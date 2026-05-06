@@ -2,10 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/layout/Navbar";
-import { ArrowLeft, Clock, Share2, Link2, User } from "lucide-react";
+import { ArrowLeft, Clock, Share2, Link2, User, Tag } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+
+interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+  color?: string;
+}
 
 interface BlogPost {
   id: string;
@@ -13,10 +20,10 @@ interface BlogPost {
   slug: string;
   excerpt: string | null;
   content: string | null;
-  image_url: string | null;
-  author: string | null;
-  category: string | null;
+  featured_image_url: string | null;
   created_at: string;
+  categories?: { id: string; name: string; slug: string }[];
+  tags?: Tag[];
 }
 
 export default function BlogPostPage() {
@@ -35,7 +42,14 @@ export default function BlogPostPage() {
       try {
         const { data, error: fetchError } = await supabase
           .from('blogs')
-          .select('*')
+          .select(`
+            *,
+            categories:category_id (id, name, slug),
+            blog_tags(
+              tag_id,
+              tags:tag_id (id, name, slug, color)
+            )
+          `)
           .eq('slug', slug)
           .eq('status', 'published')
           .single();
@@ -43,7 +57,11 @@ export default function BlogPostPage() {
         if (fetchError) {
           console.error("Error fetching blog post:", fetchError);
         } else if (data) {
-          setPost(data);
+          const formattedPost = {
+            ...data,
+            tags: data.blog_tags?.map((bt: any) => bt.tags).filter(Boolean) || [],
+          };
+          setPost(formattedPost);
         }
       } catch (err) {
         console.error("Unexpected error:", err);
@@ -78,7 +96,7 @@ export default function BlogPostPage() {
         <Navbar />
         <main className="container px-4 py-20 mx-auto text-center">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Post Not Found</h1>
-          <p className="text-gray-600 mb-8">The article you&apos;re looking for doesn&apos;t exist.</p>
+          <p className="text-gray-600 mb-8">The article you're looking for doesn't exist.</p>
           <Link href="/blog" className="text-red-600 font-semibold hover:underline">
             ← Back to Blog
           </Link>
@@ -88,7 +106,7 @@ export default function BlogPostPage() {
   }
 
   const getImageUrl = () => {
-    return post.image_url || `https://images.unsplash.com/photo-1541745537411-b8046dc6d66c?q=80&w=1200&h=600&fit=crop`;
+    return post.featured_image_url || `https://images.unsplash.com/photo-1541745537411-b8046dc6d66c?q=80&w=1200&h=600&fit=crop`;
   };
 
   const formatDate = (dateString: string) => {
@@ -99,15 +117,8 @@ export default function BlogPostPage() {
     });
   };
 
-  // Default content if no content exists
-  const contentHtml = post.content || `
-    <p className="text-lg leading-relaxed mb-6 text-gray-700">
-      Discover the latest from Spice Grill. Our chefs are always creating something new and exciting.
-    </p>
-  `;
-
   return (
-    <div className="min-h-screen bg-gray-50 pb-16">
+    <div className="min-h-screen bg-white pb-16">
       <Navbar />
 
       {/* Article Header */}
@@ -119,10 +130,10 @@ export default function BlogPostPage() {
           <ArrowLeft className="w-4 h-4" /> Back to Blog
         </Link>
 
-        <div className="flex items-center gap-3 mb-6">
-          {post.category && (
+        <div className="flex items-center gap-3 mb-6 flex-wrap">
+          {post.categories?.[0] && (
             <span className="px-4 py-1 rounded-full bg-red-100 text-red-600 text-xs font-bold uppercase tracking-wider">
-              {post.category}
+              {post.categories[0].name}
             </span>
           )}
           <span className="text-xs text-gray-500 font-medium flex items-center gap-1">
@@ -136,11 +147,11 @@ export default function BlogPostPage() {
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 py-8 border-y border-gray-200">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
               <User className="w-6 h-6 text-gray-500" />
             </div>
             <div>
-              <p className="font-bold text-gray-900">{post.author || "Spice Grill Team"}</p>
+              <p className="font-bold text-gray-900">Spice Grill Team</p>
               <p className="text-sm text-gray-500">{post.created_at ? formatDate(post.created_at) : ""}</p>
             </div>
           </div>
@@ -156,17 +167,35 @@ export default function BlogPostPage() {
       </header>
 
       {/* Article Image */}
-      <div className="container px-4 mx-auto max-w-6xl mb-16">
-        <div className="aspect-[21/9] rounded-2xl overflow-hidden shadow-xl">
-          <img src={getImageUrl()} alt={post.title} className="w-full h-full object-cover" />
+      {post.featured_image_url && (
+        <div className="container px-4 mx-auto max-w-6xl mb-16">
+          <div className="aspect-[21/9] rounded-2xl overflow-hidden shadow-xl">
+            <img src={post.featured_image_url} alt={post.title} className="w-full h-full object-cover" />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Article Content */}
       <article className="container px-4 mx-auto max-w-3xl">
+        {post.tags && post.tags.length > 0 && (
+          <div className="flex items-center gap-2 mb-8 pb-8 border-b border-gray-200">
+            <Tag className="w-4 h-4 text-gray-400" />
+            <div className="flex flex-wrap gap-2">
+              {post.tags.map((tag) => (
+                <span
+                  key={tag.id}
+                  className="px-3 py-1 bg-gray-100 text-gray-600 text-sm font-medium rounded-full"
+                >
+                  #{tag.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div
-          className="prose prose-lg max-w-none"
-          dangerouslySetInnerHTML={{ __html: contentHtml }}
+          className="prose prose-lg max-w-none [&_h1]:text-gray-900 [&_h2]:text-gray-900 [&_h3]:text-gray-900 [&_p]:text-gray-700 [&_a]:text-red-600 [&_a]:underline [&_blockquote]:border-l-red-600 [&_blockquote]:text-gray-600"
+          dangerouslySetInnerHTML={{ __html: post.content || "" }}
         />
 
         {/* Share */}

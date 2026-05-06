@@ -45,9 +45,11 @@ export default function AdminShell({ children, profile }: AdminShellProps) {
       <aside className="w-64 bg-white border-r border-gray-200 hidden lg:flex flex-col sticky top-0 h-screen">
         <div className="p-6 border-b">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-red-500 flex items-center justify-center">
-              <ShoppingBag className="w-6 h-6 text-white" />
-            </div>
+            <img
+              src="/Spice_Logo.jpg"
+              alt="Spice Grill Logo"
+              className="w-10 h-10 rounded-xl object-cover shadow-sm"
+            />
             <div>
               <h2 className="font-extrabold text-lg leading-none text-gray-900">Spice Grill OS</h2>
               <span className="text-[10px] uppercase tracking-widest font-bold text-gray-500">Admin Panel</span>

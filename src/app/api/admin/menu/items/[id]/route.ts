@@ -24,7 +24,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: "Menu item not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ item });
+    // Parse image_url JSON string back to array
+    const processedItem = {
+      ...item,
+      images: item.image_url ? (Array.isArray(item.image_url) ? item.image_url : JSON.parse(item.image_url)) : []
+    };
+
+    return NextResponse.json({ item: processedItem });
   } catch (err) {
     console.error('Unexpected error in menu item GET route:', err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -38,17 +44,17 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
-    
-    const { name, description, price, category_id, image_url, is_available, stock_quantity } = await request.json();
+
+    const { name, description, price, category_id, images, is_available, stock_quantity } = await request.json();
 
     // Basic validation
-    if (!name || !description || !price || !category_id || image_url === undefined || stock_quantity === undefined) {
+    if (!name || !description || !price || !category_id || !Array.isArray(images) || images.length === 0 || stock_quantity === undefined) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     const { data: item, error } = await supabase
       .from("menu_items")
-      .update({ name, description, price, category_id, image_url, is_available, stock_quantity })
+      .update({ name, description, price, category_id, image_url: JSON.stringify(images), is_available, stock_quantity })
       .eq("id", id)
       .select()
       .single();

@@ -15,15 +15,15 @@ export default function EmployeeShell({ children, profile }: EmployeeShellProps)
   const pathname = usePathname();
 
   return (
-    <div className="min-h-screen bg-accent/20 flex flex-col">
+    <div className="min-h-screen bg-red-50/20 flex flex-col">
       {/* Employee Navbar */}
-      <nav className="h-16 bg-card border-b px-6 flex items-center justify-between sticky top-0 z-50 shadow-sm">
+      <nav className="h-16 bg-white border-b border-gray-200 px-6 flex items-center justify-between sticky top-0 z-50 shadow-sm">
         <div className="flex items-center gap-4">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary">
-            <ChefHat className="w-5 h-5 text-primary-foreground" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-red-600">
+            <ChefHat className="w-5 h-5 text-white" />
           </div>
           <div>
-            <span className="font-black text-xl tracking-tight">Staff Panel</span>
+            <span className="font-black text-xl tracking-tight text-gray-900">Staff Panel</span>
           </div>
         </div>
 
@@ -32,7 +32,7 @@ export default function EmployeeShell({ children, profile }: EmployeeShellProps)
             href="/employee" 
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all",
-              pathname === "/employee" ? "bg-primary text-primary-foreground shadow-lg shadow-primary/10" : "hover:bg-accent"
+              pathname === "/employee" ? "bg-red-600 text-white shadow-lg shadow-red-500/10" : "hover:bg-red-50 text-gray-600"
             )}
           >
             <ClipboardList className="w-4 h-4" /> Active
@@ -41,7 +41,7 @@ export default function EmployeeShell({ children, profile }: EmployeeShellProps)
             href="/employee/history" 
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all",
-              pathname === "/employee/history" ? "bg-primary text-primary-foreground shadow-lg shadow-primary/10" : "hover:bg-accent"
+              pathname === "/employee/history" ? "bg-red-600 text-white shadow-lg shadow-red-500/10" : "hover:bg-red-50 text-gray-600"
             )}
           >
             <History className="w-4 h-4" /> History
@@ -50,11 +50,11 @@ export default function EmployeeShell({ children, profile }: EmployeeShellProps)
 
         <div className="flex items-center gap-3">
           <div className="text-right hidden sm:block">
-            <p className="text-sm font-bold">{profile?.full_name || "Staff"}</p>
-            <p className="text-[10px] text-muted-foreground uppercase font-bold">Employee</p>
+            <p className="text-sm font-bold text-gray-900">{profile?.full_name || "Staff"}</p>
+            <p className="text-[10px] text-gray-600 uppercase font-bold">Employee</p>
           </div>
           <form action={signOut}>
-            <button type="submit" className="p-2 text-muted-foreground hover:text-red-500 transition-colors">
+            <button type="submit" className="p-2 text-gray-600 hover:text-red-600 transition-colors">
               <LogOut className="w-5 h-5" />
             </button>
           </form>
@@ -66,11 +66,11 @@ export default function EmployeeShell({ children, profile }: EmployeeShellProps)
       </main>
 
       {/* Mobile Sticky Bar */}
-      <div className="md:hidden sticky bottom-0 bg-card border-t p-2 flex justify-around">
-        <Link href="/employee" className="p-3 text-primary"><ClipboardList /></Link>
-        <Link href="/employee/history" className="p-3 text-muted-foreground"><History /></Link>
+      <div className="md:hidden sticky bottom-0 bg-white border-t border-gray-200 p-2 flex justify-around">
+        <Link href="/employee" className="p-3 text-red-600"><ClipboardList /></Link>
+        <Link href="/employee/history" className="p-3 text-gray-600"><History /></Link>
         <form action={signOut}>
-          <button type="submit" className="p-3 text-muted-foreground"><LogOut /></button>
+          <button type="submit" className="p-3 text-gray-600"><LogOut /></button>
         </form>
       </div>
     </div>

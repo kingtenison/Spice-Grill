@@ -48,9 +48,20 @@ create table public.orders (
   user_id uuid references public.profiles on delete set null,
   status order_status default 'pending'::order_status,
   total_amount numeric not null,
+  subtotal numeric,
+  tax_amount numeric,
+  shipping_cost numeric,
+  discount_amount numeric,
   delivery_address text,
+  shipping_address jsonb,
+  billing_address jsonb,
+  special_instructions text,
+  coupon_code text,
+  shipping_method text,
+  payment_method text,
   payment_status payment_status default 'pending'::payment_status,
   payment_reference text,
+  guest_checkout boolean default false,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -137,6 +148,17 @@ create policy "Admins and Employees can view all orders." on public.orders for s
 );
 create policy "Admins and Employees can update orders." on public.orders for update using (
   exists (select 1 from public.profiles where id = auth.uid() and role in ('admin', 'employee'))
+);
+
+-- Policies for Order Items
+create policy "Users can view own order items." on public.order_items for select using (
+  exists (select 1 from public.orders where id = order_id and (user_id = auth.uid() or user_id is null))
+);
+create policy "Users can create order items." on public.order_items for insert with check (
+  exists (select 1 from public.orders where id = order_id)
+);
+create policy "Admins can manage all order items." on public.order_items for all using (
+  exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
 );
 
 -- Policies for Blogs

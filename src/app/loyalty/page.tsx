@@ -44,7 +44,7 @@ export default function LoyaltyPage() {
     <div className="min-h-screen bg-white">
       <Navbar />
 
-      <main className="container px-4 py-20 mx-auto">
+      <main className="container px-4 pt-24 pb-20 mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           
           {/* Left Column: Points Status */}
@@ -62,9 +62,9 @@ export default function LoyaltyPage() {
                   <p className="text-gray-600 text-lg mb-8">You&apos;re making great progress towards Silver tier!</p>
                   
                   <div className="flex items-end gap-3 mb-4">
-                    <span className="text-6xl font-black text-primary">{userPoints}</span>
-                    <span className="text-xl font-bold mb-2 opacity-50">Points</span>
-                  </div>
+                     <span className="text-6xl font-black text-red-600">{userPoints}</span>
+                     <span className="text-xl font-bold mb-2 opacity-50">Points</span>
+                   </div>
 
                   <div className="w-full max-w-md h-3 bg-gray-200 rounded-full overflow-hidden">
                     <motion.div 

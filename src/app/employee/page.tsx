@@ -64,7 +64,7 @@ export default function EmployeeDashboard() {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-extrabold">Active Orders</h1>
+        <h1 className="text-3xl font-extrabold text-gray-900">Active Orders</h1>
         <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 text-green-700 text-sm font-bold animate-pulse">
           <div className="w-2 h-2 rounded-full bg-green-600" />
           Live Connection Active
@@ -79,13 +79,13 @@ export default function EmployeeDashboard() {
               <motion.div 
                 layout
                 key={order.id}
-                className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm hover:shadow-md transition-all group"
+                className="bg-white border border-gray-200 rounded-[2.5rem] p-8 shadow-sm hover:shadow-md transition-all group"
               >
                 {/* Card Header */}
                 <div className="flex items-start justify-between mb-8">
                   <div>
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="text-xl font-black text-primary">{order.id}</span>
+                      <span className="text-xl font-black text-red-600">{order.id}</span>
                       <span className={cn(
                         "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider",
                         config.color
@@ -93,12 +93,12 @@ export default function EmployeeDashboard() {
                         {order.status}
                       </span>
                     </div>
-                    <h3 className="text-2xl font-bold">{order.customer}</h3>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+                    <h3 className="text-2xl font-bold text-gray-900">{order.customer}</h3>
+                    <div className="flex items-center gap-2 text-sm text-gray-500 mt-2">
                       <Clock className="w-4 h-4" /> Received {order.timeReceived}
                     </div>
                   </div>
-                  <button className="p-3 rounded-2xl bg-accent hover:bg-primary hover:text-white transition-all">
+                  <button className="p-3 rounded-2xl bg-red-50 hover:bg-red-600 hover:text-white transition-all">
                     <ChevronRight className="w-6 h-6" />
                   </button>
                 </div>
@@ -106,12 +106,12 @@ export default function EmployeeDashboard() {
                 {/* Items List */}
                 <div className="space-y-4 mb-8">
                   {order.items.map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-accent/40 border border-transparent group-hover:border-border transition-colors">
+                    <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-red-50/40 border border-transparent group-hover:border-gray-200 transition-colors">
                       <div className="flex items-center gap-4">
-                        <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center font-black text-primary shadow-sm">
+                        <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center font-black text-red-600 shadow-sm">
                           {item.quantity}
                         </div>
-                        <span className="font-bold text-lg">{item.name}</span>
+                        <span className="font-bold text-lg text-gray-900">{item.name}</span>
                       </div>
                     </div>
                   ))}
@@ -120,20 +120,20 @@ export default function EmployeeDashboard() {
                 {/* Footer Info */}
                 <div className="grid grid-cols-2 gap-4 mb-8">
                   <div className="flex items-start gap-2">
-                    <MapPin className="w-4 h-4 mt-1 text-muted-foreground shrink-0" />
-                    <p className="text-xs font-medium text-muted-foreground line-clamp-2">{order.address}</p>
+                    <MapPin className="w-4 h-4 mt-1 text-gray-500 shrink-0" />
+                    <p className="text-xs font-medium text-gray-500 line-clamp-2">{order.address}</p>
                   </div>
-                  <div className="flex items-center justify-end font-black text-xl">
+                  <div className="flex items-center justify-end font-black text-xl text-gray-900">
                     {order.total}
                   </div>
                 </div>
 
                 {/* Actions */}
                 <div className="grid grid-cols-2 gap-4">
-                  <button className="py-4 rounded-2xl bg-accent text-muted-foreground font-bold hover:bg-red-50 hover:text-red-500 transition-all">
+                  <button className="py-4 rounded-2xl bg-red-50 text-gray-600 font-bold hover:bg-red-100 hover:text-red-600 transition-all">
                     Reject
                   </button>
-                  <button className="py-4 rounded-2xl bg-primary text-primary-foreground font-black text-lg shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                  <button className="py-4 rounded-2xl bg-red-600 text-white font-black text-lg shadow-lg shadow-red-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
                     {config.next}
                   </button>
                 </div>
@@ -145,11 +145,11 @@ export default function EmployeeDashboard() {
 
       {orders.length === 0 && (
         <div className="py-32 text-center">
-          <div className="w-24 h-24 rounded-full bg-accent flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="w-12 h-12 text-muted-foreground" />
+          <div className="w-24 h-24 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="w-12 h-12 text-gray-600" />
           </div>
-          <h3 className="text-2xl font-bold text-muted-foreground">All caught up!</h3>
-          <p className="text-muted-foreground mt-2">New orders will appear here automatically.</p>
+          <h3 className="text-2xl font-bold text-gray-900">All caught up!</h3>
+          <p className="text-gray-600 mt-2">New orders will appear here automatically.</p>
         </div>
       )}
     </div>

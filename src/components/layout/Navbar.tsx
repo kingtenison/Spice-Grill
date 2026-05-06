@@ -24,16 +24,16 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+   useEffect(() => {
+     const supabase = createClient();
+     supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
+     const { data: { subscription } } = (supabase.auth as any).onAuthStateChange((_event: any, session: any) => {
+       setUser(session?.user ?? null);
+     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+     return () => subscription.unsubscribe();
+   }, []);
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -62,13 +62,12 @@ export function Navbar() {
           href="/"
           className="flex items-center gap-3 group"
         >
-          <motion.div
+          <motion.img
             whileHover={{ rotate: 5 }}
-            className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-red-600 to-red-700 flex items-center justify-center shadow-lg"
-          >
-            <Flame className="w-5 h-5 text-white" />
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/20 to-transparent" />
-          </motion.div>
+            src="/Spice_Logo.jpg"
+            alt="Spice Grill Logo"
+            className="w-10 h-10 rounded-xl object-cover shadow-lg"
+          />
           <div className="flex flex-col">
             <span className="font-playfair text-2xl font-bold leading-none text-gray-900">
               <span className="text-gray-900">SPICE</span>
@@ -115,13 +114,22 @@ export function Navbar() {
 
           {/* Auth */}
           {user ? (
-            <button
-              onClick={handleLogout}
-              className="hidden sm:flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-red-600 transition-colors rounded-xl hover:bg-gray-100"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Logout</span>
-            </button>
+            <div className="hidden sm:flex items-center gap-2">
+              <Link
+                href="/account"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-red-600 transition-colors rounded-xl hover:bg-gray-100"
+              >
+                <User className="w-4 h-4" />
+                <span>My Account</span>
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-red-600 transition-colors rounded-xl hover:bg-gray-100"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Logout</span>
+              </button>
+            </div>
           ) : (
             <Link
               href="/login"
@@ -172,18 +180,28 @@ export function Navbar() {
                   {link.label}
                 </Link>
               ))}
-              <div className="pt-4 border-t border-gray-200">
+              <div className="pt-4 border-t border-gray-200 space-y-2">
                 {user ? (
-                  <button
-                    onClick={() => {
-                      handleLogout();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-base font-medium text-red-600 hover:bg-gray-100 transition-colors"
-                  >
-                    <LogOut className="w-5 h-5" />
-                    Logout
-                  </button>
+                  <>
+                    <Link
+                      href="/account"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-base font-medium text-gray-900 hover:bg-gray-100 transition-colors"
+                    >
+                      <User className="w-5 h-5" />
+                      My Account
+                    </Link>
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-base font-medium text-red-600 hover:bg-gray-100 transition-colors"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      Logout
+                    </button>
+                  </>
                 ) : (
                   <Link
                     href="/login"

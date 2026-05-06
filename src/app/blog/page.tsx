@@ -2,20 +2,33 @@
 
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/layout/Navbar";
-import { ArrowRight, Clock } from "lucide-react";
+import { ArrowRight, Clock, Tag } from "lucide-react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+
+interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+  color?: string;
+}
+
+interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+  color?: string;
+}
 
 interface BlogPost {
   id: string;
   title: string;
   slug: string;
   excerpt: string | null;
-  image_url: string | null;
-  author: string | null;
+  featured_image_url: string | null;
   created_at: string;
-  category: string | null;
+  categories?: { id: string; name: string; slug: string }[];
+  tags?: Tag[];
 }
 
 export default function BlogPage() {
@@ -30,12 +43,23 @@ export default function BlogPage() {
       try {
         const { data, error } = await supabase
           .from('blogs')
-          .select('*')
+          .select(`
+            *,
+            categories:category_id (id, name, slug),
+            blog_tags(
+              tag_id,
+              tags:tag_id (id, name, slug, color)
+            )
+          `)
           .eq('status', 'published')
           .order('created_at', { ascending: false });
 
         if (data && isMounted) {
-          setPosts(data);
+          const formattedPosts = data.map((post: any) => ({
+            ...post,
+            tags: post.blog_tags?.map((bt: any) => bt.tags).filter(Boolean) || [],
+          }));
+          setPosts(formattedPosts);
         }
       } catch (error) {
         console.error("Error fetching blog posts:", error);
@@ -50,7 +74,7 @@ export default function BlogPage() {
   }, []);
 
   const getImageUrl = (post: BlogPost) => {
-    return post.image_url || `https://images.unsplash.com/photo-1541745537411-b8046dc6d66c?q=80&w=800&h=500&fit=crop`;
+    return post.featured_image_url || `https://images.unsplash.com/photo-1541745537411-b8046dc6d66c?q=80&w=800&h=500&fit=crop`;
   };
 
   const formatDate = (dateString: string) => {
@@ -62,10 +86,10 @@ export default function BlogPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <Navbar />
 
-      <main className="container px-4 py-20 mx-auto">
+      <main className="container px-4 pt-24 pb-20 mx-auto">
         <div className="max-w-3xl mb-16">
           <h1 className="text-5xl font-extrabold mb-6 text-gray-900">Our Stories</h1>
           <p className="text-xl text-gray-600">
@@ -95,10 +119,10 @@ export default function BlogPage() {
                   />
                 </div>
                 <div className="p-8 md:p-12 flex flex-col justify-center">
-                  <div className="flex items-center gap-3 mb-6">
-                    {posts[0].category && (
+                  <div className="flex items-center gap-3 mb-6 flex-wrap">
+                    {posts[0].categories?.[0] && (
                       <span className="px-4 py-1 rounded-full bg-red-100 text-red-600 text-xs font-bold uppercase tracking-wider">
-                        {posts[0].category}
+                        {posts[0].categories[0].name}
                       </span>
                     )}
                     <span className="text-xs text-gray-500 font-medium flex items-center gap-1">
@@ -111,15 +135,25 @@ export default function BlogPage() {
                   <p className="text-lg text-gray-600 mb-8 line-clamp-3">
                     {posts[0].excerpt || "Discover the latest from Spice Grill."}
                   </p>
+                  {posts[0].tags && posts[0].tags.length > 0 && (
+                    <div className="flex items-center gap-2 mb-6">
+                      <Tag className="w-4 h-4 text-gray-400" />
+                      <div className="flex flex-wrap gap-1">
+                        {posts[0].tags.slice(0, 3).map((tag: any) => (
+                          <span key={tag.id} className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded">
+                            #{tag.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between mt-auto">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                        <span className="text-sm font-bold text-gray-600">
-                          {posts[0].author?.charAt(0) || "S"}
-                        </span>
+                        <span className="text-sm font-bold text-gray-600">S</span>
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-gray-900">{posts[0].author || "Spice Grill Team"}</p>
+                        <p className="text-sm font-bold text-gray-900">Spice Grill Team</p>
                         <p className="text-xs text-gray-500">{formatDate(posts[0].created_at)}</p>
                       </div>
                     </div>
@@ -133,7 +167,7 @@ export default function BlogPage() {
 
             {/* Blog Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-              {posts.slice(1).map((post) => (
+              {posts.slice(1).map((post: any) => (
                 <Link
                   key={post.id}
                   href={`/blog/${post.slug}`}
@@ -148,9 +182,9 @@ export default function BlogPage() {
                   </div>
                   <div className="p-6 flex flex-col flex-grow">
                     <div className="flex items-center gap-3 mb-4">
-                      {post.category && (
+                      {post.categories?.[0] && (
                         <span className="text-xs font-bold text-red-600 uppercase tracking-wider">
-                          {post.category}
+                          {post.categories[0].name}
                         </span>
                       )}
                       <span className="text-xs text-gray-500 font-medium">5 min read</span>
@@ -161,6 +195,15 @@ export default function BlogPage() {
                     <p className="text-sm text-gray-600 line-clamp-3 mb-4 flex-grow">
                       {post.excerpt || "Read more about this story from our kitchen."}
                     </p>
+                    {post.tags && post.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-4">
+                        {post.tags.slice(0, 2).map((tag: any) => (
+                          <span key={tag.id} className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded">
+                            #{tag.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
                       <span className="text-xs text-gray-500">{formatDate(post.created_at)}</span>
                       <ArrowRight className="w-4 h-4 text-red-600 group-hover:translate-x-1 transition-transform" />

@@ -3,7 +3,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { useCartStore } from "@/store/useCartStore";
-import { Plus, Search, ShoppingBag, SlidersHorizontal, X, Phone } from "lucide-react";
+import { MenuCarousel } from "@/components/menu/MenuCarousel";
+import { ItemDetailModal } from "@/components/menu/ItemDetailModal";
+import { Plus, Search, ShoppingBag, SlidersHorizontal, X, Phone, Filter, Leaf, Wheat, Flame } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -13,9 +15,23 @@ interface MenuItem {
   name: string;
   description: string;
   price: number;
-  image_url: string | null;
+  image_url?: string;
+  images?: string[];
   categories?: {
     name: string;
+  } | null;
+  // Extended fields from database
+  ingredients?: string[] | null;
+  calories?: number | null;
+  allergens?: string[] | null;
+  dietary_tags?: string[] | null;
+  preparation_time?: number | null;
+  cooking_method?: string | null;
+  nutritional_info?: {
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+    fiber?: number;
   } | null;
 }
 
@@ -33,8 +49,75 @@ export default function MenuPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [showItemModal, setShowItemModal] = useState(false);
+  const [dietaryFilters, setDietaryFilters] = useState<string[]>([]);
 
   const addItem = useCartStore((state) => state.addItem);
+
+  // Enhanced menu items with parsed data from database
+  const enhancedMenuItems = useMemo(() => {
+    return menuItems.map(item => {
+      // Process images - handle different possible formats
+      let images: string[] = [];
+
+      // If images is already an array, use it
+      if (item.images && Array.isArray(item.images)) {
+        images = item.images.filter(img => img && typeof img === 'string');
+      }
+      // If image_url exists, try to parse it or use as single image
+      else if (item.image_url) {
+        // Check if image_url is a JSON string array
+        if (typeof item.image_url === 'string' && item.image_url.startsWith('[')) {
+          try {
+            const parsed = JSON.parse(item.image_url);
+            images = Array.isArray(parsed) ? parsed.filter(img => img && typeof img === 'string') : [item.image_url];
+          } catch {
+            images = [item.image_url];
+          }
+        } else {
+          // Single image URL
+          images = [item.image_url];
+        }
+      }
+
+      // Ensure we have valid image URLs
+      images = images.filter(img =>
+        img &&
+        typeof img === 'string' &&
+        img.startsWith('http') &&
+        !img.includes('undefined') &&
+        !img.includes('null')
+      );
+
+      // Add fallback image if no valid images
+      if (images.length === 0) {
+        images = [`https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=600&h=400&fit=crop`];
+      }
+
+      // Debug logging for image issues
+      if (process.env.NODE_ENV === 'development' && item.name === 'Sample Item') {
+        console.log('Image processing for item:', item.name, {
+          originalImages: item.images,
+          imageUrl: item.image_url,
+          processedImages: images
+        });
+      }
+
+      return {
+        ...item,
+        images,
+        // Use real data from database with fallbacks for missing data
+        ingredients: item.ingredients || [],
+        calories: item.calories || null,
+        allergens: item.allergens || [],
+        dietary_tags: item.dietary_tags || [],
+        preparation_time: item.preparation_time || null,
+        cooking_method: item.cooking_method || null,
+        nutritional_info: item.nutritional_info || null
+      };
+    });
+  }, [menuItems]);
 
   useEffect(() => {
     let isMounted = true;
@@ -86,162 +169,259 @@ export default function MenuPage() {
     return ["All", ...catNames];
   }, [categories]);
 
-  // Filter items by category and search
+  // Filter items by category, search, and dietary restrictions
   const filteredItems = useMemo(() => {
-    return menuItems.filter((item) => {
+    return enhancedMenuItems.filter((item) => {
       const itemCategory = item.categories?.name || "Uncategorized";
       const matchesCategory = activeCategory === "All" || itemCategory === activeCategory;
       const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.description?.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
+                           item.description?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesDietary = dietaryFilters.length === 0 ||
+                            dietaryFilters.every(filter => item.dietary_tags?.includes(filter));
+
+      return matchesCategory && matchesSearch && matchesDietary;
     });
-  }, [menuItems, activeCategory, searchQuery]);
+  }, [enhancedMenuItems, activeCategory, searchQuery, dietaryFilters]);
+
+  // Available dietary options
+  const dietaryOptions = [
+    { id: 'vegan', label: 'Vegan', icon: Leaf },
+    { id: 'vegetarian', label: 'Vegetarian', icon: Leaf },
+    { id: 'gluten-free', label: 'Gluten-Free', icon: Wheat },
+    { id: 'spicy', label: 'Spicy', icon: Flame },
+  ];
+
+  const handleItemSelect = (item: MenuItem) => {
+    setSelectedItem(item);
+    setShowItemModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowItemModal(false);
+    setSelectedItem(null);
+  };
+
+  const toggleDietaryFilter = (filterId: string) => {
+    setDietaryFilters(prev =>
+      prev.includes(filterId)
+        ? prev.filter(id => id !== filterId)
+        : [...prev, filterId]
+    );
+  };
 
   const getImageUrl = (item: MenuItem) => {
-    return item.image_url || `https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=600&h=400&fit=crop`;
+    return item.images?.[0] || `https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=600&h=400&fit=crop`;
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       <Navbar />
 
-      <main className="container px-4 py-12 mx-auto">
+      <main className="container px-4 pt-24 pb-8 mx-auto max-w-7xl">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-gray-900">Our Menu</h1>
-            <p className="text-gray-600 text-lg">
-              {menuItems.length > 0
-                ? `Explore ${menuItems.length} handcrafted dishes made with premium local ingredients.`
-                : "Discover our carefully curated selection of wood-fired specialties."
-              }
-            </p>
-          </div>
+        <div className="text-center mb-12">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-5xl md:text-6xl font-extrabold mb-4 text-gray-900"
+          >
+            Our Menu
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-gray-600 text-lg max-w-2xl mx-auto"
+          >
+            Discover our handcrafted dishes made with premium local ingredients.
+            Each item is prepared with care using traditional techniques and modern flair.
+          </motion.p>
+        </div>
 
-          <div className="flex gap-4 w-full md:w-auto">
-            <div className="relative flex-1 md:w-80">
+        {/* Search and Filters */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8"
+        >
+          <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
+            {/* Search */}
+            <div className="relative flex-1 max-w-md">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search dishes..."
-                className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-colors text-gray-900 placeholder:text-gray-400"
+                className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all text-gray-900 placeholder:text-gray-400"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="md:hidden px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-gray-700"
-            >
-              <SlidersHorizontal className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
 
-        {/* Categories Bar */}
-        <div className={cn(
-          "flex items-center gap-3 overflow-x-auto pb-4 mb-12 no-scrollbar",
-          showFilters ? "flex" : "hidden md:flex"
-        )}>
-          {categoryList.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={cn(
-                "px-6 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-all border",
-                activeCategory === cat
-                  ? "bg-red-600 text-white border-red-600 shadow-md"
-                  : "bg-white text-gray-700 hover:border-red-600 hover:text-red-600 border-gray-200"
-              )}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
-        {/* Menu Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {isLoading ? (
-            Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="h-[420px] rounded-2xl bg-gray-100 animate-pulse" />
-            ))
-          ) : filteredItems.length > 0 ? (
-            <AnimatePresence mode="popLayout">
-              {filteredItems.map((item) => (
-                <motion.div
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  key={item.id}
-                  className="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-red-600 transition-all hover:shadow-xl hover:shadow-gray-200/50"
+            {/* Category Filter */}
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-sm font-medium text-gray-700">Category:</span>
+              {categoryList.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={cn(
+                    "px-4 py-2 rounded-full text-sm font-medium transition-all border",
+                    activeCategory === cat
+                      ? "bg-red-600 text-white border-red-600 shadow-md"
+                      : "bg-white text-gray-700 hover:border-red-600 hover:text-red-600 border-gray-200"
+                  )}
                 >
-                  <div className="relative aspect-square overflow-hidden">
-                    <img
-                      src={getImageUrl(item)}
-                      alt={item.name}
-                      className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => addItem({
-                          id: item.id,
-                          name: item.name,
-                          price: item.price,
-                          image: getImageUrl(item),
-                          category: item.categories?.name || "Uncategorized"
-                        })}
-                        className="p-3 rounded-xl bg-white/95 backdrop-blur-sm text-gray-900 hover:bg-red-600 hover:text-white transition-all shadow-lg active:scale-90"
-                      >
-                        <Plus className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="p-5">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold uppercase tracking-wider text-red-600">
-                        {item.categories?.name || "Uncategorized"}
-                      </span>
-                      <span className="text-lg font-bold text-gray-900">${item.price.toFixed(2)}</span>
-                    </div>
-                    <h3 className="text-lg font-bold mb-2 text-gray-900 group-hover:text-red-600 transition-colors line-clamp-1">
-                      {item.name}
-                    </h3>
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                      {item.description || ""}
-                    </p>
-                  </div>
-                </motion.div>
+                  {cat}
+                </button>
               ))}
-            </AnimatePresence>
+            </div>
+
+            {/* Dietary Filters */}
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-700">Dietary:</span>
+              {dietaryOptions.map((option) => {
+                const Icon = option.icon;
+                const isActive = dietaryFilters.includes(option.id);
+                return (
+                  <button
+                    key={option.id}
+                    onClick={() => toggleDietaryFilter(option.id)}
+                    className={cn(
+                      "inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium transition-all border",
+                      isActive
+                        ? "bg-green-600 text-white border-green-600"
+                        : "bg-white text-gray-700 hover:border-green-600 hover:text-green-600 border-gray-200"
+                    )}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Active Filters Display */}
+          {(dietaryFilters.length > 0 || searchQuery) && (
+            <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-gray-100">
+              <span className="text-sm text-gray-600">Active filters:</span>
+              {searchQuery && (
+                <span className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                  Search: &quot;{searchQuery}&quot;
+                  <button onClick={() => setSearchQuery("")} className="hover:bg-blue-200 rounded-full p-0.5">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              {dietaryFilters.map((filter) => (
+                <span key={filter} className="inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">
+                  {dietaryOptions.find(opt => opt.id === filter)?.label}
+                  <button onClick={() => toggleDietaryFilter(filter)} className="hover:bg-green-200 rounded-full p-0.5">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setDietaryFilters([]);
+                  setActiveCategory("All");
+                }}
+                className="text-sm text-red-600 hover:text-red-700 font-medium"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
+        </motion.div>
+
+        {/* Menu Carousel */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          {isLoading ? (
+            <div className="flex justify-center items-center py-20">
+              <div className="animate-spin w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full"></div>
+            </div>
+          ) : filteredItems.length > 0 ? (
+            <div className="space-y-8">
+              {/* Featured/Current Category Header */}
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  {activeCategory === "All" ? "Featured Dishes" : activeCategory}
+                </h2>
+                <p className="text-gray-600">
+                  {filteredItems.length} {filteredItems.length === 1 ? 'dish' : 'dishes'} available
+                </p>
+              </div>
+
+              {/* Carousel */}
+              <MenuCarousel
+                items={filteredItems}
+                onItemSelect={handleItemSelect}
+                selectedItemId={selectedItem?.id}
+                onAddToCart={(item) => addItem({
+                  id: item.id,
+                  name: item.name,
+                  price: item.price,
+                  image: item.images?.[0] || getImageUrl(item),
+                  category: item.categories?.name || "Uncategorized",
+                  description: item.description
+                })}
+              />
+            </div>
           ) : (
-            <div className="col-span-full py-24 text-center">
+            <div className="text-center py-20">
               <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-6">
                 <ShoppingBag className="w-10 h-10 text-gray-400" />
               </div>
               <h3 className="text-2xl font-bold mb-2 text-gray-900">No dishes found</h3>
-              <p className="text-gray-600">Try adjusting your search or filters.</p>
+              <p className="text-gray-600 mb-6">Try adjusting your search or filters.</p>
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setDietaryFilters([]);
+                  setActiveCategory("All");
+                }}
+                className="px-6 py-3 bg-red-600 text-white font-medium rounded-xl hover:bg-red-700 transition-colors"
+              >
+                Show All Dishes
+              </button>
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* No data message */}
         {!isLoading && menuItems.length === 0 && (
-          <div className="text-center py-20 bg-gray-50 rounded-3xl mt-12">
-            <h3 className="text-2xl font-bold mb-2 text-gray-900">Menu Coming Soon</h3>
-            <p className="text-gray-600 mb-4">Our chefs are crafting the perfect menu. Check back shortly!</p>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-20 bg-gradient-to-r from-red-50 to-orange-50 rounded-3xl mt-12 border border-red-100"
+          >
+            <h3 className="text-3xl font-bold mb-4 text-gray-900">Menu Coming Soon</h3>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              Our chefs are crafting the perfect menu with seasonal ingredients. Check back shortly for our latest creations!
+            </p>
             <a
               href="tel:+15551234567"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors"
+              className="inline-flex items-center gap-3 px-8 py-4 rounded-full bg-red-600 text-white font-semibold hover:bg-red-700 transition-all shadow-lg shadow-red-500/20 hover:shadow-xl hover:shadow-red-500/30"
             >
-              <Phone className="w-4 h-4" />
+              <Phone className="w-5 h-5" />
               Call for Updates
             </a>
-          </div>
+          </motion.div>
         )}
       </main>
+
+      {/* Item Detail Modal */}
+      <ItemDetailModal
+        item={selectedItem}
+        isOpen={showItemModal}
+        onClose={handleCloseModal}
+      />
 
       {/* Floating Cart */}
       <CartStatusButton />

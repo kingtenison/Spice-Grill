@@ -44,18 +44,18 @@ export function ReviewModal({ isOpen, onClose, orderId }: ReviewModalProps) {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-lg bg-card border border-border rounded-[2.5rem] shadow-2xl overflow-hidden"
+            className="relative w-full max-w-lg bg-white border border-gray-200 rounded-[2.5rem] shadow-2xl overflow-hidden"
           >
             {isSuccess ? (
               <div className="p-12 text-center">
                 <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
                   <CheckCircle2 className="w-10 h-10 text-green-600" />
                 </div>
-                <h2 className="text-3xl font-black mb-4">Thank You!</h2>
-                <p className="text-muted-foreground mb-8">Your feedback helps us improve Fable for everyone.</p>
+                <h2 className="text-3xl font-black mb-4 text-gray-900">Thank You!</h2>
+                <p className="text-gray-600 mb-8">Your feedback helps us improve Spice Grill for everyone.</p>
                 <button 
                   onClick={onClose}
-                  className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-extrabold text-lg"
+                  className="w-full py-4 rounded-2xl bg-red-600 text-white font-extrabold text-lg"
                 >
                   Close
                 </button>
@@ -64,22 +64,22 @@ export function ReviewModal({ isOpen, onClose, orderId }: ReviewModalProps) {
               <div className="p-8 md:p-10">
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <MessageSquare className="w-5 h-5 text-primary" />
+                    <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
+                      <MessageSquare className="w-5 h-5 text-red-600" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-black">Rate Your Order</h2>
-                      <p className="text-xs text-muted-foreground font-bold">{orderId}</p>
+                      <h2 className="text-xl font-black text-gray-900">Rate Your Order</h2>
+                      <p className="text-xs text-gray-600 font-bold">{orderId}</p>
                     </div>
                   </div>
-                  <button onClick={onClose} className="p-2 rounded-lg hover:bg-accent transition-colors">
-                    <X className="w-5 h-5" />
+                  <button onClick={onClose} className="p-2 rounded-lg hover:bg-red-50 transition-colors">
+                    <X className="w-5 h-5 text-red-600" />
                   </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-8">
                   <div className="text-center">
-                    <p className="text-sm font-bold mb-4 uppercase tracking-widest text-muted-foreground">How was the food?</p>
+                    <p className="text-sm font-bold mb-4 uppercase tracking-widest text-gray-600">How was the food?</p>
                     <div className="flex items-center justify-center gap-2">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
@@ -94,8 +94,8 @@ export function ReviewModal({ isOpen, onClose, orderId }: ReviewModalProps) {
                             className={cn(
                               "w-10 h-10 transition-colors",
                               (hoveredRating || rating) >= star 
-                                ? "fill-primary text-primary" 
-                                : "text-accent stroke-[2.5px]"
+                                ? "fill-red-600 text-red-600" 
+                                : "text-red-200 stroke-[2.5px]"
                             )} 
                           />
                         </button>
@@ -104,10 +104,10 @@ export function ReviewModal({ isOpen, onClose, orderId }: ReviewModalProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-bold ml-1">Comments (Optional)</label>
+                    <label className="text-sm font-bold ml-1 text-gray-900">Comments (Optional)</label>
                     <textarea 
                       placeholder="Share your experience..."
-                      className="w-full px-6 py-4 rounded-2xl bg-accent border border-transparent focus:border-primary focus:bg-background transition-all outline-none min-h-[120px] resize-none"
+                      className="w-full px-6 py-4 rounded-2xl bg-red-50 border border-gray-300 focus:border-red-600 focus:bg-white transition-all outline-none min-h-[120px] resize-none"
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
                     />
@@ -115,7 +115,7 @@ export function ReviewModal({ isOpen, onClose, orderId }: ReviewModalProps) {
 
                   <button 
                     disabled={rating === 0 || isSubmitting}
-                    className="w-full py-5 rounded-2xl bg-primary text-primary-foreground font-black text-xl shadow-lg shadow-primary/20 hover:opacity-90 disabled:opacity-50 transition-all active:scale-[0.98]"
+                    className="w-full py-5 rounded-2xl bg-red-600 text-white font-black text-xl shadow-lg shadow-red-500/20 hover:opacity-90 disabled:opacity-50 transition-all active:scale-[0.98]"
                   >
                     {isSubmitting ? "Submitting..." : "Submit Review"}
                   </button>

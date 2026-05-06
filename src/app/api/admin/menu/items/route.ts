@@ -18,8 +18,33 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // Parse image_url JSON strings back to arrays and ensure all fields are properly typed
+    const processedItems = (items ?? []).map(item => {
+      let images = [];
+      if (item.image_url) {
+        if (Array.isArray(item.image_url)) {
+          images = item.image_url;
+        } else if (typeof item.image_url === 'string') {
+          try {
+            images = JSON.parse(item.image_url);
+          } catch {
+            // If it's not valid JSON, assume it's a single URL string
+            images = [item.image_url];
+          }
+        }
+      }
+      return {
+        ...item,
+        images,
+        ingredients: item.ingredients || [],
+        allergens: item.allergens || [],
+        dietary_tags: item.dietary_tags || [],
+        nutritional_info: item.nutritional_info || null
+      };
+    });
+
     return NextResponse.json({
-      items: items ?? [],
+      items: processedItems,
     });
   } catch (err) {
     console.error('Unexpected error in menu items GET route:', err);
@@ -33,17 +58,47 @@ export async function POST(request: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
-    
-    const { name, description, price, category_id, image_url, is_available, stock_quantity } = await request.json();
+
+    const {
+      name,
+      description,
+      price,
+      category_id,
+      images,
+      is_available,
+      stock_quantity,
+      ingredients,
+      preparation_time,
+      cooking_method,
+      nutritional_info,
+      allergens,
+      dietary_tags,
+      calories
+    } = await request.json();
 
     // Basic validation
-    if (!name || !description || !price || !category_id || image_url === undefined || stock_quantity === undefined) {
+    if (!name || !description || !price || !category_id || !Array.isArray(images) || images.length === 0 || stock_quantity === undefined) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     const { data: item, error } = await supabase
       .from("menu_items")
-      .insert([{ name, description, price, category_id, image_url, is_available, stock_quantity }])
+      .insert([{
+        name,
+        description,
+        price,
+        category_id,
+        image_url: JSON.stringify(images),
+        is_available,
+        stock_quantity,
+        ingredients: ingredients || [],
+        preparation_time: preparation_time || null,
+        cooking_method: cooking_method || null,
+        nutritional_info: nutritional_info || null,
+        allergens: allergens || [],
+        dietary_tags: dietary_tags || [],
+        calories: calories || null
+      }])
       .select()
       .single();
 
