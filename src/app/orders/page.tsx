@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Navbar } from "@/components/layout/Navbar";
 import {
   Package,
   Clock,
@@ -19,8 +18,8 @@ import {
   AlertCircle,
   Ban
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
@@ -99,6 +98,8 @@ export default function OrdersPage() {
   };
 
   useEffect(() => {
+    let subscription: any = null;
+    
     const loadUserAndOrders = async () => {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
@@ -131,9 +132,14 @@ export default function OrdersPage() {
 
       setIsLoading(false);
 
-      // Set up real-time subscription for order updates
-      const subscription = supabase
-        .channel('user-orders')
+      // Clean up any existing subscription before creating new one
+      if (subscription) {
+        supabase.removeChannel(subscription);
+      }
+
+      // Set up real-time subscription for order updates with unique channel name
+      subscription = supabase
+        .channel(`user-orders-${user.id}`)
         .on(
           'postgres_changes',
           {
@@ -154,13 +160,16 @@ export default function OrdersPage() {
           }
         )
         .subscribe();
-
-      return () => {
-        subscription.unsubscribe();
-      };
     };
 
     loadUserAndOrders();
+
+    return () => {
+      if (subscription) {
+        const supabase = createClient();
+        supabase.removeChannel(subscription);
+      }
+    };
   }, []);
 
   const formatDate = (dateString: string) => {
@@ -201,7 +210,6 @@ export default function OrdersPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
         <main className="container px-4 pt-24 pb-12 mx-auto max-w-6xl">
           <div className="flex justify-center items-center py-20">
             <div className="animate-spin w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full"></div>
@@ -211,11 +219,9 @@ export default function OrdersPage() {
     );
   }
 
-  return (
+return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
-
-      <main className="container px-4 pt-24 pb-12 mx-auto max-w-6xl">
+      <main className="container px-4 pt-20 pb-24 mx-auto lg:pl-sidebar space-y-6 sm:space-y-8">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-4xl font-bold text-gray-900 mb-2">My Orders</h1>

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Navbar } from "@/components/layout/Navbar";
 import { 
   CheckCircle2, Clock, ChefHat, Truck, 
   Package, ArrowLeft, Phone 
@@ -82,11 +81,10 @@ export default function OrderTrackingPage() {
 
   const currentStepIndex = order ? STEPS.findIndex((s) => s.key === order.status) : 0;
 
-   if (loading) {
-     return (
-       <div className="min-h-screen bg-white">
-         <Navbar />
-         <div className="container px-4 py-20 mx-auto max-w-2xl">
+if (loading) {
+      return (
+        <div className="min-h-screen bg-white">
+          <div className="container px-4 py-20 mx-auto max-w-2xl">
            <div className="animate-pulse space-y-6">
              <div className="h-8 bg-red-50/30 rounded-xl w-1/3" />
              <div className="h-64 bg-red-50/30 rounded-[2rem]" />
@@ -97,11 +95,10 @@ export default function OrderTrackingPage() {
      );
    }
 
-   if (!order) {
-     return (
-       <div className="min-h-screen bg-white">
-         <Navbar />
-         <div className="container px-4 py-20 mx-auto max-w-lg text-center">
+if (!order) {
+      return (
+        <div className="min-h-screen bg-white">
+          <div className="container px-4 py-20 mx-auto max-w-lg text-center">
            <h1 className="text-3xl font-black mb-4 text-gray-900">Order Not Found</h1>
            <p className="text-gray-600 mb-8">We&apos;re couldn&apos;t find this order. Please check the link.</p>
            <Link href="/menu" className="inline-flex px-8 py-4 rounded-2xl bg-red-600 text-white font-extrabold">
@@ -112,11 +109,10 @@ export default function OrderTrackingPage() {
      );
    }
 
-   return (
-     <div className="min-h-screen bg-white">
-       <Navbar />
+return (
+      <div className="min-h-screen bg-white">
 
-       <main className="container px-4 py-12 mx-auto max-w-2xl">
+        <main className="container px-4 py-12 mx-auto max-w-2xl">
          <Link href="/menu" className="inline-flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-red-600 mb-8 transition-colors">
            <ArrowLeft className="w-4 h-4" /> Back to Menu
          </Link>

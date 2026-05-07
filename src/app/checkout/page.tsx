@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Navbar } from "@/components/layout/Navbar";
 import { useCartStore, type Address, type ShippingMethod, type PaymentMethod, type OrderDetails } from "@/store/useCartStore";
 import {
   Trash2, Plus, Minus, ArrowRight, ArrowLeft, MapPin, Clock,
@@ -322,11 +321,10 @@ export default function CheckoutPage() {
     );
   }
 
-  return (
+return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
 
-      <main className="container px-4 pt-24 pb-12 mx-auto max-w-6xl">
+       <main className="container px-4 pt-24 pb-12 mx-auto max-w-6xl">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Link
@@ -1086,7 +1084,6 @@ function ConfirmationPage({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
 
       <main className="container px-4 pt-24 pb-12 mx-auto max-w-4xl">
         <motion.div

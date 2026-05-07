@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Navbar } from "@/components/layout/Navbar";
 import { ArrowRight, Mail, Lock, User, Phone } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -53,7 +52,6 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex flex-col">
-      <Navbar />
 
       <main className="flex-grow flex items-center justify-center p-4 -mt-16">
         <div className="w-full max-w-md">

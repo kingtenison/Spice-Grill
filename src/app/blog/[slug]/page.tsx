@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Navbar } from "@/components/layout/Navbar";
 import { ArrowLeft, Clock, Share2, Link2, User, Tag } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -78,7 +77,6 @@ export default function BlogPostPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white">
-        <Navbar />
         <main className="container px-4 py-20 mx-auto">
           <div className="animate-pulse space-y-6">
             <div className="h-8 w-48 bg-gray-200 rounded" />
@@ -93,7 +91,6 @@ export default function BlogPostPage() {
   if (!post) {
     return (
       <div className="min-h-screen bg-white">
-        <Navbar />
         <main className="container px-4 py-20 mx-auto text-center">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Post Not Found</h1>
           <p className="text-gray-600 mb-8">The article you're looking for doesn't exist.</p>
@@ -119,7 +116,6 @@ export default function BlogPostPage() {
 
   return (
     <div className="min-h-screen bg-white pb-16">
-      <Navbar />
 
       {/* Article Header */}
       <header className="container px-4 py-12 mx-auto max-w-4xl">

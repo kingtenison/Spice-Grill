@@ -242,18 +242,19 @@ export default function AdminOrdersPage() {
       </div>
 
       <div className="rounded-2xl bg-white border border-gray-200 overflow-hidden shadow-sm">
-        <table className="w-full text-left">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-500">
-                <th className="px-6 py-5">Order ID</th>
-                <th className="px-6 py-5">Customer</th>
-                <th className="px-6 py-5">Date</th>
-                <th className="px-6 py-5">Total</th>
-                <th className="px-6 py-5">Status</th>
-                <th className="px-6 py-5">Address</th>
-                <th className="px-6 py-5 text-right">Actions</th>
-              </tr>
-            </thead>
+        {/* Desktop Table */}
+        <table className="hidden sm:table w-full text-left">
+          <thead>
+            <tr className="bg-gray-50 border-b border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-500">
+              <th className="px-6 py-5">Order ID</th>
+              <th className="px-6 py-5">Customer</th>
+              <th className="px-6 py-5">Date</th>
+              <th className="px-6 py-5">Total</th>
+              <th className="px-6 py-5">Status</th>
+              <th className="px-6 py-5">Address</th>
+              <th className="px-6 py-5 text-right">Actions</th>
+            </tr>
+          </thead>
           <tbody className="divide-y divide-gray-200">
             {loading ? (
               <tr>
@@ -314,6 +315,74 @@ export default function AdminOrdersPage() {
             )}
           </tbody>
         </table>
+
+        {/* Mobile Card View */}
+        <div className="sm:hidden divide-y divide-gray-200">
+          {loading ? (
+            <div className="p-4 space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-24 bg-gray-200 rounded-lg animate-pulse" />
+              ))}
+            </div>
+          ) : filteredOrders.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              No orders found
+            </div>
+          ) : (
+            filteredOrders.map((order) => (
+              <div key={order.id} className="p-4 space-y-3">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="font-bold text-gray-900">#{order.id.slice(-5)}</p>
+                    <p className="text-sm text-gray-600">{order.profiles?.full_name || "—"}</p>
+                  </div>
+                  <span className={cn(
+                    "text-[10px] font-black uppercase px-2 py-1 rounded-lg",
+                    order.status === "delivered" && "bg-green-100 text-green-600",
+                    order.status === "pending" && "bg-orange-100 text-orange-600",
+                    order.status === "accepted" && "bg-blue-100 text-blue-600",
+                    order.status === "preparing" && "bg-yellow-100 text-yellow-600",
+                    order.status === "ready" && "bg-purple-100 text-purple-600",
+                    order.status === "cancelled" && "bg-red-100 text-red-600"
+                  )}>
+                    {order.status.replace('_', ' ')}
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <p className="text-gray-500">Date</p>
+                    <p className="text-gray-900">{new Date(order.created_at).toLocaleDateString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Total</p>
+                    <p className="font-bold text-gray-900">{formatCurrency(order.total_amount)}</p>
+                  </div>
+                </div>
+                
+                {order.delivery_address && (
+                  <div>
+                    <p className="text-gray-500 text-sm">Address</p>
+                    <p className="text-gray-900 text-sm line-clamp-2">{order.delivery_address}</p>
+                  </div>
+                )}
+                
+                <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <button
+                    onClick={() => setSelectedOrder(selectedOrder?.id === order.id ? null : order)}
+                    className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
+                  >
+                    <Eye className="w-4 h-4" />
+                    Details
+                  </button>
+                  <div className="flex flex-wrap gap-1 justify-end">
+                    {getActionButtons(order)}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {/* Order Details Modal */}

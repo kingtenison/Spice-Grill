@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Navbar } from "@/components/layout/Navbar";
 import {
   Package,
   Clock,
@@ -237,7 +236,6 @@ export default function AccountPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
         <main className="container px-4 pt-24 pb-12 mx-auto max-w-6xl">
           <div className="flex justify-center items-center py-20">
             <div className="animate-pulse w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full"></div>
@@ -249,7 +247,6 @@ export default function AccountPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
 
       <main className="container px-4 pt-24 pb-12 mx-auto max-w-6xl">
         <div className="flex items-center justify-between mb-8">

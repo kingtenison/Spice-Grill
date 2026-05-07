@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Navbar } from "@/components/layout/Navbar";
 import { useCartStore } from "@/store/useCartStore";
 import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, Tag, Percent } from "lucide-react";
 import Link from "next/link";
@@ -57,7 +56,6 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
 
       <main className="container px-4 py-12 mx-auto max-w-4xl">
         <div className="flex items-center justify-between mb-8">

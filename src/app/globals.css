@@ -1,36 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 @import "tailwindcss";
 
+/* Custom Justice Love (Regular Only) */
+@font-face {
+    font-family: 'justice Love';
+    src: url('https://fonts.cdnfonts.com/s/98761/justice%20love.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Custom Codec Warm Trial (Strictly No Italics) */
+@font-face {
+    font-family: 'Codec Warm Trial';
+    src: url('https://fonts.cdnfonts.com/s/14896/Codec-Warm-Regular-trial.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Codec Warm Trial';
+    src: url('https://fonts.cdnfonts.com/s/14896/Codec-Warm-Light-trial.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Codec Warm Trial';
+    src: url('https://fonts.cdnfonts.com/s/14896/Codec-Warm-ExtraLight-trial.woff') format('woff');
+    font-weight: 250;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Codec Warm Trial';
+    src: url('https://fonts.cdnfonts.com/s/14896/Codec-Warm-Bold-trial.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Global Font Override for Numbers */
+@font-face {
+  font-family: 'GlobalNumbers';
+  src: url('https://fonts.gstatic.com/s/roboto/v51/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWubEbWmT.ttf') format('truetype');
+  unicode-range: U+30-39, U+2E, U+2C, U+24, U+23, U+25; /* 0-9, ., ,, $, #, % */
+  font-weight: 100-900;
+  font-style: normal;
+}
+
+
 @theme {
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-playfair), Georgia, serif;
+  --font-sans: 'GlobalNumbers', 'Codec Warm Trial', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'GlobalNumbers', 'justice Love', Georgia, serif;
+  --font-heading: 'GlobalNumbers', 'justice Love', sans-serif;
+  --font-numbers: 'Roboto', ui-sans-serif, system-ui, sans-serif;
 
-  /* Primary Brand Colors */
   --color-primary: #DC2626;
-  --color-primary-hover: #B91C1C;
   --color-primary-foreground: #FFFFFF;
-
-  /* Semantic Color System - Light Theme */
-  --color-background: #FFFFFF;    /* Main background */
-  --color-foreground: #111827;    /* Main text */
-
-  --color-card: #FFFFFF;          /* Card/surface background */
-  --color-card-foreground: #111827;
-
-  --color-secondary: #F9FAFB;     /* Secondary sections */
-  --color-secondary-foreground: #111827;
-
-  --color-muted: #F3F4F6;         /* Muted backgrounds */
-  --color-muted-foreground: #6B7280;
-
-  --color-accent: #FEF2F2;        /* Accent/red tint */
-  --color-accent-foreground: #DC2626;
-
-  --color-border: #E5E7EB;        /* Borders */
-
-  --color-success: #22c55e;
-  --color-success-foreground: #FFFFFF;
-  --color-warning: #f59e0b;
-  --color-warning-foreground: #FFFFFF;
 }
 
 /* Base styles */
@@ -43,11 +70,81 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  font-style: normal !important;
+  font-weight: 300;
 }
+
+/* Force no italics globally */
+*, *::before, *::after {
+  font-style: normal !important;
+  font-synthesis: none !important;
+}
+
+/* Heading font */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+/* Numbers and symbols font */
+.numbers,
+.numbers *,
+[data-font-numbers],
+.price, .currency, .amount, [class*="price"], [class*="amount"],
+.qty, .quantity, .count, .date, .time,
+input[type="number"],
+.font-mono {
+  font-family: var(--font-numbers) !important;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Symbols like @ $ */
+.symbol, .at-sign, .dollar-sign, [class*="symbol"], [class*="dollar"] {
+  font-family: var(--font-numbers);
+}
+
+/* Navigation specific weight */
+nav, 
+header,
+aside,
+[role="navigation"],
+.nav-link,
+[class*="nav-link"] {
+  font-weight: 300 !important;
+}
+
+
+
+
 
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
+}
+
+/* Responsive padding utilities */
+.section-padding {
+  @apply py-12 px-4 sm:py-16 md:py-20 lg:py-24;
+}
+
+.container-padding {
+  @apply px-4 sm:px-6 md:px-8 lg:px-12;
+}
+
+/* Bottom nav spacing for mobile */
+@media (max-width: 1023px) {
+  .pb-mobile-nav {
+    padding-bottom: 4rem;
+  }
+}
+
+/* Sidebar spacing for desktop */
+@media (min-width: 1024px) {
+  .pl-sidebar {
+    padding-left: 18rem;
+  }
+  .pl-sidebar-collapsed {
+    padding-left: 5rem;
+  }
 }
 
 /* Selection */

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import {
   X,
   Plus,
@@ -11,7 +12,8 @@ import {
   Flame,
   Heart,
   Zap,
-  Users
+  ChevronLeft,
+  ShoppingBag
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -55,6 +57,18 @@ export function ItemDetailModal({ item, isOpen, onClose }: ItemDetailModalProps)
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const items = useCartStore((state) => state.items);
 
+  // Reset state when modal opens with a new item
+  useEffect(() => {
+    if (isOpen) {
+      setQuantity(1);
+      setSelectedImage(0);
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => { document.body.style.overflow = 'auto'; };
+  }, [isOpen, item]);
+
   if (!item) return null;
 
   const cartItem = items.find(cartItem => cartItem.id === item.id);
@@ -66,31 +80,17 @@ export function ItemDetailModal({ item, isOpen, onClose }: ItemDetailModalProps)
         id: item.id,
         name: item.name,
         price: item.price,
-        image: item.image_url || '',
+        image: item.images?.[0] || item.image_url || '',
         category: item.categories?.name || "Uncategorized",
         description: item.description
       });
     }
-    setQuantity(1);
+    onClose(); // Close after adding
   };
 
-  const handleUpdateQuantity = (newQuantity: number) => {
-    if (newQuantity <= 0) {
-      // Remove from cart if quantity becomes 0
-      updateQuantity(item.id, 0);
-    } else {
-      updateQuantity(item.id, newQuantity);
-    }
-  };
-
-  // Use actual uploaded images, with fallbacks if needed
   const images = item.images && item.images.length > 0
     ? item.images
-    : [
-        `https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=600&h=400&fit=crop`,
-        `https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?q=80&w=600&h=400&fit=crop`,
-        `https://images.unsplash.com/photo-1551782450-17144efb5723?q=80&w=600&h=400&fit=crop`,
-      ];
+    : [item.image_url || `https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=600&h=400&fit=crop`].filter(Boolean) as string[];
 
   const getDietaryIcon = (tag: string) => {
     switch (tag.toLowerCase()) {
@@ -105,264 +105,217 @@ export function ItemDetailModal({ item, isOpen, onClose }: ItemDetailModalProps)
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={onClose}
-        >
+        <>
+          {/* Backdrop */}
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
+            onClick={onClose}
+          />
+
+          {/* Side Drawer Content */}
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed inset-y-0 right-0 w-full md:max-w-xl lg:max-w-2xl bg-white z-[101] shadow-2xl flex flex-col"
           >
-            <div className="flex flex-col lg:flex-row">
-              {/* Image Gallery */}
-              <div className="lg:w-1/2 relative">
-                <div className="aspect-square relative overflow-hidden bg-gray-100">
-                  <img
-                    src={images[selectedImage]}
-                    alt={item.name}
-                    className="w-full h-full object-cover"
-                  />
+            {/* Header / Image Section */}
+            <div className="relative h-[40vh] sm:h-[45vh] flex-shrink-0 bg-gray-100">
+              <div className="absolute inset-0">
+                <img
+                  src={images[selectedImage]}
+                  alt={item.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+              </div>
 
-                  {/* Close button */}
-                  <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 p-2 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white transition-colors"
-                  >
-                    <X className="w-5 h-5 text-gray-700" />
+              {/* Top Navigation */}
+              <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between z-10">
+                <button
+                  onClick={onClose}
+                  className="p-3 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white hover:text-gray-900 transition-all border border-white/20"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+                <div className="flex gap-2">
+                  <button className="p-3 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white hover:text-gray-900 transition-all border border-white/20">
+                    <Heart className="w-6 h-6" />
                   </button>
-
-                  {/* Image navigation dots */}
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                    {images.map((_, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setSelectedImage(index)}
-                        className={cn(
-                          "w-2 h-2 rounded-full transition-all",
-                          selectedImage === index ? "bg-white" : "bg-white/50"
-                        )}
-                      />
-                    ))}
-                  </div>
                 </div>
+              </div>
 
-                {/* Thumbnail gallery */}
-                <div className="flex gap-2 p-4 bg-gray-50">
-                  {images.map((image, index) => (
+              {/* Image Indicators */}
+              {images.length > 1 && (
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                  {images.map((_, i) => (
                     <button
-                      key={index}
-                      onClick={() => setSelectedImage(index)}
+                      key={i}
+                      onClick={() => setSelectedImage(i)}
                       className={cn(
-                        "w-16 h-16 rounded-lg overflow-hidden border-2 transition-all",
-                        selectedImage === index ? "border-red-500" : "border-gray-200"
+                        "h-1.5 rounded-full transition-all duration-300",
+                        selectedImage === i ? "bg-white w-8" : "bg-white/40 w-1.5"
                       )}
-                    >
-                      <img src={image} alt="" className="w-full h-full object-cover" />
-                    </button>
+                    />
                   ))}
                 </div>
-              </div>
+              )}
 
-              {/* Content */}
-              <div className="lg:w-1/2 p-8 overflow-y-auto max-h-[90vh] lg:max-h-none">
-                {/* Header */}
-                <div className="mb-6">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-sm font-bold uppercase tracking-wider text-red-600">
-                      {item.categories?.name || "Uncategorized"}
-                    </span>
-                    {item.dietary_tags?.map((tag) => (
-                      <span
-                        key={tag}
-                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full"
-                      >
-                        {getDietaryIcon(tag)}
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{item.name}</h1>
-
-                  <div className="flex items-center gap-4 mb-4">
-                    <span className="text-3xl font-bold text-red-600">${item.price.toFixed(2)}</span>
-                    {item.calories && (
-                      <span className="text-sm text-gray-600">{item.calories} calories</span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Description */}
-                <div className="mb-6">
-                  <h3 className="font-semibold text-gray-900 mb-2">Description</h3>
-                  <p className="text-gray-600 leading-relaxed">{item.description}</p>
-                </div>
-
-                {/* Cooking Info */}
-                {(item.preparation_time || item.cooking_method) && (
-                  <div className="mb-6">
-                    <h3 className="font-semibold text-gray-900 mb-3">Cooking Information</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {item.preparation_time && (
-                        <div className="flex items-center gap-2 p-3 bg-orange-50 rounded-lg">
-                          <Clock className="w-5 h-5 text-orange-600" />
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">Prep Time</p>
-                            <p className="text-sm text-gray-600">{item.preparation_time} minutes</p>
-                          </div>
-                        </div>
-                      )}
-                      {item.cooking_method && (
-                        <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
-                          <ChefHat className="w-5 h-5 text-blue-600" />
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">Cooking Method</p>
-                            <p className="text-sm text-gray-600">{item.cooking_method}</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Ingredients */}
-                {item.ingredients && item.ingredients.length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="font-semibold text-gray-900 mb-3">Ingredients</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {item.ingredients.map((ingredient, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
-                        >
-                          {ingredient}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Nutritional Info */}
-                {item.nutritional_info && (
-                  <div className="mb-6">
-                    <h3 className="font-semibold text-gray-900 mb-3">Nutritional Information</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                      {item.nutritional_info.protein && (
-                        <div className="text-center p-3 bg-green-50 rounded-lg">
-                          <p className="text-2xl font-bold text-green-600">{item.nutritional_info.protein}g</p>
-                          <p className="text-xs text-gray-600">Protein</p>
-                        </div>
-                      )}
-                      {item.nutritional_info.carbs && (
-                        <div className="text-center p-3 bg-blue-50 rounded-lg">
-                          <p className="text-2xl font-bold text-blue-600">{item.nutritional_info.carbs}g</p>
-                          <p className="text-xs text-gray-600">Carbs</p>
-                        </div>
-                      )}
-                      {item.nutritional_info.fat && (
-                        <div className="text-center p-3 bg-orange-50 rounded-lg">
-                          <p className="text-2xl font-bold text-orange-600">{item.nutritional_info.fat}g</p>
-                          <p className="text-xs text-gray-600">Fat</p>
-                        </div>
-                      )}
-                      {item.nutritional_info.fiber && (
-                        <div className="text-center p-3 bg-purple-50 rounded-lg">
-                          <p className="text-2xl font-bold text-purple-600">{item.nutritional_info.fiber}g</p>
-                          <p className="text-xs text-gray-600">Fiber</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Allergens */}
-                {item.allergens && item.allergens.length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                      <AlertTriangle className="w-5 h-5 text-orange-500" />
-                      Allergen Information
-                    </h3>
-                    <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
-                      <p className="text-sm text-orange-800 mb-2">Contains:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {item.allergens.map((allergen, index) => (
-                          <span
-                            key={index}
-                            className="px-3 py-1 bg-orange-100 text-orange-700 text-sm rounded-full"
-                          >
-                            {allergen}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Add to Cart */}
-                <div className="border-t pt-6">
-                  {currentQuantity > 0 ? (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">In cart:</span>
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={() => handleUpdateQuantity(currentQuantity - 1)}
-                            className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-                          >
-                            <Minus className="w-4 h-4" />
-                          </button>
-                          <span className="font-semibold min-w-[2rem] text-center">{currentQuantity}</span>
-                          <button
-                            onClick={() => handleUpdateQuantity(currentQuantity + 1)}
-                            className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                      <div className="text-center text-sm text-gray-600">
-                        Total: ${(item.price * currentQuantity).toFixed(2)}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Quantity:</span>
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                            className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-                          >
-                            <Minus className="w-4 h-4" />
-                          </button>
-                          <span className="font-semibold min-w-[2rem] text-center">{quantity}</span>
-                          <button
-                            onClick={() => setQuantity(quantity + 1)}
-                            className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                      <button
-                        onClick={handleAddToCart}
-                        className="w-full py-4 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors"
-                      >
-                        Add to Cart - ${(item.price * quantity).toFixed(2)}
-                      </button>
-                    </div>
-                  )}
-                </div>
+              {/* Title Overlay */}
+              <div className="absolute bottom-0 left-0 right-0 p-8 pt-20">
+                 <span className="inline-block px-3 py-1 rounded-lg bg-red-600 text-white text-[10px] font-bold uppercase tracking-widest mb-3">
+                   {item.categories?.name || "Uncategorized"}
+                 </span>
+                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading text-white leading-tight">
+                   {item.name}
+                 </h1>
               </div>
             </div>
+
+            {/* Scrollable Content Area */}
+            <div className="flex-1 overflow-y-auto px-6 sm:px-8 py-8 custom-scrollbar">
+              {/* Features Quick Info */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
+                <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100">
+                   <div className="flex items-center gap-2 mb-1">
+                     <Clock className="w-4 h-4 text-orange-500" />
+                     <span className="text-[10px] font-bold uppercase text-gray-400">Time</span>
+                   </div>
+                   <p className="text-sm font-bold text-gray-900">{item.preparation_time || 15}m</p>
+                </div>
+                <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100">
+                   <div className="flex items-center gap-2 mb-1">
+                     <Zap className="w-4 h-4 text-yellow-500" />
+                     <span className="text-[10px] font-bold uppercase text-gray-400">Calories</span>
+                   </div>
+                   <p className="text-sm font-bold text-gray-900">{item.calories || '---'} kcal</p>
+                </div>
+                <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 col-span-2 sm:col-span-1">
+                   <div className="flex items-center gap-2 mb-1">
+                     <ChefHat className="w-4 h-4 text-blue-500" />
+                     <span className="text-[10px] font-bold uppercase text-gray-400">Method</span>
+                   </div>
+                   <p className="text-sm font-bold text-gray-900 truncate">{item.cooking_method || 'Grill'}</p>
+                </div>
+              </div>
+
+              {/* Description Section */}
+              <div className="mb-10">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4">About this dish</h3>
+                <p className="text-lg text-gray-600 leading-relaxed font-light">
+                  {item.description}
+                </p>
+              </div>
+
+              {/* Dietary Tags Section */}
+              {item.dietary_tags && item.dietary_tags.length > 0 && (
+                 <div className="mb-10">
+                   <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4">Dietary Information</h3>
+                   <div className="flex flex-wrap gap-2">
+                     {item.dietary_tags.map(tag => (
+                       <span key={tag} className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-xl text-xs font-bold border border-green-100">
+                         {getDietaryIcon(tag)}
+                         {tag}
+                       </span>
+                     ))}
+                   </div>
+                 </div>
+              )}
+
+              {/* Ingredients Section */}
+              {item.ingredients && item.ingredients.length > 0 && (
+                <div className="mb-10">
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4">Key Ingredients</h3>
+                  <div className="grid grid-cols-2 gap-y-3 gap-x-4">
+                    {item.ingredients.map((ingredient, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-600" />
+                        <span className="text-gray-700 font-medium">{ingredient}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Nutritional Section */}
+              {item.nutritional_info && (
+                <div className="mb-10">
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4">Nutrition per serving</h3>
+                  <div className="grid grid-cols-4 gap-4 p-6 bg-gray-900 rounded-[2rem] text-white">
+                    <div className="text-center">
+                      <p className="text-xl font-bold text-red-500">{item.nutritional_info.protein || 0}g</p>
+                      <p className="text-[10px] uppercase text-gray-400 font-bold">Protein</p>
+                    </div>
+                    <div className="text-center border-l border-white/10">
+                      <p className="text-xl font-bold text-blue-400">{item.nutritional_info.carbs || 0}g</p>
+                      <p className="text-[10px] uppercase text-gray-400 font-bold">Carbs</p>
+                    </div>
+                    <div className="text-center border-l border-white/10">
+                      <p className="text-xl font-bold text-orange-400">{item.nutritional_info.fat || 0}g</p>
+                      <p className="text-[10px] uppercase text-gray-400 font-bold">Fat</p>
+                    </div>
+                    <div className="text-center border-l border-white/10">
+                      <p className="text-xl font-bold text-purple-400">{item.nutritional_info.fiber || 0}g</p>
+                      <p className="text-[10px] uppercase text-gray-400 font-bold">Fiber</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Allergen Section */}
+              {item.allergens && item.allergens.length > 0 && (
+                <div className="mb-10 p-6 rounded-[2rem] bg-orange-50 border border-orange-100">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-full bg-orange-200 flex items-center justify-center">
+                      <AlertTriangle className="w-5 h-5 text-orange-700" />
+                    </div>
+                    <h3 className="font-bold text-orange-900">Allergen Warning</h3>
+                  </div>
+                  <p className="text-sm text-orange-800/80 leading-relaxed">
+                    This dish contains: <span className="font-bold">{item.allergens.join(', ')}</span>. Please inform your server of any allergies.
+                  </p>
+                </div>
+              )}
+              
+              {/* Extra Spacing for bottom bar */}
+              <div className="h-24" />
+            </div>
+
+            {/* Bottom Sticky Action Bar */}
+            <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 bg-white/80 backdrop-blur-xl border-t border-gray-100 flex items-center gap-4 sm:gap-6 z-20">
+               <div className="flex items-center gap-4 bg-gray-100 p-1 rounded-2xl">
+                 <button
+                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                   className="w-12 h-12 flex items-center justify-center rounded-xl bg-white shadow-sm hover:text-red-600 transition-all active:scale-90"
+                 >
+                   <Minus className="w-5 h-5" />
+                 </button>
+                 <span className="font-bold text-xl min-w-[2rem] text-center">{quantity}</span>
+                 <button
+                   onClick={() => setQuantity(quantity + 1)}
+                   className="w-12 h-12 flex items-center justify-center rounded-xl bg-white shadow-sm hover:text-red-600 transition-all active:scale-90"
+                 >
+                   <Plus className="w-5 h-5" />
+                 </button>
+               </div>
+               
+               <button
+                 onClick={handleAddToCart}
+                 className="flex-1 h-14 bg-red-600 text-white font-bold rounded-2xl flex items-center justify-between px-6 hover:bg-red-700 transition-all shadow-xl shadow-red-500/20 active:scale-95"
+               >
+                 <div className="flex items-center gap-2">
+                   <ShoppingBag className="w-5 h-5" />
+                   <span>Add to Order</span>
+                 </div>
+                 <span className="text-xl font-extrabold">${(item.price * quantity).toFixed(2)}</span>
+               </button>
+            </div>
           </motion.div>
-        </motion.div>
+        </>
       )}
     </AnimatePresence>
   );

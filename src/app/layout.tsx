@@ -1,18 +1,7 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-});
-
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-  weight: ["600", "700", "800"],
-});
+import { Navbar } from "@/components/layout/Navbar";
+import { RouteAwareNav } from "@/components/layout/RouteAwareNav";
 
 export const metadata: Metadata = {
   title: "Spice Grill - Premium Wood-Fired Dining | USA",
@@ -49,9 +38,20 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${playfair.variable} h-full antialiased`}
+      className="h-full antialiased"
     >
-      <body className="min-h-full flex flex-col bg-white text-gray-900">{children}</body>
+      <head>
+        <link href="https://fonts.cdnfonts.com/css/justice-love" rel="stylesheet" />
+        <link href="https://fonts.cdnfonts.com/css/codec-warm-trial" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+      </head>
+      <body className="min-h-full flex flex-col bg-white text-gray-900">
+        <Navbar />
+        <RouteAwareNav />
+        <main className="flex-grow">
+          {children}
+        </main>
+      </body>
     </html>
   );
 }

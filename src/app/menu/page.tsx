@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Navbar } from "@/components/layout/Navbar";
 import { useCartStore } from "@/store/useCartStore";
-import { MenuCarousel } from "@/components/menu/MenuCarousel";
+import { MenuGrid } from "@/components/menu/MenuGrid";
 import { ItemDetailModal } from "@/components/menu/ItemDetailModal";
 import { Plus, Search, ShoppingBag, SlidersHorizontal, X, Phone, Filter, Leaf, Wheat, Flame } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -214,16 +213,15 @@ export default function MenuPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
-      <Navbar />
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white overflow-x-hidden">
 
-      <main className="container px-4 pt-24 pb-8 mx-auto max-w-7xl">
+      <main className="container mx-auto pt-20 pb-24 px-4 max-w-7xl pb-mobile-nav lg:pl-sidebar">
         {/* Header */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-8 px-2">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-5xl md:text-6xl font-extrabold mb-4 text-gray-900"
+            className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-3 text-gray-900"
           >
             Our Menu
           </motion.h1>
@@ -231,10 +229,9 @@ export default function MenuPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-gray-600 text-lg max-w-2xl mx-auto"
+            className="text-gray-600 text-sm sm:text-base max-w-xl mx-auto px-4"
           >
             Discover our handcrafted dishes made with premium local ingredients.
-            Each item is prepared with care using traditional techniques and modern flair.
           </motion.p>
         </div>
 
@@ -243,30 +240,30 @@ export default function MenuPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8"
+          className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 mb-6"
         >
-          <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
+          <div className="flex flex-col gap-4">
             {/* Search */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search dishes..."
-                className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all text-gray-900 placeholder:text-gray-400"
+                className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all text-sm sm:text-base text-gray-900 placeholder:text-gray-400"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
 
-            {/* Category Filter */}
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="text-sm font-medium text-gray-700">Category:</span>
+            {/* Category Filter - Horizontal scroll on mobile */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              <span className="text-xs sm:text-sm font-medium text-gray-700 flex-shrink-0 hidden sm:inline">Category:</span>
               {categoryList.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
                   className={cn(
-                    "px-4 py-2 rounded-full text-sm font-medium transition-all border",
+                    "px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all border flex-shrink-0",
                     activeCategory === cat
                       ? "bg-red-600 text-white border-red-600 shadow-md"
                       : "bg-white text-gray-700 hover:border-red-600 hover:text-red-600 border-gray-200"
@@ -277,9 +274,9 @@ export default function MenuPage() {
               ))}
             </div>
 
-            {/* Dietary Filters */}
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-gray-700">Dietary:</span>
+            {/* Dietary Filters - Horizontal scroll on mobile */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              <span className="text-xs sm:text-sm font-medium text-gray-700 flex-shrink-0">Dietary:</span>
               {dietaryOptions.map((option) => {
                 const Icon = option.icon;
                 const isActive = dietaryFilters.includes(option.id);
@@ -288,14 +285,14 @@ export default function MenuPage() {
                     key={option.id}
                     onClick={() => toggleDietaryFilter(option.id)}
                     className={cn(
-                      "inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium transition-all border",
+                      "inline-flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-2 rounded-full text-xs font-medium transition-all border flex-shrink-0",
                       isActive
                         ? "bg-green-600 text-white border-green-600"
                         : "bg-white text-gray-700 hover:border-green-600 hover:text-green-600 border-gray-200"
                     )}
                   >
-                    <Icon className="w-4 h-4" />
-                    {option.label}
+                    <Icon className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">{option.label}</span>
                   </button>
                 );
               })}
@@ -304,18 +301,18 @@ export default function MenuPage() {
 
           {/* Active Filters Display */}
           {(dietaryFilters.length > 0 || searchQuery) && (
-            <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-gray-100">
-              <span className="text-sm text-gray-600">Active filters:</span>
+            <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+              <span className="text-xs text-gray-600">Active filters:</span>
               {searchQuery && (
-                <span className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
-                  Search: &quot;{searchQuery}&quot;
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full">
+                  &quot;{searchQuery}&quot;
                   <button onClick={() => setSearchQuery("")} className="hover:bg-blue-200 rounded-full p-0.5">
                     <X className="w-3 h-3" />
                   </button>
                 </span>
               )}
               {dietaryFilters.map((filter) => (
-                <span key={filter} className="inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">
+                <span key={filter} className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">
                   {dietaryOptions.find(opt => opt.id === filter)?.label}
                   <button onClick={() => toggleDietaryFilter(filter)} className="hover:bg-green-200 rounded-full p-0.5">
                     <X className="w-3 h-3" />
@@ -328,7 +325,7 @@ export default function MenuPage() {
                   setDietaryFilters([]);
                   setActiveCategory("All");
                 }}
-                className="text-sm text-red-600 hover:text-red-700 font-medium"
+                className="text-xs text-red-600 hover:text-red-700 font-medium"
               >
                 Clear all
               </button>
@@ -358,8 +355,8 @@ export default function MenuPage() {
                 </p>
               </div>
 
-              {/* Carousel */}
-              <MenuCarousel
+              {/* Grid */}
+              <MenuGrid
                 items={filteredItems}
                 onItemSelect={handleItemSelect}
                 selectedItemId={selectedItem?.id}
@@ -440,20 +437,20 @@ function CartStatusButton() {
     <motion.div
       initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50"
+      className="fixed bottom-20 sm:bottom-8 left-1/2 -translate-x-1/2 z-50"
     >
       <a
         href="/cart"
-        className="flex items-center gap-6 px-8 py-4 rounded-2xl bg-red-600 text-white shadow-xl shadow-red-500/30 hover:bg-red-700 transition-all"
+        className="flex items-center gap-4 sm:gap-6 px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-red-600 text-white shadow-xl shadow-red-500/30 hover:bg-red-700 transition-all"
       >
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center font-bold">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/20 flex items-center justify-center font-bold text-sm">
             {count}
           </div>
-          <span className="font-bold">View Cart</span>
+          <span className="font-bold text-sm sm:text-base">Cart</span>
         </div>
-        <div className="w-[1px] h-6 bg-white/20" />
-        <span className="font-extrabold text-xl">${total.toFixed(2)}</span>
+        <div className="w-[1px] h-5 sm:h-6 bg-white/20" />
+        <span className="font-extrabold text-base sm:text-xl">${total.toFixed(2)}</span>
       </a>
     </motion.div>
   );

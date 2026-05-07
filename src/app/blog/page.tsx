@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Navbar } from "@/components/layout/Navbar";
 import { ArrowRight, Clock, Tag } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -87,7 +86,6 @@ export default function BlogPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
 
       <main className="container px-4 pt-24 pb-20 mx-auto">
         <div className="max-w-3xl mb-16">

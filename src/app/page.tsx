@@ -16,6 +16,8 @@ import {
   Award,
 } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { useCartStore } from "@/store/useCartStore";
 
 import { Navbar } from "@/components/layout/Navbar";
 
@@ -42,6 +44,7 @@ export default function HomePage() {
   const { scrollY } = useScroll();
   const heroOpacity = useTransform(scrollY, [0, 600], [1, 0]);
   const heroScale = useTransform(scrollY, [0, 600], [1, 0.95]);
+  const addItem = useCartStore((state) => state.addItem);
 
   const categories = [
     {
@@ -76,24 +79,39 @@ export default function HomePage() {
 
   const featuredDishes = [
     {
+      id: "signature-ribeye",
       name: "Spice Grill Signature Ribeye",
       description: "Prime 16oz ribeye with our house spice blend, char-grilled to your liking. Served with garlic mashed potatoes and seasonal vegetables.",
       price: 42,
       image: "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=600&h=400&fit=crop",
+      category: "Signature Grills",
       featured: true,
     },
     {
+      id: "smoked-brisket",
       name: "Smoked Brisket Platter",
       description: "12-hour smoked brisket with pickled vegetables and garlic mash. Our signature dry rub creates a perfect bark.",
       price: 34,
       image: "https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?q=80&w=600&h=400&fit=crop",
+      category: "Smokehouse",
       featured: false,
     },
     {
+      id: "spice-rubbed-chicken",
       name: "Spice-Rubbed Chicken",
       description: "Half chicken marinated in our secret blend, grilled over oak coals. Juicy, flavorful, and perfectly charred.",
       price: 24,
       image: "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?q=80&w=600&h=400&fit=crop",
+      category: "Signature Grills",
+      featured: false,
+    },
+    {
+      id: "cedar-plank-salmon",
+      name: "Cedar Plank Salmon",
+      description: "Atlantic salmon roasted on a cedar plank with a maple-bourbon glaze. Infused with deep woody aromas and smoky sweetness.",
+      price: 32,
+      image: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?q=80&w=600&h=400&fit=crop",
+      category: "Signature Grills",
       featured: false,
     },
   ];
@@ -155,7 +173,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.15 }}
-              className="font-playfair text-6xl md:text-8xl lg:text-9xl font-bold leading-[0.95] mb-8 tracking-tight text-gray-900"
+              className="font-heading text-6xl md:text-8xl lg:text-9xl font-bold leading-[0.95] mb-8 tracking-tight text-gray-900"
             >
               <span className="text-gray-900">SPICE</span>
               <br />
@@ -293,7 +311,7 @@ export default function HomePage() {
 
               <motion.h2
                 variants={fadeInUp}
-                className="font-playfair text-4xl md:text-5xl lg:text-6xl font-bold mb-8 leading-tight text-gray-900"
+                className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold mb-8 leading-tight text-gray-900"
               >
                 Where Fire Meets <span className="text-red-600">Artistry</span>
               </motion.h2>
@@ -355,7 +373,7 @@ export default function HomePage() {
             </motion.span>
             <motion.h2
               variants={fadeInUp}
-              className="font-playfair text-4xl md:text-5xl lg:text-6xl font-bold mt-4 mb-6 text-gray-900"
+              className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold mt-4 mb-6 text-gray-900"
             >
               Our Culinary <span className="text-red-600">Categories</span>
             </motion.h2>
@@ -393,7 +411,7 @@ export default function HomePage() {
                   <span className="text-red-200 text-sm font-semibold uppercase tracking-wider">
                     {category.itemCount} items
                   </span>
-                  <h3 className="font-playfair text-2xl font-bold text-white mt-1 mb-2">
+                  <h3 className="font-heading text-2xl font-bold text-white mt-1 mb-2">
                     {category.name}
                   </h3>
                   <p className="text-white/80 text-sm">
@@ -440,7 +458,7 @@ export default function HomePage() {
             </motion.span>
             <motion.h2
               variants={fadeInUp}
-              className="font-playfair text-4xl md:text-5xl lg:text-6xl font-bold mt-4 mb-6 text-gray-900"
+              className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold mt-4 mb-6 text-gray-900"
             >
               Featured <span className="text-red-600">Dishes</span>
             </motion.h2>
@@ -458,51 +476,74 @@ export default function HomePage() {
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
             variants={staggerContainer}
-            className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[250px] md:auto-rows-[300px]"
           >
             {featuredDishes.map((dish, i) => (
               <motion.div
                 key={i}
                 variants={fadeInUp}
-                className={`group relative bg-white rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-2xl border border-gray-200 ${
-                  dish.featured ? "lg:col-span-2 lg:row-span-2" : ""
-                }`}
+                className={cn(
+                  "group relative bg-white rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-2xl border border-gray-200",
+                  i === 0 ? "md:col-span-2 md:row-span-2" : "",
+                  i === 1 ? "md:col-span-1 md:row-span-1" : "",
+                  i === 2 ? "md:col-span-1 md:row-span-1" : "",
+                  i === 3 ? "md:col-span-3 md:row-span-1" : ""
+                )}
               >
                 {/* Image */}
-                <div
-                  className={`relative overflow-hidden ${
-                    dish.featured ? "aspect-[16/10]" : "aspect-square"
-                  }`}
-                >
+                <div className="absolute inset-0 w-full h-full">
                   <img
                     src={dish.image}
                     alt={dish.name}
                     className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60" />
-                  {dish.featured && (
-                    <div className="absolute top-4 left-4 bg-red-600 text-white px-4 py-1 rounded-full text-sm font-bold">
-                      Chef &apos;s Special
-                    </div>
-                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80" />
                 </div>
 
                 {/* Content */}
-                <div className="p-6 -mt-16 relative">
-                  <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg">
-                    <div className="flex items-start justify-between gap-4 mb-3">
-                      <h3 className="font-playfair text-xl md:text-2xl font-bold text-gray-900 leading-tight">
-                        {dish.name}
-                      </h3>
-                      <span className="text-red-600 font-bold text-xl flex-shrink-0">
-                        ${dish.price}
+                <div className="absolute inset-0 p-8 flex flex-col justify-end">
+                  <div className="relative z-10">
+                    {dish.featured && (
+                      <span className="inline-block px-3 py-1 rounded-full bg-red-600 text-white text-[10px] font-bold uppercase tracking-wider mb-3">
+                        Chef's Selection
                       </span>
+                    )}
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className={cn(
+                          "font-heading text-white leading-tight mb-2",
+                          i === 0 ? "text-3xl md:text-5xl" : "text-2xl"
+                        )}>
+                          {dish.name}
+                        </h3>
+                        <p className={cn(
+                          "text-white/80 line-clamp-2 max-w-md",
+                          i === 0 ? "text-lg" : "text-sm"
+                        )}>
+                          {dish.description}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-red-400 font-bold text-2xl">
+                          ${dish.price}
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-gray-600 leading-relaxed">
-                      {dish.description}
-                    </p>
-
-                    <button className="mt-4 w-full py-3 rounded-xl bg-red-600 text-white font-medium hover:bg-red-700 transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:shadow-lg">
+                    
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addItem({
+                          id: dish.id,
+                          name: dish.name,
+                          price: dish.price,
+                          image: dish.image,
+                          category: dish.category,
+                          description: dish.description
+                        });
+                      }}
+                      className="mt-6 px-6 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0"
+                    >
                       Add to Order
                     </button>
                   </div>
@@ -510,6 +551,7 @@ export default function HomePage() {
               </motion.div>
             ))}
           </motion.div>
+
         </div>
       </section>
 
@@ -526,7 +568,7 @@ export default function HomePage() {
             <span className="text-red-600 font-semibold tracking-wider uppercase text-sm">
               Testimonials
             </span>
-            <h2 className="font-playfair text-4xl md:text-5xl font-bold mt-4 mb-6 text-gray-900">
+            <h2 className="font-heading text-4xl md:text-5xl font-bold mt-4 mb-6 text-gray-900">
               What Our Guests <span className="text-red-600">Say</span>
             </h2>
           </motion.div>
@@ -597,7 +639,7 @@ export default function HomePage() {
             <span className="text-red-600 font-semibold tracking-wider uppercase text-sm">
               Join Us
             </span>
-            <h2 className="font-playfair text-4xl md:text-5xl lg:text-6xl font-bold mt-4 mb-6 text-gray-900">
+            <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold mt-4 mb-6 text-gray-900">
               Reserve Your <span className="text-red-600">Table</span>
             </h2>
             <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
@@ -645,7 +687,7 @@ export default function HomePage() {
               </motion.span>
               <motion.h2
                 variants={fadeInUp}
-                className="font-playfair text-4xl md:text-5xl font-bold mt-4 mb-8 text-gray-900"
+                className="font-heading text-4xl md:text-5xl font-bold mt-4 mb-8 text-gray-900"
               >
                 Visit <span className="text-red-600">Us</span>
               </motion.h2>
@@ -700,7 +742,7 @@ export default function HomePage() {
               variants={fadeInUp}
               className="bg-white rounded-3xl p-10 border border-gray-200 shadow-xl"
             >
-              <h3 className="font-playfair text-3xl font-bold mb-8 text-gray-900">
+              <h3 className="font-heading text-3xl font-bold mb-8 text-gray-900">
                 Hours of <span className="text-red-600">Operation</span>
               </h3>
 
@@ -740,7 +782,7 @@ export default function HomePage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mb-12">
             {/* Brand */}
             <div className="col-span-2 md:col-span-1">
-              <h3 className="font-playfair text-2xl font-bold mb-4 text-gray-900">
+              <h3 className="font-heading text-2xl font-bold mb-4 text-gray-900">
                 <span className="text-gray-900">SPICE</span>
                 <span className="text-red-600">GRILL</span>
               </h3>
