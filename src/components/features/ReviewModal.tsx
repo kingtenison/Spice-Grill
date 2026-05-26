@@ -52,7 +52,7 @@ export function ReviewModal({ isOpen, onClose, orderId }: ReviewModalProps) {
                   <CheckCircle2 className="w-10 h-10 text-green-600" />
                 </div>
                 <h2 className="text-3xl font-black mb-4 text-gray-900">Thank You!</h2>
-                <p className="text-gray-600 mb-8">Your feedback helps us improve Spice Grill for everyone.</p>
+                <p className="text-gray-600 mb-8">Your feedback helps us improve Spice Grille for everyone.</p>
                 <button 
                   onClick={onClose}
                   className="w-full py-4 rounded-2xl bg-red-600 text-white font-extrabold text-lg"

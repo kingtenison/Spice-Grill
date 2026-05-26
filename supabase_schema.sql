@@ -186,3 +186,145 @@ $$ language plpgsql security definer;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- 6. LOYALTY POINTS POLICIES (add after table creation)
+-- Drop old policies if they exist (safe re-run)
+drop policy if exists "Users can view own loyalty points." on public.loyalty_points;
+drop policy if exists "Users can update own loyalty points." on public.loyalty_points;
+
+-- Users can view their own loyalty points
+create policy "Users can view own loyalty points." on public.loyalty_points 
+  for select using (auth.uid() = user_id);
+
+-- Users can update their own loyalty points (for redemption)
+create policy "Users can update own loyalty points." on public.loyalty_points 
+  for update using (auth.uid() = user_id);
+
+-- 7. LOYALTY COUPONS TABLE (for redeemed point rewards)
+create table if not exists public.loyalty_coupons (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references public.profiles on delete cascade not null,
+  code text unique not null,
+  discount_type text not null check (discount_type in ('percentage', 'fixed')),
+  discount_value numeric not null,
+  description text,
+  points_cost int not null,
+  is_used boolean default false,
+  expires_at timestamp with time zone default (now() + interval '90 days'),
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.loyalty_coupons enable row level security;
+
+create policy "Users can view own loyalty coupons." on public.loyalty_coupons 
+  for select using (auth.uid() = user_id);
+
+create policy "Users can update own loyalty coupons (mark used)." on public.loyalty_coupons 
+  for update using (auth.uid() = user_id);
+
+-- Admins can view all for management
+create policy "Admins can manage loyalty coupons." on public.loyalty_coupons 
+  for all using (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  );
+
+-- 8. HELPER FUNCTION: Safely award loyalty points (callable from API)
+create or replace function public.award_loyalty_points(p_user_id uuid, p_points int)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  new_points int;
+  new_tier text;
+begin
+  if p_points <= 0 then
+    return;
+  end if;
+
+  insert into public.loyalty_points (user_id, points, tier)
+  values (p_user_id, p_points, 
+    case 
+      when p_points >= 2001 then 'Gold'
+      when p_points >= 501 then 'Silver'
+      else 'Bronze'
+    end
+  )
+  on conflict (user_id) do update
+  set 
+    points = public.loyalty_points.points + p_points,
+    updated_at = now();
+
+  -- Recalculate tier
+  select points into new_points from public.loyalty_points where user_id = p_user_id;
+  
+  new_tier := case 
+    when new_points >= 2001 then 'Gold'
+    when new_points >= 501 then 'Silver'
+    else 'Bronze'
+  end;
+
+  update public.loyalty_points 
+  set tier = new_tier, updated_at = now()
+  where user_id = p_user_id;
+end;
+$$;
+
+-- 9. HELPER FUNCTION: Redeem loyalty points for a coupon
+create or replace function public.redeem_loyalty_points(
+  p_user_id uuid, 
+  p_points_cost int,
+  p_discount_type text,
+  p_discount_value numeric,
+  p_description text
+)
+returns table (
+  coupon_code text,
+  success boolean,
+  message text
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_points int;
+  new_code text;
+begin
+  -- Get current points with lock
+  select points into current_points 
+  from public.loyalty_points 
+  where user_id = p_user_id 
+  for update;
+
+  if current_points is null or current_points < p_points_cost then
+    return query select ''::text, false, 'Insufficient points'::text;
+    return;
+  end if;
+
+  -- Generate unique code
+  new_code := 'REWARD-' || upper(substring(md5(random()::text) from 1 for 8));
+
+  -- Deduct points
+  update public.loyalty_points 
+  set points = points - p_points_cost,
+      updated_at = now()
+  where user_id = p_user_id;
+
+  -- Recalculate tier after deduction
+  update public.loyalty_points
+  set tier = case 
+        when (points) >= 2001 then 'Gold'
+        when (points) >= 501 then 'Silver'
+        else 'Bronze'
+      end
+  where user_id = p_user_id;
+
+  -- Create coupon
+  insert into public.loyalty_coupons (user_id, code, discount_type, discount_value, description, points_cost)
+  values (p_user_id, new_code, p_discount_type, p_discount_value, p_description, p_points_cost);
+
+  return query select new_code, true, 'Reward redeemed successfully'::text;
+end;
+$$;

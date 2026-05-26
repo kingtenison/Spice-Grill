@@ -42,7 +42,7 @@ export async function updateSession(request: NextRequest) {
   return supabaseResponse
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   return await updateSession(request)
 }
 

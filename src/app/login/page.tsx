@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { signInWithPassword, signInWithGoogle } from "@/app/actions/auth";
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -24,9 +25,29 @@ export default function LoginPage() {
       setMessage("Error: " + error.message);
     } else if (data?.user) {
       setMessage("Success! Redirecting...");
-      setTimeout(() => {
-        window.location.href = '/menu';
-      }, 1000);
+
+      // Role-based redirect: send admins/employees straight to their panels
+      setTimeout(async () => {
+        try {
+          const supabase = createClient();
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", data.user!.id)
+            .single();
+
+          const role = profile?.role;
+          if (role === "admin") {
+            window.location.href = "/admin";
+          } else if (role === "employee") {
+            window.location.href = "/employee";
+          } else {
+            window.location.href = "/menu";
+          }
+        } catch {
+          window.location.href = "/menu";
+        }
+      }, 700);
     }
     setIsLoading(false);
   };

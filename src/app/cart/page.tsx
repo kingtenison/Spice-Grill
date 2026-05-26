@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useCartStore } from "@/store/useCartStore";
+import { getMenuItemImage } from "@/lib/utils";
 import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, Tag, Percent } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -78,7 +79,7 @@ export default function CartPage() {
                 >
                   <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100">
                     <img
-                      src={item.image_url || item.image}
+                      src={getMenuItemImage(item)}
                       alt={item.name}
                       className="w-full h-full object-cover"
                     />
@@ -226,7 +227,7 @@ export default function CartPage() {
                 </Link>
 
                 <p className="mt-6 text-center text-sm text-gray-500 italic">
-                  Secure checkout • No hidden fees • Direct from Spice Grill
+                  Secure checkout • No hidden fees • Direct from Spice Grille
                 </p>
               </div>
             </div>

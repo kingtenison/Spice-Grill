@@ -147,7 +147,7 @@ export default function BlogPostPage() {
               <User className="w-6 h-6 text-gray-500" />
             </div>
             <div>
-              <p className="font-bold text-gray-900">Spice Grill Team</p>
+              <p className="font-bold text-gray-900">Spice Grille Team</p>
               <p className="text-sm text-gray-500">{post.created_at ? formatDate(post.created_at) : ""}</p>
             </div>
           </div>
@@ -199,7 +199,7 @@ export default function BlogPostPage() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-bold text-gray-900 mb-2">Share this article</h3>
-              <p className="text-gray-600 text-sm">Spread the word about Spice Grill.</p>
+              <p className="text-gray-600 text-sm">Spread the word about Spice Grille.</p>
             </div>
             <div className="flex gap-3">
               <button className="px-6 py-3 rounded-xl bg-gray-100 hover:bg-red-600 hover:text-white transition-colors font-medium">

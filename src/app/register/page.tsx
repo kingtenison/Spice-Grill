@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { signUpWithPassword, signInWithGoogle } from "@/app/actions/auth";
+import { createClient } from "@/lib/supabase/client";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -35,9 +36,29 @@ export default function RegisterPage() {
       } else if (data?.user) {
         if (data.session) {
           setMessage("Account created! Redirecting...");
-          setTimeout(() => {
-            window.location.href = '/menu';
-          }, 1000);
+
+          // New users are customers, but check role just in case (future-proof)
+          setTimeout(async () => {
+            try {
+              const supabase = createClient();
+              const { data: profile } = await supabase
+                .from("profiles")
+                .select("role")
+                .eq("id", data.user!.id)
+                .single();
+
+              const role = profile?.role;
+              if (role === "admin") {
+                window.location.href = "/admin";
+              } else if (role === "employee") {
+                window.location.href = "/employee";
+              } else {
+                window.location.href = "/menu";
+              }
+            } catch {
+              window.location.href = "/menu";
+            }
+          }, 700);
         } else {
           setMessage("Success! Please check your email to verify your account.");
           setFormData({ name: "", email: "", phone: "", password: "" });
@@ -66,7 +87,7 @@ export default function RegisterPage() {
                 <User className="w-10 h-10 text-red-600" />
               </div>
               <h1 className="text-3xl font-bold mb-3 text-gray-900">Create Account</h1>
-              <p className="text-gray-600">Join Spice Grill and start earning delicious rewards.</p>
+              <p className="text-gray-600">Join Spice Grille and start earning delicious rewards.</p>
               {message && (
                 <div className={cn(
                   "mt-4 p-3 rounded-xl text-sm font-bold",

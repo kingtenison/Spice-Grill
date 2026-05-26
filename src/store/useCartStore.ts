@@ -214,38 +214,34 @@ export const useCartStore = create<CartState>()(
       },
 
       validateCoupon: async (code: string) => {
-        // Simulate API call to validate coupon
-        const validCoupons: Record<string, Coupon> = {
-          'WELCOME10': {
-            code: 'WELCOME10',
-            discountType: 'percentage',
-            discountValue: 10,
-            description: '10% off your first order',
-            minimumAmount: 25
-          },
-          'SAVE5': {
-            code: 'SAVE5',
-            discountType: 'fixed',
-            discountValue: 5,
-            description: '$5 off orders over $30',
-            minimumAmount: 30
-          }
-        }
-
-        const coupon = validCoupons[code.toUpperCase()]
-        if (!coupon) return false
-
         const subtotal = get().getSubtotal()
-        if (coupon.minimumAmount && subtotal < coupon.minimumAmount) {
+
+        try {
+          const res = await fetch('/api/loyalty/validate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, subtotal }),
+          })
+
+          const data = await res.json()
+
+          if (data.valid && data.coupon) {
+            const validatedCoupon: Coupon = {
+              code: data.coupon.code,
+              discountType: data.coupon.discountType,
+              discountValue: data.coupon.discountValue,
+              description: data.coupon.description,
+              minimumAmount: data.coupon.minimumAmount,
+            }
+            set({ coupon: validatedCoupon })
+            return true
+          }
+
+          return false
+        } catch (err) {
+          console.error('Coupon validation failed:', err)
           return false
         }
-
-        if (coupon.validUntil && new Date() > coupon.validUntil) {
-          return false
-        }
-
-        set({ coupon })
-        return true
       },
     }),
     {

@@ -138,7 +138,7 @@ export default function AdminShell({ children, profile }: AdminShellProps) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
-        <h2 className="font-bold text-gray-900">Spice Grill OS</h2>
+        <h2 className="font-bold text-gray-900">Spice Grille OS</h2>
         <div className="flex items-center gap-2">
           <button className="relative p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-all">
             <Bell className="w-5 h-5" />
@@ -167,7 +167,7 @@ export default function AdminShell({ children, profile }: AdminShellProps) {
             >
               <div className="p-6 border-b">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-extrabold text-lg text-gray-900">Spice Grill OS</h2>
+                  <h2 className="font-extrabold text-lg text-gray-900">Spice Grille OS</h2>
                   <button
                     onClick={() => setShowMobileMenu(false)}
                     className="p-2 rounded-lg hover:bg-gray-100"

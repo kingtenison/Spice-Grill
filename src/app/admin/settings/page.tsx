@@ -15,10 +15,10 @@ interface SettingsState {
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<SettingsState>({
-    restaurantName: "Spice Grill",
+    restaurantName: "Spice Grille",
     address: "123 Main Street, Lagos",
     phone: "+234 800 000 0000",
-    email: "info@spicegrill.com",
+    email: "info@spicegrille.com",
     currency: "NGN",
     deliveryFee: 1500,
     taxRate: 7.5,

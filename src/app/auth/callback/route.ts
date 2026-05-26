@@ -13,6 +13,27 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
+      // Role-based redirect for staff
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+
+        const role = profile?.role;
+
+        if (role === "admin") {
+          return NextResponse.redirect(`${origin}/admin`);
+        }
+
+        if (role === "employee") {
+          return NextResponse.redirect(`${origin}/employee`);
+        }
+      }
+
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

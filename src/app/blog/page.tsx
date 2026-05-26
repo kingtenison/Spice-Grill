@@ -91,7 +91,7 @@ export default function BlogPage() {
         <div className="max-w-3xl mb-16">
           <h1 className="text-5xl font-extrabold mb-6 text-gray-900">Our Stories</h1>
           <p className="text-xl text-gray-600">
-            Explore the culinary journey, recipes, and news from the Spice Grill kitchen.
+            Explore the culinary journey, recipes, and news from the Spice Grille kitchen.
           </p>
         </div>
 
@@ -131,7 +131,7 @@ export default function BlogPage() {
                     {posts[0].title}
                   </h2>
                   <p className="text-lg text-gray-600 mb-8 line-clamp-3">
-                    {posts[0].excerpt || "Discover the latest from Spice Grill."}
+                    {posts[0].excerpt || "Discover the latest from Spice Grille."}
                   </p>
                   {posts[0].tags && posts[0].tags.length > 0 && (
                     <div className="flex items-center gap-2 mb-6">
@@ -151,7 +151,7 @@ export default function BlogPage() {
                         <span className="text-sm font-bold text-gray-600">S</span>
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-gray-900">Spice Grill Team</p>
+                        <p className="text-sm font-bold text-gray-900">Spice Grille Team</p>
                         <p className="text-xs text-gray-500">{formatDate(posts[0].created_at)}</p>
                       </div>
                     </div>
@@ -214,7 +214,7 @@ export default function BlogPage() {
         ) : (
           <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
             <h3 className="text-2xl font-bold mb-2 text-gray-900">No stories yet</h3>
-            <p className="text-gray-600">Check back soon for the latest from Spice Grill.</p>
+            <p className="text-gray-600">Check back soon for the latest from Spice Grille.</p>
           </div>
         )}
       </main>

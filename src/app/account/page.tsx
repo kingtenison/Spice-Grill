@@ -26,6 +26,7 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { getMenuItemImage } from "@/lib/utils";
 
 interface OrderItem {
   id: string;
@@ -412,13 +413,13 @@ export default function AccountPage() {
                             {order.order_items.slice(0, 3).map((item) => (
                               <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                                 <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center">
-                              {item.menu_items?.image_url ? (
-                                <img
-                                  src={item.menu_items.image_url}
-                                  alt={item.menu_items.name}
-                                  className="w-full h-full object-cover rounded-lg"
-                                />
-                              ) : (
+                               {item.menu_items ? (
+                                 <img
+                                   src={getMenuItemImage(item.menu_items)}
+                                   alt={item.menu_items.name}
+                                   className="w-full h-full object-cover rounded-lg"
+                                 />
+                               ) : (
                                 <Package className="w-6 h-6 text-gray-400" />
                               )}
                                 </div>
@@ -496,13 +497,13 @@ export default function AccountPage() {
                                       <div key={item.id} className="flex justify-between items-center">
                                         <div className="flex items-center gap-3">
                                           <div className="w-8 h-8 rounded bg-gray-200 flex items-center justify-center">
-                                          {item.menu_items?.image_url ? (
-                                            <img
-                                              src={item.menu_items.image_url}
-                                              alt={item.menu_items.name}
-                                              className="w-full h-full object-cover rounded"
-                                            />
-                                          ) : (
+                                           {item.menu_items ? (
+                                             <img
+                                               src={getMenuItemImage(item.menu_items)}
+                                               alt={item.menu_items.name}
+                                               className="w-full h-full object-cover rounded"
+                                             />
+                                           ) : (
                                             <Package className="w-4 h-4 text-gray-400" />
                                           )}
                                           </div>
@@ -663,38 +664,100 @@ export default function AccountPage() {
                     </div>
                   </Link>
 
-                  <Link
-                    href="/contact"
-                    className="flex items-center gap-3 w-full p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
-                  >
-                    <Phone className="w-5 h-5 text-green-600" />
-                    <div>
-                      <p className="font-medium text-green-900">Contact Support</p>
-                      <p className="text-sm text-green-700">Get help with your orders</p>
-                    </div>
-                  </Link>
-                </div>
-              </div>
+                   <Link
+                     href="/contact"
+                     className="flex items-center gap-3 w-full p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+                   >
+                     <Phone className="w-5 h-5 text-green-600" />
+                     <div>
+                       <p className="font-medium text-green-900">Contact Support</p>
+                       <p className="text-sm text-green-700">Get help with your orders</p>
+                     </div>
+                   </Link>
+                 </div>
+               </div>
+             </div>
+           </div>
+         )}
+
+         {/* Loyalty Tab - Live Summary */}
+         {activeTab === 'loyalty' && (
+           <LoyaltySummary />
+         )}
+       </main>
+     </div>
+   );
+ }
+
+// Live Loyalty Summary Component (used in account page)
+function LoyaltySummary() {
+  const [data, setData] = useState<{ points: number; tier: string; pointsToNext: number; nextTier: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch("/api/loyalty");
+        if (res.ok) {
+          const json = await res.json();
+          setData({
+            points: json.points,
+            tier: json.tier,
+            pointsToNext: json.pointsToNext,
+            nextTier: json.nextTier,
+          });
+        }
+      } catch {}
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  if (loading) {
+    return <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center text-gray-500">Loading rewards...</div>;
+  }
+
+  const points = data?.points ?? 0;
+  const tier = data?.tier ?? "Bronze";
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
+      <div className="flex items-start justify-between mb-8">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <Star className="w-8 h-8 text-yellow-500" />
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900">Rewards Program</h3>
+              <p className="text-sm text-gray-600">{tier} Member</p>
             </div>
           </div>
-        )}
+        </div>
+        <Link href="/loyalty" className="text-sm font-bold text-red-600 hover:text-red-700">View all rewards →</Link>
+      </div>
 
-        {/* Loyalty Tab Placeholder */}
-        {activeTab === 'loyalty' && (
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 text-center">
-            <Star className="w-16 h-16 text-yellow-400 mx-auto mb-6" />
-            <h3 className="text-2xl font-bold mb-2 text-gray-900">Rewards Program</h3>
-            <p className="text-gray-600 mb-6">Track your loyalty points and unlock exclusive rewards</p>
-            <Link
-              href="/loyalty"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-yellow-500 text-white font-semibold hover:bg-yellow-600 transition-colors shadow-lg shadow-yellow-500/20"
-            >
-              <Star className="w-5 h-5" />
-              View Rewards
-            </Link>
-          </div>
-        )}
-      </main>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="bg-gray-50 rounded-2xl p-6 text-center">
+          <div className="text-4xl font-black text-red-600">{points}</div>
+          <div className="text-sm font-bold text-gray-600 mt-1">Points Balance</div>
+        </div>
+        <div className="bg-gray-50 rounded-2xl p-6 text-center">
+          <div className="text-2xl font-black text-gray-900">{tier}</div>
+          <div className="text-sm font-bold text-gray-600 mt-1">Current Tier</div>
+        </div>
+        <div className="bg-gray-50 rounded-2xl p-6 text-center">
+          <div className="text-2xl font-black text-gray-900">{data?.pointsToNext ?? 0}</div>
+          <div className="text-sm font-bold text-gray-600 mt-1">Points to {data?.nextTier}</div>
+        </div>
+      </div>
+
+      <div className="mt-8 flex justify-center">
+        <Link
+          href="/loyalty"
+          className="inline-flex items-center gap-2 px-8 py-3 rounded-2xl bg-yellow-500 hover:bg-yellow-600 text-white font-bold transition-colors shadow-lg shadow-yellow-500/20"
+        >
+          <Star className="w-5 h-5" /> Redeem Rewards
+        </Link>
+      </div>
     </div>
   );
 }

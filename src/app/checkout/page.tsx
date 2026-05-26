@@ -284,6 +284,20 @@ export default function CheckoutPage() {
       setOrderPlaced(true);
       clearCart();
 
+      // Award loyalty points for logged-in users (1 point per $1 spent)
+      if (user?.id) {
+        try {
+          await fetch("/api/loyalty/award", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ orderId: order.id }),
+          });
+        } catch (e) {
+          console.error("Failed to award loyalty points:", e);
+          // Non-blocking - order is already placed
+        }
+      }
+
     } catch (error) {
       console.error("Error placing order:", error);
       setValidationErrors({ general: "Failed to place order. Please try again." });

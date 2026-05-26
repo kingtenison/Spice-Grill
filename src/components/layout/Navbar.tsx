@@ -54,12 +54,12 @@ export function Navbar() {
           <Link href="/" className="flex lg:hidden items-center gap-3">
             <img
               src="/Spice_Logo.jpg"
-              alt="Spice Grill Logo"
+              alt="Spice Grille Logo"
               className="w-10 h-10 rounded-xl object-cover shadow-lg"
             />
             <span className="font-heading text-2xl font-bold text-gray-900">
               <span className="text-gray-900">SPICE</span>
-              <span className="text-red-600">GRILL</span>
+              <span className="text-red-600">GRILLE</span>
             </span>
           </Link>
 

@@ -18,6 +18,8 @@ import {
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/store/useCartStore";
+import { createClient } from "@/lib/supabase/client";
+import { useEffect } from "react";
 
 import { Navbar } from "@/components/layout/Navbar";
 
@@ -45,6 +47,33 @@ export default function HomePage() {
   const heroOpacity = useTransform(scrollY, [0, 600], [1, 0]);
   const heroScale = useTransform(scrollY, [0, 600], [1, 0.95]);
   const addItem = useCartStore((state) => state.addItem);
+
+  // Auto-redirect admins/employees to their panels when visiting the public homepage
+  useEffect(() => {
+    const checkAndRedirectStaff = async () => {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+
+        if (profile?.role === "admin") {
+          window.location.replace("/admin");
+        } else if (profile?.role === "employee") {
+          window.location.replace("/employee");
+        }
+      } catch {
+        // Silently ignore — user stays on homepage
+      }
+    };
+
+    checkAndRedirectStaff();
+  }, []);
 
   const categories = [
     {
@@ -80,7 +109,7 @@ export default function HomePage() {
   const featuredDishes = [
     {
       id: "signature-ribeye",
-      name: "Spice Grill Signature Ribeye",
+      name: "Spice Grille Signature Ribeye",
       description: "Prime 16oz ribeye with our house spice blend, char-grilled to your liking. Served with garlic mashed potatoes and seasonal vegetables.",
       price: 42,
       image: "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=600&h=400&fit=crop",
@@ -120,7 +149,7 @@ export default function HomePage() {
     {
       name: "Michael Torres",
       role: "Food Critic",
-      text: "The depth of flavor at Spice Grill is unmatched. Every dish tells a story of passion and precision. The ribeye is simply perfection.",
+      text: "The depth of flavor at Spice Grille is unmatched. Every dish tells a story of passion and precision. The ribeye is simply perfection.",
       rating: 5,
       image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=100&h=100&fit=crop",
     },
@@ -134,7 +163,7 @@ export default function HomePage() {
     {
       name: "James Wilson",
       role: "Local Chef",
-      text: "As a chef myself, I'm exceptionally picky about where I eat. Spice Grill surpasses all expectations. The attention to detail is remarkable.",
+      text: "As a chef myself, I'm exceptionally picky about where I eat. Spice Grille surpasses all expectations. The attention to detail is remarkable.",
       rating: 5,
       image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=100&h=100&fit=crop",
     },
@@ -177,7 +206,7 @@ export default function HomePage() {
             >
               <span className="text-gray-900">SPICE</span>
               <br />
-              <span className="text-red-600">GRILL</span>
+              <span className="text-red-600">GRILLE</span>
             </motion.h1>
 
             {/* Tagline */}
@@ -272,7 +301,7 @@ export default function HomePage() {
               <div className="relative aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl">
                 <img
                   src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1200&h=1500&fit=crop"
-                  alt="Spice Grill Interior - Wood-fired kitchen"
+                  alt="Spice Grille Interior - Wood-fired kitchen"
                   className="object-cover w-full h-full"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-white/20 via-transparent to-transparent" />
@@ -320,7 +349,7 @@ export default function HomePage() {
                 variants={fadeInUp}
                 className="text-lg text-gray-700 leading-relaxed mb-6"
               >
-                Founded on a passion for authentic wood-fired cooking, Spice Grill brings
+                Founded on a passion for authentic wood-fired cooking, Spice Grille brings
                 the primal essence of flame and smoke to modern dining. Our chefs have
                 mastered the delicate balance between bold spices and delicate technique.
               </motion.p>
@@ -381,7 +410,7 @@ export default function HomePage() {
               variants={fadeInUp}
               className="text-gray-600 text-lg max-w-2xl mx-auto"
             >
-              Discover the diverse flavors that define Spice Grill.
+              Discover the diverse flavors that define Spice Grille.
               Each category represents a unique approach to fire and spice.
             </motion.p>
           </motion.div>
@@ -467,7 +496,7 @@ export default function HomePage() {
               className="text-gray-600 text-lg max-w-2xl mx-auto"
             >
               Hand-picked favorites from our executive chef.
-              Must-try items that define the Spice Grill experience.
+              Must-try items that define the Spice Grille experience.
             </motion.p>
           </motion.div>
 
@@ -726,8 +755,8 @@ export default function HomePage() {
                   <div>
                     <h4 className="font-bold text-lg mb-1 text-gray-900">Email</h4>
                     <p className="text-gray-600">
-                      hello@spicegrill.com<br />
-                      reservations@spicegrill.com
+                      hello@spicegrille.com<br />
+                      reservations@spicegrille.com
                     </p>
                   </div>
                 </div>
@@ -784,7 +813,7 @@ export default function HomePage() {
             <div className="col-span-2 md:col-span-1">
               <h3 className="font-heading text-2xl font-bold mb-4 text-gray-900">
                 <span className="text-gray-900">SPICE</span>
-                <span className="text-red-600">GRILL</span>
+                <span className="text-red-600">GRILLE</span>
               </h3>
               <p className="text-gray-600 mb-4">
                 Wood-fired perfection since 2024.
@@ -861,7 +890,7 @@ export default function HomePage() {
 
           {/* Copyright */}
           <div className="pt-8 border-t border-gray-200 text-center text-gray-500 text-sm">
-            <p>&copy; 2026 Spice Grill. All rights reserved.</p>
+            <p>&copy; 2026 Spice Grille. All rights reserved.</p>
           </div>
         </div>
       </footer>

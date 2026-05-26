@@ -22,6 +22,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { getMenuItemImage } from "@/lib/utils";
 
 interface OrderItem {
   id: string;
@@ -225,7 +226,7 @@ return (
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-4xl font-bold text-gray-900 mb-2">My Orders</h1>
-            <p className="text-gray-600">Track and manage your Spice Grill orders</p>
+            <p className="text-gray-600">Track and manage your Spice Grille orders</p>
           </div>
           <Link
             href="/menu"
@@ -324,13 +325,13 @@ return (
                       {order.order_items?.slice(0, 3).map((item) => (
                         <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                             <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center">
-                              {item.menu_items?.image_url ? (
-                                <img
-                                  src={item.menu_items.image_url}
-                                  alt={item.menu_items.name}
-                                  className="w-full h-full object-cover rounded-lg"
-                                />
-                              ) : (
+                               {item.menu_items ? (
+                                 <img
+                                   src={getMenuItemImage(item.menu_items)}
+                                   alt={item.menu_items.name}
+                                   className="w-full h-full object-cover rounded-lg"
+                                 />
+                               ) : (
                                 <Package className="w-6 h-6 text-gray-400" />
                               )}
                           </div>
@@ -437,13 +438,13 @@ return (
                                   <div key={item.id} className="flex justify-between items-center">
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded bg-gray-200 flex items-center justify-center">
-                                          {item.menu_items?.image_url ? (
-                                            <img
-                                              src={item.menu_items.image_url}
-                                              alt={item.menu_items.name}
-                                              className="w-full h-full object-cover rounded"
-                                            />
-                                          ) : (
+                                           {item.menu_items ? (
+                                             <img
+                                               src={getMenuItemImage(item.menu_items)}
+                                               alt={item.menu_items.name}
+                                               className="w-full h-full object-cover rounded"
+                                             />
+                                           ) : (
                                             <Package className="w-4 h-4 text-gray-400" />
                                           )}
                                       </div>
@@ -547,10 +548,10 @@ return (
               <h3 className="font-semibold text-gray-900 mb-2">Email Support</h3>
               <p className="text-sm text-gray-600 mb-3">Get help via email</p>
               <a
-                href="mailto:support@spicegrill.com"
+                href="mailto:support@spicegrille.com"
                 className="text-red-600 hover:text-red-700 font-medium"
               >
-                support@spicegrill.com
+                support@spicegrille.com
               </a>
             </div>
 

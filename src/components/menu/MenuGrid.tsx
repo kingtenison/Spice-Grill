@@ -1,5 +1,5 @@
 
-import { cn } from '@/lib/utils';
+import { cn, getMenuItemImage } from '@/lib/utils';
 import { Plus, ShoppingCart, Clock, Flame, Leaf, Wheat } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -47,7 +47,7 @@ export function MenuGrid({ items, onItemSelect, selectedItemId, onAddToCart }: M
           {/* Image Container */}
           <div className="relative aspect-[4/5] overflow-hidden">
             <img
-              src={item.images?.[0] || `https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=600&h=400&fit=crop`}
+              src={getMenuItemImage(item)}
               alt={item.name}
               className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
             />
