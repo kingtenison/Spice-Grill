@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 interface AnalyticsData {
   totalRevenue: number;
   totalOrders: number;
+  completedOrders: number;
   ordersByDay: { date: string; revenue: number }[];
 }
 
@@ -36,6 +37,8 @@ export default function AdminAnalyticsPage() {
   }, []);
 
   const formatCurrency = (amount: number) => `$${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const maxRevenue = Math.max(...(analytics?.ordersByDay?.map(d => d.revenue) || [1]));
 
   return (
     <div className="space-y-8">
@@ -65,29 +68,31 @@ export default function AdminAnalyticsPage() {
           <div className="text-right">
             <p className="text-3xl font-black text-red-500">{loading ? "—" : formatCurrency(analytics?.totalRevenue ?? 0)}</p>
             <p className="text-sm font-bold text-green-600 flex items-center justify-end gap-1">
-              <TrendingUp className="w-4 h-4" /> +15.4%
+              <TrendingUp className="w-4 h-4" /> {analytics?.completedOrders || 0} completed
             </p>
           </div>
         </div>
 
-        {/* Visual Chart Placeholder */}
+        {/* Real Revenue Chart */}
         <div className="h-80 flex items-end gap-2 px-4">
-          {[40, 60, 45, 70, 90, 55, 80, 100, 75, 65, 85, 110, 95, 120, 130].map((h, i) => (
-            <div 
-              key={i} 
-              className="flex-grow bg-red-100 hover:bg-red-500 transition-all rounded-t-lg relative group"
-              style={{ height: `${h}%` }}
-            >
-              <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] font-black px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                ${(h * 100).toLocaleString()}
+          {(analytics?.ordersByDay || []).map((day, i) => {
+            const height = maxRevenue > 0 ? Math.max(8, (day.revenue / maxRevenue) * 100) : 10;
+            return (
+              <div 
+                key={i} 
+                className="flex-grow bg-red-100 hover:bg-red-500 transition-all rounded-t-lg relative group"
+                style={{ height: `${height}%` }}
+              >
+                <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] font-black px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                  ${day.revenue.toFixed(0)}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         <div className="flex justify-between mt-6 px-4 text-[10px] font-black uppercase text-gray-500 tracking-widest">
-          <span>Oct 01</span>
-          <span>Oct 15</span>
-          <span>Oct 31</span>
+          <span>{analytics?.ordersByDay?.[0]?.date}</span>
+          <span>Today</span>
         </div>
       </div>
 
@@ -95,7 +100,7 @@ export default function AdminAnalyticsPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {[
           { title: "Peak Ordering Hour", value: "7:00 PM - 8:30 PM", desc: "45% of daily volume", icon: Calendar },
-          { title: "Top Selling Item", value: loading ? "—" : "Hibiscus Iced Tea", desc: loading ? "—" : "124 sold this week", icon: Target },
+            { title: "Completed Orders", value: loading ? "—" : (analytics?.completedOrders || 0).toString(), desc: "All time delivered", icon: Target },
           { title: "Customer Retention", value: "68%", desc: "+5% from last month", icon: PieChart },
         ].map((insight, i) => (
           <div key={i} className="p-8 rounded-[2.5rem] bg-white border border-gray-200 shadow-sm flex flex-col gap-6">

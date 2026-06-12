@@ -1,91 +1,170 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Clock, 
-  ChevronRight, 
   MapPin, 
   CheckCircle2,
   Clock4,
-  Truck
+  Truck,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { createClient } from "@/lib/supabase/client";
 
-const MOCK_ACTIVE_ORDERS = [
-  { 
-    id: "#ORD-7829", 
-    customer: "Amara Okeke", 
-    items: [
-      { name: "Truffle Mushroom Pizza", quantity: 2 },
-      { name: "Hibiscus Iced Tea", quantity: 1 }
-    ],
-    total: "$56.48",
-    status: "Pending",
-    timeReceived: "5 mins ago",
-    address: "123 Victory Lane, Accra"
-  },
-  { 
-    id: "#ORD-7828", 
-    customer: "Kofi Mensah", 
-    items: [
-      { name: "Double Wagyu Burger", quantity: 1 }
-    ],
-    total: "$18.50",
-    status: "Preparing",
-    timeReceived: "12 mins ago",
-    address: "45 Independence Ave, Osu"
-  },
-  { 
-    id: "#ORD-7827", 
-    customer: "Sarah Johnson", 
-    items: [
-      { name: "Quinoa Avocado Salad", quantity: 2 }
-    ],
-    total: "$28.00",
-    status: "Ready",
-    timeReceived: "18 mins ago",
-    address: "99 Ring Road, Cantonments"
-  }
-];
+interface OrderItem {
+  id: string;
+  quantity: number;
+  unit_price: number;
+  menu_items?: {
+    name: string;
+  }[];
+}
+
+interface Order {
+  id: string;
+  created_at: string;
+  total_amount: number;
+  status: string;
+  shipping_address?: any;
+  special_instructions?: string;
+  order_items: OrderItem[];
+}
 
 export default function EmployeeDashboard() {
-  const [orders, setOrders] = useState(MOCK_ACTIVE_ORDERS);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState<string | null>(null);
 
-  const getStatusConfig = (status: string) => {
-    switch(status) {
-      case "Pending": return { icon: Clock4, color: "bg-orange-100 text-orange-600", next: "Accept Order" };
-      case "Preparing": return { icon: ChefHat, color: "bg-blue-100 text-blue-600", next: "Mark as Ready" };
-      case "Ready": return { icon: CheckCircle2, color: "bg-purple-100 text-purple-600", next: "Send for Delivery" };
-      default: return { icon: Truck, color: "bg-green-100 text-green-600", next: "Complete" };
+  const supabase = createClient();
+
+  const fetchActiveOrders = async () => {
+    const { data, error } = await supabase
+      .from("orders")
+      .select(`
+        id,
+        created_at,
+        total_amount,
+        status,
+        shipping_address,
+        special_instructions,
+        order_items (
+          id,
+          quantity,
+          unit_price,
+          menu_items (name)
+        )
+      `)
+      .in("status", ["pending", "accepted", "preparing", "ready"])
+      .order("created_at", { ascending: true });
+
+    if (!error && data) {
+      setOrders(data as Order[]);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchActiveOrders();
+
+    // Real-time subscription for order updates
+    const channel = supabase
+      .channel("employee-orders")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "orders",
+          filter: "status=in.(pending,accepted,preparing,ready)"
+        },
+        () => {
+          fetchActiveOrders();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const updateOrderStatus = async (orderId: string, action: string) => {
+    setUpdating(orderId);
+
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}?action=${action}`, {
+        method: "PATCH",
+      });
+
+      if (res.ok) {
+        // Optimistic update + refetch
+        await fetchActiveOrders();
+      } else {
+        const err = await res.json();
+        alert("Failed to update order: " + (err.error || "Unknown error"));
+      }
+    } catch (e) {
+      alert("Error updating order");
+    } finally {
+      setUpdating(null);
     }
   };
+
+  const getStatusConfig = (status: string) => {
+    const s = status.toLowerCase();
+    if (s === "pending") return { icon: Clock4, color: "bg-orange-100 text-orange-600", next: "Accept", action: "confirm" };
+    if (s === "accepted") return { icon: Clock4, color: "bg-blue-100 text-blue-600", next: "Start Preparing", action: "prepare" };
+    if (s === "preparing") return { icon: Clock4, color: "bg-purple-100 text-purple-600", next: "Mark Ready", action: "ready" };
+    if (s === "ready") return { icon: CheckCircle2, color: "bg-green-100 text-green-600", next: "Out for Delivery", action: "deliver" };
+    return { icon: Truck, color: "bg-gray-100 text-gray-600", next: "Complete", action: "deliver" };
+  };
+
+  const getTimeAgo = (dateString: string) => {
+    const minutes = Math.floor((Date.now() - new Date(dateString).getTime()) / 60000);
+    return minutes < 1 ? "just now" : `${minutes} min ago`;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="w-8 h-8 animate-spin text-red-600" />
+      </div>
+    );
+  }
+
+  const activeOrders = orders.filter(o => ["pending", "accepted", "preparing", "ready"].includes(o.status));
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-extrabold text-gray-900">Active Orders</h1>
-        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 text-green-700 text-sm font-bold animate-pulse">
-          <div className="w-2 h-2 rounded-full bg-green-600" />
-          Live Connection Active
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 text-green-700 text-sm font-bold">
+          <div className="w-2 h-2 rounded-full bg-green-600 animate-pulse" />
+          {activeOrders.length} Active
         </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         <AnimatePresence>
-          {orders.map((order) => {
+          {activeOrders.map((order) => {
             const config = getStatusConfig(order.status);
+            const customerName = order.shipping_address?.name || "Guest";
+            const address = order.shipping_address 
+              ? `${order.shipping_address.street}, ${order.shipping_address.city}` 
+              : "No address";
+
             return (
               <motion.div 
                 layout
                 key={order.id}
                 className="bg-white border border-gray-200 rounded-[2.5rem] p-8 shadow-sm hover:shadow-md transition-all group"
               >
-                {/* Card Header */}
                 <div className="flex items-start justify-between mb-8">
                   <div>
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="text-xl font-black text-red-600">{order.id}</span>
+                      <span className="text-xl font-black text-red-600">#{order.id.slice(0, 8)}</span>
                       <span className={cn(
                         "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider",
                         config.color
@@ -93,48 +172,51 @@ export default function EmployeeDashboard() {
                         {order.status}
                       </span>
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900">{order.customer}</h3>
+                    <h3 className="text-2xl font-bold text-gray-900">{customerName}</h3>
                     <div className="flex items-center gap-2 text-sm text-gray-500 mt-2">
-                      <Clock className="w-4 h-4" /> Received {order.timeReceived}
+                      <Clock className="w-4 h-4" /> {getTimeAgo(order.created_at)}
                     </div>
                   </div>
-                  <button className="p-3 rounded-2xl bg-red-50 hover:bg-red-600 hover:text-white transition-all">
-                    <ChevronRight className="w-6 h-6" />
-                  </button>
                 </div>
 
-                {/* Items List */}
-                <div className="space-y-4 mb-8">
-                  {order.items.map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-red-50/40 border border-transparent group-hover:border-gray-200 transition-colors">
+                <div className="space-y-3 mb-8">
+                  {order.order_items?.map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-red-50/40">
                       <div className="flex items-center gap-4">
                         <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center font-black text-red-600 shadow-sm">
                           {item.quantity}
                         </div>
-                        <span className="font-bold text-lg text-gray-900">{item.name}</span>
+                        <span className="font-bold text-lg text-gray-900">{item.menu_items?.[0]?.name || "Item"}</span>
                       </div>
+                      <span className="font-medium text-gray-600">${(item.unit_price * item.quantity).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
 
-                {/* Footer Info */}
                 <div className="grid grid-cols-2 gap-4 mb-8">
                   <div className="flex items-start gap-2">
                     <MapPin className="w-4 h-4 mt-1 text-gray-500 shrink-0" />
-                    <p className="text-xs font-medium text-gray-500 line-clamp-2">{order.address}</p>
+                    <p className="text-xs font-medium text-gray-500 line-clamp-2">{address}</p>
                   </div>
                   <div className="flex items-center justify-end font-black text-xl text-gray-900">
-                    {order.total}
+                    ${Number(order.total_amount).toFixed(2)}
                   </div>
                 </div>
 
-                {/* Actions */}
                 <div className="grid grid-cols-2 gap-4">
-                  <button className="py-4 rounded-2xl bg-red-50 text-gray-600 font-bold hover:bg-red-100 hover:text-red-600 transition-all">
+                  <button 
+                    onClick={() => updateOrderStatus(order.id, "cancel")}
+                    disabled={!!updating}
+                    className="py-4 rounded-2xl bg-red-50 text-gray-600 font-bold hover:bg-red-100 transition-all disabled:opacity-50"
+                  >
                     Reject
                   </button>
-                  <button className="py-4 rounded-2xl bg-red-600 text-white font-black text-lg shadow-lg shadow-red-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
-                    {config.next}
+                  <button 
+                    onClick={() => updateOrderStatus(order.id, config.action)}
+                    disabled={!!updating}
+                    className="py-4 rounded-2xl bg-red-600 text-white font-black text-lg shadow-lg shadow-red-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-70 flex items-center justify-center gap-2"
+                  >
+                    {updating === order.id ? <Loader2 className="w-4 h-4 animate-spin" /> : config.next}
                   </button>
                 </div>
               </motion.div>
@@ -143,7 +225,7 @@ export default function EmployeeDashboard() {
         </AnimatePresence>
       </div>
 
-      {orders.length === 0 && (
+      {activeOrders.length === 0 && (
         <div className="py-32 text-center">
           <div className="w-24 h-24 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 className="w-12 h-12 text-gray-600" />
@@ -155,6 +237,7 @@ export default function EmployeeDashboard() {
     </div>
   );
 }
+
 
 function ChefHat(props: React.SVGProps<SVGSVGElement>) {
   return (

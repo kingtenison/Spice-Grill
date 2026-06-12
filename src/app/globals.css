@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+@import url('https://fonts.cdnfonts.com/css/nexa');
 @import "tailwindcss";
 
 /* Custom Justice Love (Regular Only) */
@@ -10,31 +11,24 @@
     font-display: swap;
 }
 
-/* Custom Codec Warm Trial (Strictly No Italics) */
+/* Custom Nexa Font */
 @font-face {
-    font-family: 'Codec Warm Trial';
-    src: url('https://fonts.cdnfonts.com/s/14896/Codec-Warm-Regular-trial.woff') format('woff');
+    font-family: 'Nexa';
+    src: url('https://fonts.cdnfonts.com/s/14896/Nexa-Regular.woff') format('woff');
     font-weight: 400;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
-    font-family: 'Codec Warm Trial';
-    src: url('https://fonts.cdnfonts.com/s/14896/Codec-Warm-Light-trial.woff') format('woff');
+    font-family: 'Nexa';
+    src: url('https://fonts.cdnfonts.com/s/14896/Nexa-Light.woff') format('woff');
     font-weight: 300;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
-    font-family: 'Codec Warm Trial';
-    src: url('https://fonts.cdnfonts.com/s/14896/Codec-Warm-ExtraLight-trial.woff') format('woff');
-    font-weight: 250;
-    font-style: normal;
-    font-display: swap;
-}
-@font-face {
-    font-family: 'Codec Warm Trial';
-    src: url('https://fonts.cdnfonts.com/s/14896/Codec-Warm-Bold-trial.woff') format('woff');
+    font-family: 'Nexa';
+    src: url('https://fonts.cdnfonts.com/s/14896/Nexa-Bold.woff') format('woff');
     font-weight: 700;
     font-style: normal;
     font-display: swap;
@@ -51,7 +45,7 @@
 
 
 @theme {
-  --font-sans: 'GlobalNumbers', 'Codec Warm Trial', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'GlobalNumbers', 'Nexa', ui-sans-serif, system-ui, sans-serif;
   --font-display: 'GlobalNumbers', 'justice Love', Georgia, serif;
   --font-heading: 'GlobalNumbers', 'justice Love', sans-serif;
   --font-numbers: 'Roboto', ui-sans-serif, system-ui, sans-serif;

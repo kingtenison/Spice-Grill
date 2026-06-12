@@ -4,25 +4,25 @@ import { Navbar } from "@/components/layout/Navbar";
 import { RouteAwareNav } from "@/components/layout/RouteAwareNav";
 
 export const metadata: Metadata = {
-  title: "Spice Grille - Premium Wood-Fired Dining | USA",
-  description: "Spice Grille brings the art of wood-fired cooking to life. Experience bold flavors, premium cuts, and unforgettable dining. Located in the USA. View menu, make reservations, order online.",
-  keywords: "Spice Grille, wood-fired grill, steakhouse, American cuisine, restaurant, dining, BBQ, grilled meats, fine dining, USA",
-  authors: [{ name: "Spice Grille" }],
-  creator: "Spice Grille",
-  publisher: "Spice Grille",
+  title: "The Spice Grille - Afro-Caribbean Cuisine | Moorhead, MN",
+  description: "The Spice Grille brings a redefined mix of Afro-Caribbean cuisine to the Fargo-Moorhead area. Wood-fired grill, bold flavors, outdoor seating. 28 Moorhead Center Mall Avenue, Moorhead, MN.",
+  keywords: "The Spice Grille, Afro-Caribbean cuisine, Moorhead MN, Fargo, wood-fired grill, African restaurant, Caribbean food, dine-in, curbside pickup",
+  authors: [{ name: "The Spice Grille" }],
+  creator: "The Spice Grille",
+  publisher: "The Spice Grille",
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://spicegrille.com",
-    title: "Spice Grille - Premium Wood-Fired Dining",
-    description: "Experience the art of wood-fired cooking at Spice Grille. Bold flavors, perfect flame, unforgettable moments.",
-    siteName: "Spice Grille",
+    url: "https://thespicegrillemn.com",
+    title: "The Spice Grille - Afro-Caribbean Cuisine | Moorhead, MN",
+    description: "Bringing you a redefined mix of Afro-Caribbean cuisine to the Fargo-Moorhead area.",
+    siteName: "The Spice Grille",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Spice Grille - Premium Wood-Fired Dining",
-    description: "Experience the art of wood-fired cooking at Spice Grille.",
-    creator: "@spicegrille",
+    title: "The Spice Grille - Afro-Caribbean Cuisine | Moorhead, MN",
+    description: "Bringing you a redefined mix of Afro-Caribbean cuisine to the Fargo-Moorhead area.",
+    creator: "@tsgmoorhead",
   },
   robots: {
     index: true,
@@ -41,8 +41,20 @@ export default function RootLayout({
       className="h-full antialiased"
     >
       <head>
+        {/* PWA Meta Tags */}
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#ef4444" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        
+        {/* Apple iOS Specific */}
+        <link rel="apple-touch-icon" href="/Spice_Logo.jpg" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Spice Grille" />
+        
+        {/* Fonts */}
         <link href="https://fonts.cdnfonts.com/css/justice-love" rel="stylesheet" />
-        <link href="https://fonts.cdnfonts.com/css/codec-warm-trial" rel="stylesheet" />
+        <link href="https://fonts.cdnfonts.com/css/nexa" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
       </head>
       <body className="min-h-full flex flex-col bg-white text-gray-900">
@@ -55,3 +67,4 @@ export default function RootLayout({
     </html>
   );
 }
+

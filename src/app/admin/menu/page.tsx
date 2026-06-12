@@ -26,10 +26,12 @@ import {
   CheckSquare,
   Square,
   Copy,
-  Move
+  Move,
+  QrCode
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MultiImageUpload } from "@/components/admin/MultiImageUpload";
+import Link from "next/link";
 
 interface MenuItem {
   id: string;
@@ -685,6 +687,13 @@ export default function AdminMenuPage() {
                 <Plus className="w-5 h-5" />
                 Add Item
               </button>
+              <Link
+                href="/admin/menu/qr"
+                className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 font-medium rounded-xl hover:bg-purple-200 transition-all"
+              >
+                <QrCode className="w-4 h-4" />
+                Menu QR
+              </Link>
             </div>
           </div>
         </div>

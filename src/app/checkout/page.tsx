@@ -5,7 +5,8 @@ import { useCartStore, type Address, type ShippingMethod, type PaymentMethod, ty
 import {
   Trash2, Plus, Minus, ArrowRight, ArrowLeft, MapPin, Clock,
   CreditCard, Smartphone, DollarSign, Truck, Tag, Percent,
-  CheckCircle, AlertCircle, User, Mail, Phone, Home, Building
+  CheckCircle, AlertCircle, User, Mail, Phone, Home, Building,
+  Award
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -65,6 +66,7 @@ export default function CheckoutPage() {
 
   const [currentStep, setCurrentStep] = useState<CheckoutStep>('shipping');
   const [isGuestCheckout, setIsGuestCheckout] = useState(false);
+  const [userLoyalty, setUserLoyalty] = useState<{ tier: string; points: number; discountPercent: number } | null>(null);
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
@@ -127,6 +129,19 @@ export default function CheckoutPage() {
             phone: profile.phone || ''
           }));
         }
+
+        // Load loyalty tier for automatic benefits
+        const { data: loyalty } = await supabase
+          .from('loyalty_points')
+          .select('points, tier')
+          .eq('user_id', user.id)
+          .single();
+
+        if (loyalty) {
+          const tier = loyalty.tier || 'Bronze';
+          const discountPercent = tier === 'Gold' ? 10 : tier === 'Silver' ? 5 : 0;
+          setUserLoyalty({ tier, points: loyalty.points || 0, discountPercent });
+        }
       } else {
         setIsGuestCheckout(true);
       }
@@ -161,7 +176,8 @@ export default function CheckoutPage() {
   const shippingCost = getShippingCost();
   const taxAmount = subtotal * 0.08; // Calculate directly to avoid hydration issues
   const discountAmount = getDiscountAmount();
-  const total = subtotal + shippingCost + taxAmount - discountAmount;
+  const loyaltyDiscountAmount = userLoyalty ? Math.round(subtotal * (userLoyalty.discountPercent / 100) * 100) / 100 : 0;
+  const total = Math.max(0, subtotal + shippingCost + taxAmount - discountAmount - loyaltyDiscountAmount);
 
   const validateStep = (step: CheckoutStep): boolean => {
     const errors: Record<string, string> = {};
@@ -1015,6 +1031,16 @@ return (
                       Discount ({coupon?.code})
                     </span>
                     <span className="font-semibold">-${discountAmount.toFixed(2)}</span>
+                  </div>
+                )}
+
+                {userLoyalty && userLoyalty.discountPercent > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span className="flex items-center gap-1">
+                      <Award className="w-4 h-4" />
+                      {userLoyalty.tier} Member ({userLoyalty.discountPercent}% off)
+                    </span>
+                    <span className="font-semibold">-${loyaltyDiscountAmount.toFixed(2)}</span>
                   </div>
                 )}
 

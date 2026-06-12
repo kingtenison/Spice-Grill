@@ -45,7 +45,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    const { name, description, price, category_id, images, is_available, stock_quantity } = await request.json();
+    const { name, description, price, category_id, images, is_available, stock_quantity, low_stock_threshold } = await request.json();
 
     // Basic validation
     if (!name || !description || !price || !category_id || !Array.isArray(images) || images.length === 0 || stock_quantity === undefined) {
@@ -54,7 +54,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     const { data: item, error } = await supabase
       .from("menu_items")
-      .update({ name, description, price, category_id, image_url: JSON.stringify(images), is_available, stock_quantity })
+      .update({ name, description, price, category_id, image_url: JSON.stringify(images), is_available, stock_quantity, low_stock_threshold: low_stock_threshold || 10 })
       .eq("id", id)
       .select()
       .single();

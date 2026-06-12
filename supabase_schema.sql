@@ -39,6 +39,7 @@ create table public.menu_items (
   image_url text,
   is_available boolean default true,
   stock_quantity int default 0,
+  low_stock_threshold int default 10,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 

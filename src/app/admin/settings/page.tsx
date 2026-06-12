@@ -14,15 +14,26 @@ interface SettingsState {
 }
 
 export default function AdminSettingsPage() {
-  const [settings, setSettings] = useState<SettingsState>({
-    restaurantName: "Spice Grille",
-    address: "123 Main Street, Lagos",
-    phone: "+234 800 000 0000",
-    email: "info@spicegrille.com",
-    currency: "NGN",
-    deliveryFee: 1500,
-    taxRate: 7.5,
+  const [settings, setSettings] = useState<SettingsState>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('admin-settings');
+      if (saved) return JSON.parse(saved);
+    }
+    return {
+      restaurantName: "Spice Grille",
+      address: "123 Main Street, Lagos",
+      phone: "+234 800 000 0000",
+      email: "info@spicegrille.com",
+      currency: "NGN",
+      deliveryFee: 1500,
+      taxRate: 7.5,
+    };
   });
+
+  const saveSettings = () => {
+    localStorage.setItem('admin-settings', JSON.stringify(settings));
+    alert("Settings saved! (In production this would persist to database)");
+  };
 
   const updateSetting = (key: keyof SettingsState, value: string | number) => {
     setSettings(prev => ({ ...prev, [key]: value }));
@@ -35,7 +46,10 @@ export default function AdminSettingsPage() {
           <h1 className="text-3xl font-bold mb-1 text-gray-900">Settings</h1>
           <p className="text-gray-600">Configure your restaurant and system preferences.</p>
         </div>
-        <button className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-red-600 text-white font-bold shadow-lg shadow-red-500/20 hover:scale-[1.02] transition-all">
+        <button 
+          onClick={saveSettings}
+          className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-red-600 text-white font-bold shadow-lg shadow-red-500/20 hover:scale-[1.02] transition-all"
+        >
           <Save className="w-4 h-4" /> Save Changes
         </button>
       </div>
