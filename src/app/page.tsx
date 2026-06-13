@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useInView, animate } from "framer-motion";
 import {
   ArrowRight,
   Star,
@@ -19,7 +19,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/store/useCartStore";
 import { createClient } from "@/lib/supabase/client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
 
 import { Navbar } from "@/components/layout/Navbar";
@@ -41,6 +41,30 @@ const scaleIn = {
   hidden: { opacity: 0, scale: 0.9 },
   visible: { opacity: 1, scale: 1, transition: { duration: 0.6 } },
 };
+
+// Count-up number that animates when scrolled into view
+function CountUp({ value, suffix = "", className }: { value: number; suffix?: string; className?: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    if (!inView) return;
+    const controls = animate(0, value, {
+      duration: 1.6,
+      ease: [0.22, 1, 0.36, 1],
+      onUpdate: (latest) => setDisplay(Math.round(latest)),
+    });
+    return () => controls.stop();
+  }, [inView, value]);
+
+  return (
+    <span ref={ref} className={className}>
+      {display}
+      {suffix}
+    </span>
+  );
+}
 
 
 export default function HomePage() {
@@ -1182,97 +1206,153 @@ export default function HomePage() {
       </section>
 
       {/* Our Story Section */}
-      <section className="relative py-32 bg-gray-50">
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-red-50/30 to-white opacity-50" />
+      <section className="relative py-24 sm:py-32 bg-[#faf5ec] overflow-hidden">
+        {/* Soft texture */}
+        <div
+          aria-hidden
+          className="absolute inset-0 opacity-[0.5]"
+          style={{ backgroundImage: "radial-gradient(circle at 1px 1px, rgba(120,53,15,0.06) 1px, transparent 0)", backgroundSize: "26px 26px" }}
+        />
+
+        {/* Scrolling dish-name ribbon */}
+        <div className="relative mb-20 border-y border-amber-900/15 py-5 overflow-hidden">
+          <motion.div
+            aria-hidden
+            className="flex whitespace-nowrap"
+            animate={{ x: ["0%", "-50%"] }}
+            transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
+          >
+            {[0, 1].map((dup) => (
+              <div key={dup} className="flex items-center shrink-0">
+                {["Jollof Rice", "Banku & Tilapia", "Kelewele", "Waakye", "Fufu", "Red Red", "Grilled Suya", "Kontomire Stew"].map((dish, i) => (
+                  <span key={`${dup}-${i}`} className="flex items-center text-amber-900/70 font-heading text-2xl sm:text-3xl">
+                    <span className="px-6">{dish}</span>
+                    <Flame className="w-4 h-4 text-red-600/70" />
+                  </span>
+                ))}
+              </div>
+            ))}
+          </motion.div>
+        </div>
 
         <div className="container relative px-4 mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            {/* Image side */}
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-100px" }}
-              variants={fadeInUp}
-              className="relative"
+          {/* Centered headline + narrative */}
+          <div className="max-w-3xl mx-auto text-center">
+            <motion.span
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center gap-3 text-red-600 font-semibold tracking-[0.3em] uppercase text-xs mb-7"
             >
-              <div className="relative aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl">
-                <img
-                  src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1200&h=1500&fit=crop"
-                  alt="Spice Grille Interior - Wood-fired kitchen"
-                  className="object-cover w-full h-full"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-white/20 via-transparent to-transparent" />
-              </div>
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-                className="absolute -bottom-8 -right-8 bg-red-600 text-white p-6 rounded-2xl max-w-xs shadow-xl"
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <ChefHat className="w-6 h-6" />
-                  <span className="font-bold">Award-Winning</span>
-                </div>
-                <p className="text-sm opacity-90">
-                  Voted &quot;Best Grill&quot; 2024 by Food & Wine Magazine
-                </p>
-              </motion.div>
-            </motion.div>
+              <span className="w-8 h-px bg-red-600" />
+              Akwaaba — Our Story
+              <span className="w-8 h-px bg-red-600" />
+            </motion.span>
 
-            {/* Text side */}
-            <motion.div
+            <motion.h2
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true, margin: "-100px" }}
+              viewport={{ once: true, margin: "-80px" }}
               variants={staggerContainer}
-              className="flex flex-col justify-center"
+              className="font-heading text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.08] text-stone-900"
             >
-              <motion.span
-                variants={fadeInUp}
-                className="text-red-600 font-semibold tracking-wider uppercase text-sm mb-4"
-              >
-                Our Story
-              </motion.span>
+              {["Rooted in Ghana.", "Served in Fargo-Moorhead."].map((line, i) => (
+                <span key={i} className="block overflow-hidden">
+                  <motion.span
+                    variants={{
+                      hidden: { y: "110%" },
+                      visible: { y: "0%", transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } },
+                    }}
+                    className={cn("block", i === 1 && "text-red-600")}
+                  >
+                    {line}
+                  </motion.span>
+                </span>
+              ))}
+            </motion.h2>
 
-              <motion.h2
-                variants={fadeInUp}
-                className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold mb-8 leading-tight text-gray-900"
-              >
-                Where Fire Meets <span className="text-red-600">Culture</span>
-              </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="text-lg sm:text-xl text-stone-700 leading-relaxed mt-8"
+            >
+              The Spice Grille brings a <span className="text-red-600 font-semibold">redefined mix of Afro-Caribbean cuisine</span> to the Fargo-Moorhead area — proudly serving the community as an authentic African restaurant rooted in the soulful flavors of Ghana.
+            </motion.p>
 
-              <motion.p
-                variants={fadeInUp}
-                className="text-lg text-gray-700 leading-relaxed mb-6"
-              >
-                The Spice Grille brings a redefined mix of Afro-Caribbean cuisine to the Fargo-Moorhead area. Founded on a passion for bold spices, wood-fired cooking, and vibrant flavors, we honor tradition while creating something entirely new.
-              </motion.p>
-
-              <motion.p
-                variants={fadeInUp}
-                className="text-lg text-gray-700 leading-relaxed mb-8"
-              >
-                Every dish is crafted with intention — from our house spice blends to the flame that finishes each plate. We don&apos;t just cook — we share a story of culture, community, and unforgettable flavor.
-              </motion.p>
-
-              <motion.div
-                variants={fadeInUp}
-                className="grid grid-cols-2 gap-6"
-              >
-                {[
-                  { icon: Flame, text: "Wood-Fired Grill" },
-                  { icon: ShieldCheck, text: "Premium Quality" },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center">
-                      <item.icon className="w-5 h-5 text-red-600" />
-                    </div>
-                    <span className="font-medium text-gray-900">{item.text}</span>
-                  </div>
-                ))}
-              </motion.div>
-            </motion.div>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="text-base text-stone-600 leading-relaxed mt-5"
+            >
+              From fragrant jollof rice and hearty banku to spicy kelewele and slow-simmered stews, every dish is built on family recipes passed down through generations. It&apos;s more than a meal — it&apos;s a warm welcome to a taste of home you won&apos;t find anywhere else.
+            </motion.p>
           </div>
+
+          {/* Clean 3-image band */}
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-80px" }}
+            variants={staggerContainer}
+            className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mt-16"
+          >
+            {[
+              { src: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?q=80&w=800&h=900&fit=crop", label: "Bold West African Spice" },
+              { src: "https://images.unsplash.com/photo-1432139555190-58524dae6a55?q=80&w=800&h=900&fit=crop", label: "Family Recipes" },
+              { src: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=800&h=900&fit=crop", label: "Made to Share" },
+            ].map((img, i) => (
+              <motion.div
+                key={i}
+                variants={{
+                  hidden: { opacity: 0, y: 40 },
+                  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
+                }}
+                className={cn(
+                  "group relative aspect-[4/5] rounded-3xl overflow-hidden shadow-lg",
+                  i === 2 && "col-span-2 md:col-span-1"
+                )}
+              >
+                <img
+                  src={img.src}
+                  alt={img.label}
+                  className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-stone-900/70 via-transparent to-transparent" />
+                <span className="absolute bottom-5 left-5 right-5 font-heading text-xl text-white">
+                  {img.label}
+                </span>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* Inline stat strip */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-12 mt-16 text-center"
+          >
+            {[
+              { value: 100, suffix: "%", label: "House-Made Spices" },
+              { value: 15, suffix: "+", label: "Signature Dishes" },
+              { value: 1, suffix: " of 1", label: "Like It in FM" },
+            ].map((stat, i) => (
+              <div key={i} className="flex items-center gap-6 sm:gap-12">
+                <div>
+                  <div className="font-heading text-4xl font-bold text-red-600">
+                    <CountUp value={stat.value} suffix={stat.suffix} />
+                  </div>
+                  <div className="text-xs uppercase tracking-wider text-stone-500 mt-1">{stat.label}</div>
+                </div>
+                {i < 2 && <span className="hidden sm:block w-px h-12 bg-stone-300" />}
+              </div>
+            ))}
+          </motion.div>
         </div>
       </section>
 

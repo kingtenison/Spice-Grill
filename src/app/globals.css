@@ -11,28 +11,7 @@
     font-display: swap;
 }
 
-/* Custom Nexa Font */
-@font-face {
-    font-family: 'Nexa';
-    src: url('https://fonts.cdnfonts.com/s/14896/Nexa-Regular.woff') format('woff');
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-}
-@font-face {
-    font-family: 'Nexa';
-    src: url('https://fonts.cdnfonts.com/s/14896/Nexa-Light.woff') format('woff');
-    font-weight: 300;
-    font-style: normal;
-    font-display: swap;
-}
-@font-face {
-    font-family: 'Nexa';
-    src: url('https://fonts.cdnfonts.com/s/14896/Nexa-Bold.woff') format('woff');
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
-}
+/* Nexa is loaded via the @import on line 2 */
 
 /* Global Font Override for Numbers */
 @font-face {

@@ -215,7 +215,7 @@ export default function MenuPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white overflow-x-hidden">
 
-      <main className="container mx-auto pt-20 pb-24 px-4 max-w-7xl pb-mobile-nav lg:pl-sidebar">
+      <main className="container mx-auto pt-20 pb-24 px-4 pb-mobile-nav lg:pl-sidebar">
         {/* Header */}
         <div className="text-center mb-8 px-2">
           <motion.h1
