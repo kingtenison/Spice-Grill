@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
+import { getServiceClient } from "@/lib/supabase/service";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
+  const db = getServiceClient();
 
   const { orderId, items } = await request.json();
 
@@ -38,7 +40,7 @@ export async function POST(request: Request) {
 
     console.log("Manually inserting order items:", orderItems);
 
-    let { data, error } = await supabase
+    let { data, error } = await db
       .from("order_items")
       .insert(orderItems)
       .select();

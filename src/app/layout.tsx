@@ -39,6 +39,7 @@ export default function RootLayout({
     <html
       lang="en"
       className="h-full antialiased"
+      data-scroll-behavior="smooth"
     >
       <head>
         {/* PWA Meta Tags */}

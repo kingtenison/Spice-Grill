@@ -1,19 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { 
-  Package, 
-  AlertTriangle, 
-  CheckCircle, 
-  Search, 
-  Filter,
-  RefreshCw,
-  Edit2,
-  Save,
-  X
-} from "lucide-react";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
+import { AlertTriangle, Package, Search, RefreshCw, Save, X, Edit2 } from "lucide-react";
 
 interface MenuItem {
   id: string;
@@ -37,20 +26,15 @@ export default function AdminInventoryPage() {
   const [editValue, setEditValue] = useState(0);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const supabase = createClient();
-
   const fetchItems = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('menu_items')
-      .select(`
-        id, name, stock_quantity, low_stock_threshold, is_available, price,
-        categories (name)
-      `)
-      .order('stock_quantity', { ascending: true });
-
-    if (!error && data) {
-      setItems(data as any);
+    try {
+      const res = await fetch("/api/admin/menu/items");
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      setItems(data.items || []);
+    } catch (error) {
+      console.error("Error fetching items:", error);
     }
     setLoading(false);
   };

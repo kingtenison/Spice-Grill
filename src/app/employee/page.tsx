@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { createClient } from "@/lib/supabase/client";
+import { createAuthClientBrowser } from "@/lib/supabase/client";
 
 interface OrderItem {
   id: string;
@@ -37,7 +37,7 @@ export default function EmployeeDashboard() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
 
-  const supabase = createClient();
+  const supabase = createAuthClientBrowser();
 
   const fetchActiveOrders = async () => {
     const { data, error } = await supabase

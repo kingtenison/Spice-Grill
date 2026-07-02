@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     }
   }
 
-  // First, get all orders - only select fields that exist in current schema
+  // First, get all orders with delivery assignments
   const { data: orders, error } = await supabase
     .from("orders")
     .select(`
@@ -33,7 +33,17 @@ export async function GET(request: Request) {
       status,
       created_at,
       delivery_address,
-      user_id
+      customer_location,
+      user_id,
+      delivery_assignments!delivery_assignments_order_id_fkey(
+        id,
+        status,
+        dispatcher_id,
+        dispatchers(
+          name,
+          phone
+        )
+      )
     `)
     .order("created_at", { ascending: false });
 
@@ -57,6 +67,9 @@ export async function GET(request: Request) {
     total_amount: order.total_amount,
     status: order.status,
     created_at: order.created_at,
+    delivery_address: order.delivery_address,
+    customer_location: order.customer_location,
+    delivery_assignments: order.delivery_assignments?.[0] || null,
     profiles: order.user_id ?
       { full_name: profileMap.get(order.user_id) || 'Unknown User' } :
       { full_name: 'Guest User' }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createAuthClientBrowser } from "@/lib/supabase/client";
 import { useCartStore } from "@/store/useCartStore";
 import { Share } from "lucide-react";
 
@@ -25,7 +25,7 @@ export default function MenuView() {
   const [error, setError] = useState<string | null>(null);
   const [pointsAwardedToday, setPointsAwardedToday] = useState(false);
   const { addItem } = useCartStore();
-  const supabase = createClient();
+  const supabase = createAuthClientBrowser();
 
   const fetchMenu = useCallback(async () => {
     try {

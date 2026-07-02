@@ -1,10 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
+import { getServiceClient } from "@/lib/supabase/service";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  const supabase = await createClient();
+  const db = getServiceClient();
   
-  const { data: orders, error } = await supabase
+  const { data: orders, error } = await db
     .from("orders")
     .select(`id, total_amount, status, created_at, profiles!inner(full_name)`)
     .order("created_at", { ascending: false })

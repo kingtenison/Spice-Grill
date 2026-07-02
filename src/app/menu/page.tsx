@@ -125,30 +125,21 @@ export default function MenuPage() {
     async function fetchData() {
       setIsLoading(true);
       try {
-        // Fetch categories
-        const { data: categoriesData, error: catError } = await supabase
-          .from('categories')
-          .select('*')
-          .order('name');
+        const [categoriesResult, menuResult] = await Promise.all([
+          supabase.from('categories').select('*').order('name'),
+          supabase.from('menu_items').select('*, categories(name)').eq('is_available', true).order('created_at', { ascending: false }),
+        ]);
 
-        if (categoriesData && isMounted) {
-          setCategories(categoriesData);
+        if (categoriesResult.error) {
+          console.error("Error fetching categories:", categoriesResult.error);
+        } else if (categoriesResult.data && isMounted) {
+          setCategories(categoriesResult.data);
         }
 
-        // Fetch menu items with category join
-        const { data: menuData, error: menuError } = await supabase
-          .from('menu_items')
-          .select(`
-            *,
-            categories(name)
-          `)
-          .eq('is_available', true)
-          .order('created_at', { ascending: false });
-
-        if (menuError) {
-          console.error("Error fetching menu items:", menuError);
-        } else if (menuData && isMounted) {
-          setMenuItems(menuData);
+        if (menuResult.error) {
+          console.error("Error fetching menu items:", menuResult.error);
+        } else if (menuResult.data && isMounted) {
+          setMenuItems(menuResult.data);
         }
       } catch (err) {
         console.error("Unexpected error fetching data:", err);

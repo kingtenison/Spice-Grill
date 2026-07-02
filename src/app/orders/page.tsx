@@ -19,7 +19,7 @@ import {
   Ban
 } from "lucide-react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, safeGetUser } from "@/lib/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { getMenuItemImage } from "@/lib/utils";
@@ -100,72 +100,88 @@ export default function OrdersPage() {
 
   useEffect(() => {
     let subscription: any = null;
+    let active = true;
     
     const loadUserAndOrders = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        window.location.href = '/login';
-        return;
-      }
-
-      setUser(user);
-
-      // Load orders
-      const { data: ordersData, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          order_items(
-            *,
-            menu_items(name, image_url)
-          )
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error loading orders:', error);
-      } else {
-        setOrders(ordersData || []);
-      }
-
-      setIsLoading(false);
-
-      // Clean up any existing subscription before creating new one
-      if (subscription) {
-        supabase.removeChannel(subscription);
-      }
-
-      // Set up real-time subscription for order updates with unique channel name
-      subscription = supabase
-        .channel(`user-orders-${user.id}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'orders',
-            filter: `user_id=eq.${user.id}`
-          },
-          (payload) => {
-            console.log('Order updated:', payload);
-            setOrders(currentOrders =>
-              currentOrders.map(order =>
-                order.id === payload.new.id
-                  ? { ...order, ...payload.new }
-                  : order
-              )
-            );
+      try {
+        // Fetch user status from server
+        const authRes = await fetch("/api/auth/me");
+        if (!authRes.ok) {
+          console.error("Auth check failed with status:", authRes.status);
+          if (active) {
+            window.location.href = '/login';
           }
-        )
-        .subscribe();
+          return;
+        }
+
+        const authData = await authRes.json();
+
+        if (!active) return;
+
+        if (!authData.user) {
+          window.location.href = '/login';
+          return;
+        }
+
+        setUser(authData.user);
+
+        // Fetch user orders from server
+        const ordersRes = await fetch("/api/orders/user");
+        if (ordersRes.ok) {
+          const ordersData = await ordersRes.json();
+          if (active) {
+            setOrders(ordersData.orders || []);
+          }
+        } else {
+          console.error("Failed to load orders");
+        }
+
+        // Clean up any existing subscription before creating new one
+        if (subscription) {
+          const supabase = createClient();
+          supabase.removeChannel(subscription);
+        }
+
+        // Set up real-time subscription for order updates with unique channel name
+        const supabase = createClient();
+        subscription = supabase
+          .channel(`user-orders-${authData.user.id}`)
+          .on(
+            'postgres_changes',
+            {
+              event: 'UPDATE',
+              schema: 'public',
+              table: 'orders',
+              filter: `user_id=eq.${authData.user.id}`
+            },
+            (payload: any) => {
+              console.log('Order updated:', payload);
+              setOrders(currentOrders =>
+                currentOrders.map(order =>
+                  order.id === payload.new.id
+                    ? { ...order, ...payload.new }
+                    : order
+                )
+              );
+            }
+          )
+          .subscribe();
+      } catch (err) {
+        console.error('Failed to load user and orders:', err);
+        if (active) {
+          window.location.href = '/login?error=session_expired';
+        }
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
+      }
     };
 
     loadUserAndOrders();
 
     return () => {
+      active = false;
       if (subscription) {
         const supabase = createClient();
         supabase.removeChannel(subscription);

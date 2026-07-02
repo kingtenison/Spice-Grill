@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { ArrowLeft, Clock, Share2, Link2, User, Tag } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { createAuthClientBrowser } from "@/lib/supabase/client";
 
 interface Tag {
   id: string;
@@ -34,7 +34,7 @@ export default function BlogPostPage() {
   useEffect(() => {
     if (!slug) return;
     let isMounted = true;
-    const supabase = createClient();
+    const supabase = createAuthClientBrowser();
 
     async function fetchPost() {
       setIsLoading(true);

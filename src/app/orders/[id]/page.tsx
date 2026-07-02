@@ -7,7 +7,7 @@ import {
   Package, ArrowLeft, Phone 
 } from "lucide-react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { createAuthClientBrowser } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 interface Order {
@@ -37,7 +37,7 @@ export default function OrderTrackingPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const supabase = createAuthClientBrowser();
 
   useEffect(() => {
     async function fetchOrder() {

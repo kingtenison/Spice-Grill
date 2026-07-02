@@ -1,11 +1,11 @@
-import { createClient } from "@/lib/supabase/server";
+import { getServiceClient } from "@/lib/supabase/service";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  const supabase = await createClient();
+  const db = getServiceClient();
 
   try {
-    const { data: tags, error } = await supabase
+    const { data: tags, error } = await db
       .from("tags")
       .select("*")
       .order("name", { ascending: true });
@@ -20,7 +20,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
+  const db = getServiceClient();
   const { name, description, color } = await request.json();
 
   if (!name || name.trim().length === 0) {
@@ -30,8 +30,7 @@ export async function POST(request: Request) {
   const slug = generateSlug(name.trim());
 
   try {
-    // Check if tag with same slug exists
-    const { data: existing } = await supabase
+    const { data: existing } = await db
       .from("tags")
       .select("id")
       .eq("slug", slug)
@@ -44,7 +43,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: tag, error: tagError } = await supabase
+    const { data: tag, error: tagError } = await db
       .from("tags")
       .insert({
         name: name.trim(),
@@ -65,7 +64,7 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const supabase = await createClient();
+  const db = getServiceClient();
   const { id, name, description, color } = await request.json();
 
   if (!id || !name) {
@@ -75,8 +74,7 @@ export async function PUT(request: Request) {
   const slug = generateSlug(name.trim());
 
   try {
-    // Check slug uniqueness (exclude current tag)
-    const { data: existing } = await supabase
+    const { data: existing } = await db
       .from("tags")
       .select("id")
       .eq("slug", slug)
@@ -90,7 +88,7 @@ export async function PUT(request: Request) {
       );
     }
 
-    const { data: tag, error: tagError } = await supabase
+    const { data: tag, error: tagError } = await db
       .from("tags")
       .update({
         name: name.trim(),
@@ -112,7 +110,7 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const supabase = await createClient();
+  const db = getServiceClient();
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
 
@@ -121,8 +119,7 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    // Delete tag (cascade will remove blog_tags entries)
-    const { error } = await supabase.from("tags").delete().eq("id", id);
+    const { error } = await db.from("tags").delete().eq("id", id);
 
     if (error) throw error;
 

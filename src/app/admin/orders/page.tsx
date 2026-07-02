@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Search, MoreVertical, CheckCircle, RefreshCw, Package, Truck, X, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
+import { createAuthClientBrowser } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
 interface Order {
@@ -14,6 +14,13 @@ interface Order {
   delivery_address?: string;
   profiles: { full_name: string };
   user_id?: string;
+  customer_location?: { lat: number; lng: number; address: string };
+  delivery_assignments?: {
+    id: string;
+    status: string;
+    dispatcher_id?: string;
+    dispatchers?: { name: string; phone: string };
+  };
 }
 
 export default function AdminOrdersPage() {
@@ -69,7 +76,7 @@ export default function AdminOrdersPage() {
     loadOrders();
 
     // Set up real-time subscription for order updates
-    const supabase = createClient();
+    const supabase = createAuthClientBrowser();
     const subscription = supabase
       .channel('admin-orders')
       .on(
@@ -153,6 +160,7 @@ export default function AdminOrdersPage() {
 
   const getActionButtons = (order: Order) => {
     const actions = [];
+    const deliveryStatus = order.delivery_assignments?.status;
 
     if (order.status === 'pending') {
       actions.push(
@@ -193,7 +201,59 @@ export default function AdminOrdersPage() {
       );
     }
 
-    if (order.status === 'ready') {
+    if (order.status === 'ready' && deliveryStatus === 'ready_for_pickup') {
+      actions.push(
+        <button
+          key="assign_dispatcher"
+          onClick={() => handleOrderAction(order.id, 'assign_dispatcher')}
+          disabled={processingOrder === order.id}
+          className="px-3 py-1 bg-indigo-600 text-white text-xs rounded hover:bg-indigo-700 disabled:bg-gray-400"
+        >
+          Assign Dispatcher
+        </button>
+      );
+    }
+
+    if (deliveryStatus === 'assigned') {
+      actions.push(
+        <button
+          key="pickup"
+          onClick={() => handleOrderAction(order.id, 'pickup')}
+          disabled={processingOrder === order.id}
+          className="px-3 py-1 bg-teal-600 text-white text-xs rounded hover:bg-teal-700 disabled:bg-gray-400"
+        >
+          Mark Picked Up
+        </button>
+      );
+    }
+
+    if (deliveryStatus === 'picked_up') {
+      actions.push(
+        <button
+          key="on_way"
+          onClick={() => handleOrderAction(order.id, 'on_way')}
+          disabled={processingOrder === order.id}
+          className="px-3 py-1 bg-cyan-600 text-white text-xs rounded hover:bg-cyan-700 disabled:bg-gray-400"
+        >
+          On the Way
+        </button>
+      );
+    }
+
+    if (deliveryStatus === 'on_the_way') {
+      actions.push(
+        <button
+          key="arrive"
+          onClick={() => handleOrderAction(order.id, 'arrive')}
+          disabled={processingOrder === order.id}
+          className="px-3 py-1 bg-amber-600 text-white text-xs rounded hover:bg-amber-700 disabled:bg-gray-400"
+        >
+          Arrived
+        </button>
+      );
+    }
+
+    if (deliveryStatus === 'arrived') {
       actions.push(
         <button
           key="deliver"

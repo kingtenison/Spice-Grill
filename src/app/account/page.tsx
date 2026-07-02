@@ -22,7 +22,7 @@ import {
   Heart,
   Star
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, safeGetUser } from "@/lib/supabase/client";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -136,102 +136,109 @@ export default function AccountPage() {
   };
 
   useEffect(() => {
-    if (subscriptionActive) return; // Prevent multiple executions
+    let channel: any = null;
+    let active = true;
 
     const loadUserData = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        window.location.href = '/login';
-        return;
-      }
-
-      setUser(user);
-
-      // Load user profile
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (profileData) {
-        setProfile({
-          ...profileData,
-          email: user.email || ''
-        });
-      }
-
-      // Load orders
-      const { data: ordersData, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          order_items(
-            *,
-            menu_items(name, image_url)
-          )
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error loading orders:', error);
-      } else {
-        setOrders(ordersData || []);
-      }
-
-      setIsLoading(false);
-
-      // Set up real-time subscription for order updates (only once)
-      if (!subscriptionActive) {
-        setSubscriptionActive(true);
-        let channel: any = null;
-
-        try {
-          channel = supabase.channel(`user-orders-${user.id}`);
-          channel
-            .on(
-              'postgres_changes',
-              {
-                event: 'UPDATE',
-                schema: 'public',
-                table: 'orders',
-                filter: `user_id=eq.${user.id}`
-              },
-              (payload: any) => {
-                console.log('Order updated:', payload);
-                setOrders(currentOrders =>
-                  currentOrders.map(order =>
-                    order.id === payload.new.id
-                      ? { ...order, ...payload.new }
-                      : order
-                  )
-                );
-              }
-            )
-            .subscribe((status: string) => {
-              console.log('Subscription status:', status);
-            });
-        } catch (error) {
-          console.warn('Failed to set up realtime subscription:', error);
+      try {
+        // Fetch user and profile from server
+        const authRes = await fetch("/api/auth/me");
+        if (!authRes.ok) {
+          console.error("Auth check failed with status:", authRes.status);
+          if (active) {
+            window.location.href = '/login';
+          }
+          return;
         }
 
-        return () => {
-          try {
-            setSubscriptionActive(false);
-            if (channel) {
-              channel.unsubscribe();
-            }
-          } catch (error) {
-            console.warn('Error unsubscribing from realtime channel:', error);
+        const authData = await authRes.json();
+        
+        if (!active) return;
+
+        if (!authData.user) {
+          window.location.href = '/login';
+          return;
+        }
+
+        setUser(authData.user);
+        
+        if (authData.profile) {
+          setProfile({
+            ...authData.profile,
+            email: authData.user.email || ''
+          });
+        }
+
+        // Fetch user orders from server
+        const ordersRes = await fetch("/api/orders/user");
+        if (ordersRes.ok) {
+          const ordersData = await ordersRes.json();
+          if (active) {
+            setOrders(ordersData.orders || []);
           }
-        };
+        } else {
+          console.error("Failed to load orders");
+        }
+
+        // Set up real-time subscription for order updates (only once)
+        if (!subscriptionActive) {
+          setSubscriptionActive(true);
+
+          try {
+            const supabase = createClient();
+            channel = supabase.channel(`user-orders-${authData.user.id}`);
+            channel
+              .on(
+                'postgres_changes',
+                {
+                  event: 'UPDATE',
+                  schema: 'public',
+                  table: 'orders',
+                  filter: `user_id=eq.${authData.user.id}`
+                },
+                (payload: any) => {
+                  console.log('Order updated:', payload);
+                  setOrders(currentOrders =>
+                    currentOrders.map(order =>
+                      order.id === payload.new.id
+                        ? { ...order, ...payload.new }
+                        : order
+                    )
+                  );
+                }
+              )
+              .subscribe((status: string) => {
+                console.log('Subscription status:', status);
+              });
+          } catch (error) {
+            console.warn('Failed to set up realtime subscription:', error);
+          }
+        }
+      } catch (err: any) {
+        console.error('Failed to load user data:', err);
+        if (active) {
+          window.location.href = '/login?error=session_expired';
+        }
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
       }
     };
 
     loadUserData();
+
+    return () => {
+      active = false;
+      try {
+        setSubscriptionActive(false);
+        if (channel) {
+          channel.unsubscribe();
+        }
+      } catch (error) {
+        console.warn('Error unsubscribing from realtime channel:', error);
+      }
+    };
   }, []);
 
   if (isLoading) {

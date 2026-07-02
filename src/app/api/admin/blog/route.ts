@@ -1,13 +1,13 @@
-import { createClient } from "@/lib/supabase/server";
+import { getServiceClient } from "@/lib/supabase/service";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
-  const supabase = await createClient();
+  const db = getServiceClient();
   const { searchParams } = new URL(request.url);
   const includeTaxonomy = searchParams.has("include");
 
   try {
-    let query = supabase
+    let query = db
       .from("blogs")
       .select(`
         *,
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
+  const db = getServiceClient();
   const body = await request.json();
 
   const {
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     const finalSlug = slug || generateSlug(title);
 
     // Check slug uniqueness
-    const { data: existing } = await supabase
+    const { data: existing } = await db
       .from("blogs")
       .select("id")
       .eq("slug", finalSlug)
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
     }
 
     // Insert blog post
-    const { data: post, error: postError } = await supabase
+    const { data: post, error: postError } = await db
       .from("blogs")
       .insert({
         title,
@@ -101,11 +101,11 @@ export async function POST(request: Request) {
 
     // Attach categories (through category_id) and tags
     if (category_ids.length > 0 || tag_ids.length > 0) {
-      await attachTaxonomy(supabase, post.id, category_ids, tag_ids);
+      await attachTaxonomy(db, post.id, category_ids, tag_ids);
     }
 
     // Fetch the complete post with relations
-    const { data: fullPost } = await supabase
+    const { data: fullPost } = await db
       .from("blogs")
       .select(`
         *,

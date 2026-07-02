@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
+import { getServiceClient } from "@/lib/supabase/service";
 import { NextResponse } from "next/server";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
+  const db = getServiceClient();
   const url = new URL(request.url);
   const { id: orderId } = await params;
   const action = url.searchParams.get('action');
@@ -36,29 +38,32 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Admin access required" }, { status: 403 });
   }
 
-  const validActions = ['confirm', 'prepare', 'ready', 'deliver', 'cancel'];
+  const validActions = ['confirm', 'prepare', 'ready', 'assign_dispatcher', 'pickup', 'on_way', 'arrive', 'deliver', 'cancel'];
   if (!validActions.includes(action)) {
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   }
 
-  // Map actions to status
-  const statusMap: Record<string, string> = {
-    confirm: 'accepted',
-    prepare: 'preparing',
-    ready: 'ready',
-    deliver: 'delivered',
-    cancel: 'cancelled'
+  // Map actions to order status and delivery status
+  const statusMap: Record<string, { orderStatus: string; deliveryStatus?: string }> = {
+    confirm: { orderStatus: 'accepted' },
+    prepare: { orderStatus: 'preparing', deliveryStatus: 'preparing' },
+    ready: { orderStatus: 'ready', deliveryStatus: 'ready_for_pickup' },
+    assign_dispatcher: { orderStatus: 'ready', deliveryStatus: 'assigned' },
+    pickup: { orderStatus: 'out_for_delivery', deliveryStatus: 'picked_up' },
+    on_way: { orderStatus: 'out_for_delivery', deliveryStatus: 'on_the_way' },
+    arrive: { orderStatus: 'out_for_delivery', deliveryStatus: 'arrived' },
+    deliver: { orderStatus: 'delivered', deliveryStatus: 'delivered' },
+    cancel: { orderStatus: 'cancelled', deliveryStatus: 'cancelled' }
   };
 
-  const newStatus = statusMap[action];
+  const { orderStatus, deliveryStatus } = statusMap[action];
 
   try {
-    console.log(`🔄 Updating order ${orderId} to status ${newStatus}`);
+    console.log(`🔄 Updating order ${orderId} to status ${orderStatus}, delivery status ${deliveryStatus}`);
 
-    // First, just update the status without selecting complex relations
-    const { error: updateError } = await supabase
+    const { error: updateError } = await db
       .from("orders")
-      .update({ status: newStatus })
+      .update({ status: orderStatus })
       .eq("id", orderId);
 
     console.log('Update result:', { error: updateError });
@@ -68,8 +73,22 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       throw updateError;
     }
 
-    // Then fetch the updated order
-    const { data: order, error: fetchError } = await supabase
+    // Update delivery assignment status if applicable
+    if (deliveryStatus) {
+      const { error: deliveryUpdateError } = await db
+        .from("delivery_assignments")
+        .update({ status: deliveryStatus })
+        .eq("order_id", orderId);
+
+      console.log('Delivery update result:', { error: deliveryUpdateError });
+
+      if (deliveryUpdateError) {
+        console.warn('⚠️ Delivery update failed, but order update succeeded:', deliveryUpdateError);
+        // Don't throw - order update is the critical part
+      }
+    }
+
+    const { data: order, error: fetchError } = await db
       .from("orders")
       .select(`
         *,
@@ -85,7 +104,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       // Still return success since the update worked
       return NextResponse.json({
         success: true,
-        order: { id: orderId, status: newStatus },
+        order: { id: orderId, status: orderStatus },
         message: `Order ${action}ed successfully`
       });
     }

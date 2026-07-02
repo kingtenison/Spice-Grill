@@ -1,9 +1,9 @@
-import { createClient } from "@/lib/supabase/server";
+import { getServiceClient } from "@/lib/supabase/service";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
+    const db = getServiceClient();
     const formData = await request.formData();
     const file = formData.get("file") as File;
 
@@ -29,10 +29,9 @@ export async function POST(request: Request) {
     const fileName = `${fileType}/${timestamp}-${safeName}`;
 
     // Ensure 'media' bucket exists
-    await ensureBucketExists(supabase, "media");
+    await ensureBucketExists(db, "media");
 
-    // Upload the file
-    const { data: uploadData, error } = await supabase
+    const { data: uploadData, error } = await db
       .storage
       .from("media")
       .upload(fileName, file, {
@@ -46,12 +45,12 @@ export async function POST(request: Request) {
     }
 
     // Get public URL
-    const { data: publicUrlData } = supabase.storage
+    const { data: publicUrlData } = db.storage
       .from("media")
       .getPublicUrl(fileName);
 
     // Save metadata to database
-    const { data: mediaFile, error: dbError } = await supabase
+    const { data: mediaFile, error: dbError } = await db
       .from("media_files")
       .insert({
         url: publicUrlData.publicUrl,

@@ -1,9 +1,9 @@
-import { createClient } from "@/lib/supabase/server";
+import { getServiceClient } from "@/lib/supabase/service";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const supabase = await createClient();
+    const supabase = getServiceClient();
 
     const { data: categories, error } = await supabase
       .from("categories")
@@ -25,7 +25,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
+  const supabase = getServiceClient();
   const { name, slug, image_url } = await request.json();
 
   if (!name || !slug) {

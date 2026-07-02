@@ -1,43 +1,15 @@
-import { createClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/server";
-
-export const runtime = 'edge';
+import { redirect } from "next/navigation";
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/menu";
 
+  // PKCE callback must be handled client-side
+  // Redirect to client handler that has access to the code verifier
   if (code) {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-
-    if (!error) {
-      // Role-based redirect for staff
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single();
-
-        const role = profile?.role;
-
-        if (role === "admin") {
-          return NextResponse.redirect(`${origin}/admin`);
-        }
-
-        if (role === "employee") {
-          return NextResponse.redirect(`${origin}/employee`);
-        }
-      }
-
-      return NextResponse.redirect(`${origin}${next}`);
-    }
+    return redirect(`/auth/callback-client?code=${code}&next=${encodeURIComponent(next)}`);
   }
 
-  // If something went wrong, redirect to login with error
-  return NextResponse.redirect(`${origin}/login?error=auth_failed`);
+  return redirect(`/login?error=No%20auth%20code%20provided`);
 }

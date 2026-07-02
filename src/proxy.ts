@@ -23,9 +23,21 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Refresh the session with a timeout to prevent hanging on stale
+  // sessions or network issues (the root cause of the infinite loading).
+  let user = null
+  try {
+    const result = await Promise.race([
+      supabase.auth.getUser(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('proxy_auth_timeout')), 8000),
+      ),
+    ])
+    user = result.data?.user ?? null
+  } catch (err) {
+    // Timeout or network error — clear stale cookies and let through
+    console.warn('[proxy] Auth check failed:', (err as Error).message)
+  }
 
   if (
     !user &&
@@ -34,6 +46,8 @@ export async function updateSession(request: NextRequest) {
     !request.nextUrl.pathname.startsWith('/auth') &&
     !request.nextUrl.pathname.startsWith('/menu') &&
     !request.nextUrl.pathname.startsWith('/cart') &&
+    !request.nextUrl.pathname.startsWith('/checkout') &&
+    !request.nextUrl.pathname.startsWith('/orders') &&
     request.nextUrl.pathname !== '/'
   ) {
     const url = request.nextUrl.clone()
@@ -60,6 +74,8 @@ export const config = {
      * - /auth (OAuth callback and auth routes)
      * - /api (API routes)
      * - /debug (debug pages)
+     * - /checkout (public checkout)
+     * - /orders (public orders)
      */
     '/((?!api|_next/static|_next/image|favicon.ico|login|register|auth|debug|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],

@@ -24,10 +24,25 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: "Menu item not found" }, { status: 404 });
     }
 
-    // Parse image_url JSON string back to array
+    // Parse image_url - handle array, JSON string, or single string
+    let images: string[] = [];
+    if (item.image_url) {
+      if (Array.isArray(item.image_url)) {
+        images = item.image_url;
+      } else if (typeof item.image_url === 'string') {
+        try {
+          const parsed = JSON.parse(item.image_url);
+          images = Array.isArray(parsed) ? parsed : [item.image_url];
+        } catch {
+          // Not valid JSON, treat as single image URL
+          images = [item.image_url];
+        }
+      }
+    }
+
     const processedItem = {
       ...item,
-      images: item.image_url ? (Array.isArray(item.image_url) ? item.image_url : JSON.parse(item.image_url)) : []
+      images
     };
 
     return NextResponse.json({ item: processedItem });

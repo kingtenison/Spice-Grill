@@ -1,10 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
+import { getServiceClient } from "@/lib/supabase/service";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  const supabase = await createClient();
+  const db = getServiceClient();
 
-  const { data: campaigns, error } = await supabase
+  const { data: campaigns, error } = await db
     .from("campaigns")
     .select("*")
     .order("created_at", { ascending: false });
@@ -16,21 +16,4 @@ export async function GET() {
   return NextResponse.json({
     campaigns: campaigns ?? [],
   });
-}
-
-export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { name, type, status, reach, performance } = await request.json();
-
-  const { data: campaign, error } = await supabase
-    .from("campaigns")
-    .insert([{ name, type, status, reach, performance }])
-    .select()
-    .single();
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ campaign });
 }

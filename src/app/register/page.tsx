@@ -6,7 +6,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { signUpWithPassword, signInWithGoogle } from "@/app/actions/auth";
-import { createClient } from "@/lib/supabase/client";
+import { createAuthClientBrowser } from "@/lib/supabase/client";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -40,7 +40,7 @@ export default function RegisterPage() {
           // New users are customers, but check role just in case (future-proof)
           setTimeout(async () => {
             try {
-              const supabase = createClient();
+              const supabase = createAuthClientBrowser();
               const { data: profile } = await supabase
                 .from("profiles")
                 .select("role")

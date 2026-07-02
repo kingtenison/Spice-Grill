@@ -1,11 +1,11 @@
-import { createClient } from "@/lib/supabase/server";
+import { getServiceClient } from "@/lib/supabase/service";
 import { NextResponse } from "next/server";
 
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const supabase = await createClient();
+  const db = getServiceClient();
   const body = await request.json();
   const { id } = await params;
 
@@ -23,11 +23,9 @@ export async function PUT(
   } = body;
 
   try {
-    // Generate slug if not provided
     const finalSlug = slug || generateSlug(title);
 
-    // Check slug uniqueness (exclude current post)
-    const { data: existing } = await supabase
+    const { data: existing } = await db
       .from("blogs")
       .select("id")
       .eq("slug", finalSlug)
@@ -41,7 +39,6 @@ export async function PUT(
       );
     }
 
-    // Update blog post
     const updateData: any = {
       title,
       slug: finalSlug,
@@ -50,13 +47,12 @@ export async function PUT(
       featured_image_url: featured_image_url || null,
       meta_title: meta_title || title,
       meta_description: meta_description || excerpt || "",
-      category_id: category_ids[0] || null, // Primary category
+      category_id: category_ids[0] || null,
       status,
     };
 
-    // Set published_at if status changes to published
     if (status === "published") {
-      const { data: currentPost } = await supabase
+      const { data: currentPost } = await db
         .from("blogs")
         .select("published_at")
         .eq("id", id)
@@ -69,7 +65,7 @@ export async function PUT(
       updateData.published_at = null;
     }
 
-    const { data: post, error: postError } = await supabase
+    const { data: post, error: postError } = await db
       .from("blogs")
       .update(updateData)
       .eq("id", id)
@@ -78,11 +74,9 @@ export async function PUT(
 
     if (postError) throw postError;
 
-    // Attach taxonomy (categories & tags)
-    await attachTaxonomy(supabase, id, category_ids, tag_ids);
+    await attachTaxonomy(db, id, category_ids, tag_ids);
 
-    // Fetch complete post with relations
-    const { data: fullPost } = await supabase
+    const { data: fullPost } = await db
       .from("blogs")
       .select(`
         *,
@@ -97,7 +91,7 @@ export async function PUT(
 
     const formattedPost = {
       ...fullPost,
-      categories: fullPost?.categories ? [fullPost.categories] : [], // Wrap single category in array
+      categories: fullPost?.categories ? [fullPost.categories] : [],
       tags: fullPost?.blog_tags?.map((bt: any) => bt.tags).filter(Boolean) || [],
     };
 
@@ -112,15 +106,13 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const supabase = await createClient();
+  const db = getServiceClient();
   const { id } = await params;
 
   try {
-    // Delete blog tags first (cascade should handle, but be explicit)
-    await supabase.from("blog_tags").delete().eq("blog_id", id);
+    await db.from("blog_tags").delete().eq("blog_id", id);
 
-    // Delete the post
-    const { error } = await supabase.from("blogs").delete().eq("id", id);
+    const { error } = await db.from("blogs").delete().eq("id", id);
 
     if (error) throw error;
 
@@ -136,26 +128,23 @@ function generateSlug(text: string): string {
     .toLowerCase()
     .trim()
     .replace(/[^\w\s-]/g, "")
-    .replace(/[\s_-]+/g, "")
     .replace(/[\s_-]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
 
-async function attachTaxonomy(
-  supabase: any,
+function attachTaxonomy(
+  db: any,
   blogId: string,
   categoryIds: string[],
   tagIds: string[]
 ) {
-  // Remove existing tag relations
-  await supabase.from("blog_tags").delete().eq("blog_id", blogId);
-
-  // Insert new tag relations
-  if (tagIds.length > 0) {
-    const blogTags = tagIds.map((tagId) => ({
-      blog_id: blogId,
-      tag_id: tagId,
-    }));
-    await supabase.from("blog_tags").insert(blogTags);
-  }
+  return db.from("blog_tags").delete().eq("blog_id", blogId).then(() => {
+    if (tagIds.length > 0) {
+      const blogTags = tagIds.map((tagId: string) => ({
+        blog_id: blogId,
+        tag_id: tagId,
+      }));
+      return db.from("blog_tags").insert(blogTags);
+    }
+  });
 }

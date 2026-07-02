@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { ArrowRight, Clock, Tag } from "lucide-react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { createAuthClientBrowser } from "@/lib/supabase/client";
 
 interface Tag {
   id: string;
@@ -36,7 +36,7 @@ export default function BlogPage() {
 
   useEffect(() => {
     let isMounted = true;
-    const supabase = createClient();
+    const supabase = createAuthClientBrowser();
 
     async function fetchPosts() {
       try {
