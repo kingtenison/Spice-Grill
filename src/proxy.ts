@@ -48,6 +48,10 @@ export async function updateSession(request: NextRequest) {
     !request.nextUrl.pathname.startsWith('/cart') &&
     !request.nextUrl.pathname.startsWith('/checkout') &&
     !request.nextUrl.pathname.startsWith('/orders') &&
+    !request.nextUrl.pathname.startsWith('/blog') &&
+    !request.nextUrl.pathname.startsWith('/loyalty') &&
+    !request.nextUrl.pathname.startsWith('/dispatcher') &&
+    !request.nextUrl.pathname.startsWith('/track') &&
     request.nextUrl.pathname !== '/'
   ) {
     const url = request.nextUrl.clone()
@@ -74,9 +78,11 @@ export const config = {
      * - /auth (OAuth callback and auth routes)
      * - /api (API routes)
      * - /debug (debug pages)
-     * - /checkout (public checkout)
-     * - /orders (public orders)
+     * - /blog (public blog)
+     * - /loyalty (public rewards)
+     * - /dispatcher (has own login)
+     * - /track (public order tracking)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|login|register|auth|debug|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+     '/((?!api|_next/static|_next/image|favicon.ico|login|register|auth|debug|blog|loyalty|dispatcher|track|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

@@ -1,10 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { ArrowLeft, Clock, Share2, Link2, User, Tag } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { createAuthClientBrowser } from "@/lib/supabase/client";
+
+function sanitizeHtml(html: string): string {
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+    .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
+    .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+    .replace(/\bon\w+\s*=\s*"[^"]*"/gi, '')
+    .replace(/\bon\w+\s*=\s*'[^']*'/gi, '')
+    .replace(/\bon\w+\s*=\s*[^\s>]+/gi, '');
+}
 
 interface Tag {
   id: string;
@@ -166,7 +178,7 @@ export default function BlogPostPage() {
       {post.featured_image_url && (
         <div className="container px-4 mx-auto max-w-6xl mb-16">
           <div className="aspect-[21/9] rounded-2xl overflow-hidden shadow-xl">
-            <img src={post.featured_image_url} alt={post.title} className="w-full h-full object-cover" />
+            <Image src={post.featured_image_url} alt={post.title} width={1200} height={514} priority className="w-full h-full object-cover" />
           </div>
         </div>
       )}
@@ -191,7 +203,7 @@ export default function BlogPostPage() {
 
         <div
           className="prose prose-lg max-w-none [&_h1]:text-gray-900 [&_h2]:text-gray-900 [&_h3]:text-gray-900 [&_p]:text-gray-700 [&_a]:text-red-600 [&_a]:underline [&_blockquote]:border-l-red-600 [&_blockquote]:text-gray-600"
-          dangerouslySetInnerHTML={{ __html: post.content || "" }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content || "") }}
         />
 
         {/* Share */}

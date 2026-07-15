@@ -84,7 +84,7 @@ export default function MenuPage() {
       images = images.filter(img =>
         img &&
         typeof img === 'string' &&
-        img.startsWith('http') &&
+        (img.startsWith('http') || img.startsWith('/')) &&
         !img.includes('undefined') &&
         !img.includes('null')
       );

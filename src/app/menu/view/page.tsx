@@ -46,9 +46,12 @@ export default function MenuView() {
     }
   }, [supabase]);
 
+  const getStorage = (key: string) => { try { return localStorage.getItem(key); } catch { return null; } };
+  const setStorage = (key: string, value: string) => { try { localStorage.setItem(key, value); } catch {} };
+
   const awardViewPoints = useCallback(async () => {
     try {
-      const lastViewDate = localStorage.getItem("menuViewDate");
+      const lastViewDate = getStorage("menuViewDate");
       const today = new Date().toDateString();
       if (lastViewDate === today) return;
 
@@ -61,7 +64,7 @@ export default function MenuView() {
       });
 
       if (error) throw error;
-      localStorage.setItem("menuViewDate", today);
+      setStorage("menuViewDate", today);
       setPointsAwardedToday(true);
     } catch (err) {
       console.error("Failed to award view points:", err);

@@ -218,12 +218,12 @@ function CartItemCard({
 function CartItemsView() {
   const {
     items,
-    shippingMethod,
+    deliveryMethod,
     coupon,
     removeItem,
     updateQuantity,
     getSubtotal,
-    getShippingCost,
+    getDeliveryCost,
     getTaxAmount,
     getDiscountAmount,
     getTotal,
@@ -236,7 +236,7 @@ function CartItemsView() {
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
   const subtotal = getSubtotal();
-  const shippingCost = getShippingCost();
+  const deliveryCost = getDeliveryCost();
   const taxAmount = getTaxAmount();
   const discountAmount = getDiscountAmount();
   const total = getTotal();
@@ -383,9 +383,9 @@ function CartItemsView() {
                   <span className="font-medium text-gray-900 tabular-nums">${subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-gray-500">
-                  <span>Shipping</span>
+                  <span>Delivery</span>
                   <span className="font-medium text-gray-900 tabular-nums">
-                    {shippingCost === 0 ? <span className="text-green-600">Free</span> : `$${shippingCost.toFixed(2)}`}
+                    {deliveryCost === 0 ? <span className="text-green-600">Free</span> : `$${deliveryCost.toFixed(2)}`}
                   </span>
                 </div>
                 <div className="flex justify-between text-gray-500">
@@ -472,7 +472,7 @@ function CartItemsView() {
           {/* Mini breakdown */}
           <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
             <span>
-              Subtotal ${subtotal.toFixed(2)} · Shipping {shippingCost === 0 ? "Free" : `$${shippingCost.toFixed(2)}`} · Tax ${taxAmount.toFixed(2)}
+              Subtotal ${subtotal.toFixed(2)} · Delivery {deliveryCost === 0 ? "Free" : `$${deliveryCost.toFixed(2)}`} · Tax ${taxAmount.toFixed(2)}
             </span>
             {discountAmount > 0 && (
               <span className="text-green-600 font-medium">-${discountAmount.toFixed(2)}</span>

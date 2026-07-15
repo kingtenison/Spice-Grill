@@ -16,8 +16,10 @@ interface SettingsState {
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<SettingsState>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('admin-settings');
-      if (saved) return JSON.parse(saved);
+      try {
+        const saved = localStorage.getItem('admin-settings');
+        if (saved) return JSON.parse(saved);
+      } catch {}
     }
     return {
       restaurantName: "Spice Grille",
@@ -31,7 +33,7 @@ export default function AdminSettingsPage() {
   });
 
   const saveSettings = () => {
-    localStorage.setItem('admin-settings', JSON.stringify(settings));
+    try { localStorage.setItem('admin-settings', JSON.stringify(settings)); } catch {}
     alert("Settings saved! (In production this would persist to database)");
   };
 

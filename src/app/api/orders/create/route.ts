@@ -21,17 +21,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    let methodName = '';
     if (orderData.shipping_method) {
       const method = orderData.shipping_method;
-      const methodName = typeof method === 'object' ? (method.name || method.id || '') : method;
+      methodName = typeof method === 'object' ? (method.name || method.id || '') : method;
       if (methodName) {
         orderRecord.special_instructions = orderRecord.special_instructions
-          ? `Shipping: ${methodName}\n${orderRecord.special_instructions}`
-          : `Shipping: ${methodName}`;
+          ? `Delivery: ${methodName}\n${orderRecord.special_instructions}`
+          : `Delivery: ${methodName}`;
       }
       if (method === 'pickup') {
         orderRecord.delivery_address = orderRecord.delivery_address || 'Pickup';
       }
+      orderRecord.shipping_method = methodName;
     }
 
     const supabase = createClient(
@@ -63,7 +65,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (orderData.shipping_method && typeof orderData.shipping_method === 'string' && orderData.shipping_method !== 'pickup') {
+    if (methodName && methodName !== 'pickup') {
       const { error: deliveryError } = await supabase
         .from('delivery_assignments')
         .insert({ 

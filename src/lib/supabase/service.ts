@@ -4,9 +4,12 @@ let serviceClient: SupabaseClient<any> | null = null;
 
 export function getServiceClient() {
   if (!serviceClient) {
-    serviceClient = createClient<any>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url) throw new Error('Missing required environment variable: NEXT_PUBLIC_SUPABASE_URL');
+    if (!key) throw new Error('Missing required environment variable: SUPABASE_SERVICE_ROLE_KEY');
+
+    serviceClient = createClient<any>(url, key,
       {
         global: {
           fetch: (url: RequestInfo | URL, init?: RequestInit) => {

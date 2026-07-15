@@ -9,6 +9,10 @@ import {
 import dynamic from "next/dynamic";
 const LiveMap = dynamic(() => import("@/components/dispatcher/LiveMap"), { ssr: false });
 
+const storageGet = (key: string) => { try { return localStorage.getItem(key); } catch { return null; } };
+const storageSet = (key: string, value: string) => { try { localStorage.setItem(key, value); } catch {} };
+const storageRemove = (key: string) => { try { localStorage.removeItem(key); } catch {} };
+
 type DeliveryStatus = 'pending' | 'preparing' | 'ready_for_pickup' | 'assigned' | 'picked_up' | 'on_the_way' | 'arrived' | 'delivered' | 'cancelled' | 'delayed';
 
 interface DeliveryAssignment {
@@ -89,7 +93,6 @@ export default function DispatcherPortal() {
   const [completedDeliveries, setCompletedDeliveries] = useState<DeliveryAssignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [phoneInput, setPhoneInput] = useState('');
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Clean up polling on unmount
@@ -104,6 +107,18 @@ export default function DispatcherPortal() {
 
   useEffect(() => {
     const initDispatcherPortal = async () => {
+      // 0. Check main site auth session first
+      try {
+        const authRes = await fetch('/api/auth/me');
+        if (!authRes.ok || !(await authRes.json()).user) {
+          window.location.href = '/login';
+          return;
+        }
+      } catch {
+        window.location.href = '/login';
+        return;
+      }
+
       try {
         // 1. Try to auto-login based on the main auth session
         const res = await fetch('/api/dispatcher');
@@ -111,7 +126,7 @@ export default function DispatcherPortal() {
           const data = await res.json();
           if (data.profile) {
             if (data.profile.application_status === 'approved') {
-              localStorage.setItem('dispatcher_id', data.profile.id);
+              storageSet('dispatcher_id', data.profile.id);
               setDispatcherProfile(data.profile);
               setActiveDeliveries(data.active || []);
               setCompletedDeliveries(data.completed || []);
@@ -134,7 +149,7 @@ export default function DispatcherPortal() {
       }
 
       // 2. Fallback to localStorage dispatcher_id if user is not logged in on the main site
-      const savedDispatcherId = localStorage.getItem('dispatcher_id');
+      const savedDispatcherId = storageGet('dispatcher_id');
       if (savedDispatcherId) {
         await fetchDispatcherProfile(savedDispatcherId);
       } else {
@@ -196,7 +211,7 @@ export default function DispatcherPortal() {
 
       if (!data.profile) {
         // No profile returned at all — might have been deleted
-        localStorage.removeItem('dispatcher_id');
+        storageRemove('dispatcher_id');
         setLoading(false);
         return;
       }
@@ -208,7 +223,7 @@ export default function DispatcherPortal() {
         } else if (data.profile.application_status === 'rejected') {
           setError(`Your application was rejected. ${data.profile.application_notes || 'Please contact support for more information.'}`);
         }
-        localStorage.removeItem('dispatcher_id');
+        storageRemove('dispatcher_id');
         setLoading(false);
         return;
       }
@@ -226,7 +241,7 @@ export default function DispatcherPortal() {
         return fetchDispatcherProfile(dispatcherId, retries - 1);
       }
       console.error('Error fetching dispatcher profile:', error);
-      localStorage.removeItem('dispatcher_id');
+      storageRemove('dispatcher_id');
       setError('Failed to load dispatcher profile. Please try logging in again.');
       setLoading(false);
     }
@@ -256,43 +271,15 @@ export default function DispatcherPortal() {
     }, 30000);
   };
 
-  const handleLogin = async () => {
-    if (!phoneInput.trim()) return;
-
-    try {
-      const res = await fetch('/api/dispatcher', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: phoneInput.trim() }),
-      });
-      const data = await res.json();
-
-      if (!res.ok || !data.dispatcher) {
-        setError('Dispatcher not found or inactive');
-        return;
-      }
-
-      localStorage.setItem('dispatcher_id', data.dispatcher.id);
-      setDispatcherProfile(data.dispatcher);
-      await fetchDeliveries(data.dispatcher.id);
-      startPolling(data.dispatcher.id);
-      setError(null);
-    } catch (error) {
-      console.error('Error logging in:', error);
-      setError('Failed to login');
-    }
-  };
-
   const handleLogout = () => {
     if (pollingRef.current) {
       clearInterval(pollingRef.current);
       pollingRef.current = null;
     }
-    localStorage.removeItem('dispatcher_id');
+    storageRemove('dispatcher_id');
     setDispatcherProfile(null);
     setActiveDeliveries([]);
     setCompletedDeliveries([]);
-    setPhoneInput('');
   };
 
   const updateDeliveryStatus = async (deliveryId: string, status: DeliveryStatus) => {
@@ -385,43 +372,13 @@ export default function DispatcherPortal() {
     );
   }
 
-  // Login Screen
+  // Not logged in or not a dispatcher — redirect to main login
   if (!dispatcherProfile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
-          <div className="text-center mb-8">
-            <Truck className="w-16 h-16 text-red-600 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900">Dispatcher Portal</h1>
-            <p className="text-gray-600">Enter your phone number to login</p>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-              <input
-                type="tel"
-                value={phoneInput}
-                onChange={(e) => setPhoneInput(e.target.value)}
-                placeholder="Enter your phone number"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
-              />
-            </div>
-
-            {error && (
-              <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <AlertCircle className="w-5 h-5 text-red-600" />
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
-            )}
-
-            <button
-              onClick={handleLogin}
-              className="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-            >
-              Login
-            </button>
-          </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirecting to login...</p>
         </div>
       </div>
     );

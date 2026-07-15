@@ -43,13 +43,13 @@ export type Coupon = {
   discountValue: number
   description: string
   minimumAmount?: number
-  validUntil?: Date
+  validUntil?: string
 }
 
 export type OrderDetails = {
-  shippingAddress?: Address
+  deliveryAddress?: Address
   billingAddress?: Address
-  shippingMethod?: ShippingMethod
+  deliveryMethod?: ShippingMethod
   paymentMethod?: PaymentMethod
   couponCode?: string
   specialInstructions?: string
@@ -63,7 +63,7 @@ export type OrderDetails = {
 
 interface CartState {
   items: CartItem[]
-  shippingMethod?: ShippingMethod
+  deliveryMethod?: ShippingMethod
   coupon?: Coupon
   orderDetails?: OrderDetails
   currency: string
@@ -77,13 +77,13 @@ interface CartState {
 
   // Pricing calculations
   getSubtotal: () => number
-  getShippingCost: () => number
+  getDeliveryCost: () => number
   getTaxAmount: () => number
   getDiscountAmount: () => number
   getTotal: () => number
 
-  // Shipping & payment
-  setShippingMethod: (method: ShippingMethod) => void
+  // Delivery & payment
+  setDeliveryMethod: (method: ShippingMethod) => void
   setCoupon: (coupon: Coupon | undefined) => void
   setOrderDetails: (details: Partial<OrderDetails>) => void
 
@@ -95,7 +95,7 @@ interface CartState {
   validateCoupon: (code: string) => Promise<boolean>
 }
 
-const defaultShippingMethods: ShippingMethod[] = [
+const defaultDeliveryMethods: ShippingMethod[] = [
   {
     id: 'standard',
     name: 'Standard Delivery',
@@ -151,7 +151,7 @@ export const useCartStore = create<CartState>()(
       clearCart: () => set({
         items: [],
         coupon: undefined,
-        shippingMethod: undefined,
+        deliveryMethod: undefined,
         orderDetails: undefined
       }),
 
@@ -159,14 +159,14 @@ export const useCartStore = create<CartState>()(
         return get().items.reduce((acc, item) => acc + item.price * item.quantity, 0)
       },
 
-      getShippingCost: () => {
-        return get().shippingMethod?.cost || 0
+      getDeliveryCost: () => {
+        return get().deliveryMethod?.cost || 0
       },
 
       getTaxAmount: () => {
         const subtotal = get().getSubtotal()
-        const shipping = get().getShippingCost()
-        const taxableAmount = subtotal + shipping
+        const delivery = get().getDeliveryCost()
+        const taxableAmount = subtotal + delivery
         return taxableAmount * get().taxRate
       },
 
@@ -185,15 +185,15 @@ export const useCartStore = create<CartState>()(
 
       getTotal: () => {
         const subtotal = get().getSubtotal()
-        const shipping = get().getShippingCost()
+        const delivery = get().getDeliveryCost()
         const tax = get().getTaxAmount()
         const discount = get().getDiscountAmount()
 
-        return Math.max(0, subtotal + shipping + tax - discount)
+        return Math.max(0, subtotal + delivery + tax - discount)
       },
 
-      setShippingMethod: (method) => {
-        set({ shippingMethod: method })
+      setDeliveryMethod: (method) => {
+        set({ deliveryMethod: method })
       },
 
       setCoupon: (coupon) => {
@@ -251,7 +251,7 @@ export const useCartStore = create<CartState>()(
         items: state.items,
         currency: state.currency,
         taxRate: state.taxRate,
-        shippingMethod: state.shippingMethod,
+        deliveryMethod: state.deliveryMethod,
         coupon: state.coupon,
       }),
     }

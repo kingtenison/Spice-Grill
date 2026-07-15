@@ -45,7 +45,7 @@ export default function RegisterPage() {
                 .from("profiles")
                 .select("role")
                 .eq("id", data.user!.id)
-                .single();
+                .maybeSingle();
 
               const role = profile?.role;
               if (role === "admin") {

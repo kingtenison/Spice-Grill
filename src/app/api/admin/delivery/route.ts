@@ -129,14 +129,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
   }
 
-  // Check shipping method
-  const shippingMethod = typeof existingOrder.shipping_method === 'string' 
+  // Check delivery method
+  const deliveryMethod = typeof existingOrder.shipping_method === 'string' 
     ? existingOrder.shipping_method 
     : (existingOrder.shipping_method?.name || '');
   
-  console.log("Order shipping method:", shippingMethod);
+  console.log("Order delivery method:", deliveryMethod);
   
-  if (shippingMethod === 'pickup') {
+  if (deliveryMethod === 'pickup') {
     return NextResponse.json({ error: "Cannot create delivery assignment for pickup orders" }, { status: 400 });
   }
 

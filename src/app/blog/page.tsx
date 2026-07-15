@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { ArrowRight, Clock, Tag } from "lucide-react";
 import Link from "next/link";
 import { createAuthClientBrowser } from "@/lib/supabase/client";
@@ -110,9 +111,12 @@ export default function BlogPage() {
             >
               <div className="grid grid-cols-1 lg:grid-cols-2">
                 <div className="aspect-[4/3] lg:aspect-auto overflow-hidden">
-                  <img
+                  <Image
                     src={getImageUrl(posts[0])}
                     alt={posts[0].title}
+                    width={800}
+                    height={500}
+                    priority
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   />
                 </div>
@@ -172,9 +176,11 @@ export default function BlogPage() {
                   className="group flex flex-col rounded-2xl bg-white border border-gray-200 hover:border-red-600/30 transition-all hover:shadow-lg"
                 >
                   <div className="aspect-[16/10] rounded-t-2xl overflow-hidden">
-                    <img
+                    <Image
                       src={getImageUrl(post)}
                       alt={post.title}
+                      width={400}
+                      height={250}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                   </div>

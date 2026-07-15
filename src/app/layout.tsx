@@ -2,31 +2,95 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { RouteAwareNav } from "@/components/layout/RouteAwareNav";
+import { DefaultSeoSchema } from "@/components/seo/JsonLd";
+
+const siteUrl = "https://thespicegrillemn.com";
+const siteName = "The Spice Grille";
+const defaultTitle = "The Spice Grille - Afro-Caribbean Cuisine | Moorhead, MN";
+const defaultDescription =
+  "The Spice Grille brings a redefined mix of Afro-Caribbean cuisine to the Fargo-Moorhead area. Wood-fired grill, bold flavors, outdoor seating. 28 Moorhead Center Mall Avenue, Moorhead, MN.";
+const ogImage = `${siteUrl}/Spice_Logo.jpg`;
 
 export const metadata: Metadata = {
-  title: "The Spice Grille - Afro-Caribbean Cuisine | Moorhead, MN",
-  description: "The Spice Grille brings a redefined mix of Afro-Caribbean cuisine to the Fargo-Moorhead area. Wood-fired grill, bold flavors, outdoor seating. 28 Moorhead Center Mall Avenue, Moorhead, MN.",
-  keywords: "The Spice Grille, Afro-Caribbean cuisine, Moorhead MN, Fargo, wood-fired grill, African restaurant, Caribbean food, dine-in, curbside pickup",
-  authors: [{ name: "The Spice Grille" }],
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: defaultTitle,
+    template: `%s | ${siteName}`,
+  },
+  description: defaultDescription,
+  keywords: [
+    "The Spice Grille",
+    "Afro-Caribbean cuisine",
+    "Moorhead MN restaurant",
+    "Fargo African food",
+    "West African restaurant",
+    "Ghanaian food Minnesota",
+    "wood-fired grill",
+    "African restaurant Fargo-Moorhead",
+    "Caribbean food Minnesota",
+    "jollof rice",
+    "waakye",
+    "banku and tilapia",
+    "African catering Moorhead",
+    "dine-in Moorhead",
+    "curbside pickup Moorhead",
+  ],
+  authors: [{ name: "The Spice Grille", url: siteUrl }],
   creator: "The Spice Grille",
   publisher: "The Spice Grille",
+  formatDetection: {
+    telephone: true,
+    address: true,
+    email: true,
+  },
+  alternates: {
+    canonical: siteUrl,
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://thespicegrillemn.com",
-    title: "The Spice Grille - Afro-Caribbean Cuisine | Moorhead, MN",
-    description: "Bringing you a redefined mix of Afro-Caribbean cuisine to the Fargo-Moorhead area.",
-    siteName: "The Spice Grille",
+    url: siteUrl,
+    siteName,
+    title: defaultTitle,
+    description: defaultDescription,
+    images: [
+      {
+        url: ogImage,
+        width: 512,
+        height: 512,
+        alt: "The Spice Grille Logo - Afro-Caribbean Cuisine Moorhead MN",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "The Spice Grille - Afro-Caribbean Cuisine | Moorhead, MN",
-    description: "Bringing you a redefined mix of Afro-Caribbean cuisine to the Fargo-Moorhead area.",
+    title: defaultTitle,
+    description: defaultDescription,
+    images: [ogImage],
     creator: "@tsgmoorhead",
+    site: "@tsgmoorhead",
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  verification: {
+    google: "YOUR_GOOGLE_VERIFICATION_CODE",
+  },
+  category: "food",
+  classification: "Restaurant",
+  other: {
+    "geo.region": "US-MN",
+    "geo.placename": "Moorhead",
+    "geo.position": "46.8739;-96.7676",
+    "ICBM": "46.8739, -96.7676",
   },
 };
 
@@ -53,15 +117,26 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Spice Grille" />
         
+        {/* DNS Prefetch / Preconnect for performance */}
+        <link rel="dns-prefetch" href="//fonts.cdnfonts.com" />
+        <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="//images.unsplash.com" />
+        <link rel="preconnect" href="https://fonts.cdnfonts.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
+        
         {/* Fonts */}
         <link href="https://fonts.cdnfonts.com/css/justice-love" rel="stylesheet" />
         <link href="https://fonts.cdnfonts.com/css/nexa" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+
+        {/* JSON-LD Structured Data */}
+        <DefaultSeoSchema />
       </head>
       <body className="min-h-full flex flex-col bg-white text-gray-900">
         <Navbar />
         <RouteAwareNav />
-        <main className="flex-grow">
+        <main className="flex-grow pb-mobile-nav">
           {children}
         </main>
       </body>

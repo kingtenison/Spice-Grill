@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, UtensilsCrossed, Award, BookOpen, User, ShoppingCart, History } from "lucide-react";
+import { Home, UtensilsCrossed, Award, BookOpen, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useCartStore } from "@/store/useCartStore";
@@ -18,7 +17,6 @@ export function BottomNav() {
     { href: "/menu", label: "Menu", icon: UtensilsCrossed },
     { href: "/loyalty", label: "Rewards", icon: Award },
     { href: "/blog", label: "Story", icon: BookOpen },
-    { href: "/orders", label: "Orders", icon: History },
     { href: "/cart", label: "Cart", icon: ShoppingCart, badge: cartCount },
   ];
 
@@ -29,12 +27,12 @@ export function BottomNav() {
 
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-gray-200">
-      <div className="grid grid-cols-6 h-16">
+      <div className="grid grid-cols-5 h-16">
         {navLinks.map((link) => {
           const Icon = link.icon;
           const active = isActive(link.href);
           const showBadge = link.badge && link.badge > 0;
-          
+
           return (
             <Link
               key={link.href}
@@ -44,13 +42,13 @@ export function BottomNav() {
                 active ? "text-red-600" : "text-gray-600 hover:text-red-600"
               )}
             >
-              <div className="relative">
+              <div className="flex items-center gap-0.5">
                 <Icon className="w-5 h-5" />
                 {showBadge && (
                   <motion.span
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white"
+                    className="flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-red-600 text-[8px] font-bold text-white leading-none px-0.5"
                   >
                     {link.badge > 9 ? '9+' : link.badge}
                   </motion.span>

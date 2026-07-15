@@ -1,4 +1,5 @@
 
+import Image from "next/image";
 import { cn, getMenuItemImage } from '@/lib/utils';
 import { Plus, ShoppingCart, Clock, Flame, Leaf, Wheat } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -45,10 +46,12 @@ export function MenuGrid({ items, onItemSelect, selectedItemId, onAddToCart }: M
           onClick={() => onItemSelect(item)}
         >
           {/* Square Image fills the whole card */}
-          <img
+          <Image
             src={getMenuItemImage(item)}
             alt={item.name}
-            className="absolute inset-0 object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            className="object-cover transition-transform duration-700 group-hover:scale-110"
           />
 
           {/* Bottom gradient for legible text */}

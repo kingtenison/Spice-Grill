@@ -12,9 +12,9 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { createAuthClientBrowser } from "@/lib/supabase/client";
 
-type CheckoutStep = 'shipping' | 'payment' | 'review';
+type CheckoutStep = 'delivery' | 'payment' | 'review';
 
-const shippingMethods: ShippingMethod[] = [
+const deliveryMethods: ShippingMethod[] = [
   {
     id: 'standard',
     name: 'Standard Delivery',
@@ -49,22 +49,22 @@ const paymentMethods: { id: PaymentMethod; name: string; description: string; ic
 export default function CheckoutPage() {
   const {
     items,
-    shippingMethod,
+    deliveryMethod,
     coupon,
     orderDetails,
-    setShippingMethod,
+    setDeliveryMethod,
     setOrderDetails,
     setCoupon,
     validateCoupon,
     getSubtotal,
-    getShippingCost,
+    getDeliveryCost,
     getTaxAmount,
     getDiscountAmount,
     getTotal,
     clearCart
   } = useCartStore();
 
-  const [currentStep, setCurrentStep] = useState<CheckoutStep>('shipping');
+  const [currentStep, setCurrentStep] = useState<CheckoutStep>('delivery');
   const [isGuestCheckout, setIsGuestCheckout] = useState(false);
   const [currentUser, setCurrentUser] = useState<import("@supabase/supabase-js").User | null>(null);
   const [userLoyalty, setUserLoyalty] = useState<{ tier: string; points: number; discountPercent: number } | null>(null);
@@ -76,7 +76,7 @@ export default function CheckoutPage() {
   const [orderId, setOrderId] = useState("");
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  const [shippingForm, setShippingForm] = useState({
+  const [deliveryForm, setDeliveryForm] = useState({
     name: '', email: '', phone: '',
     street: '', city: '', state: '', zipCode: '', country: 'USA', instructions: ''
   });
@@ -85,7 +85,7 @@ export default function CheckoutPage() {
   const [locationLoading, setLocationLoading] = useState(false);
 
   const [billingForm, setBillingForm] = useState({
-    sameAsShipping: true,
+    sameAsDelivery: true,
     name: '', street: '', city: '', state: '', zipCode: '', country: 'USA'
   });
 
@@ -102,11 +102,11 @@ export default function CheckoutPage() {
       if (user) {
         setCurrentUser(user);
         setIsGuestCheckout(false);
-        const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
         if (profile) {
-          setShippingForm(prev => ({ ...prev, name: profile.name || '', email: user.email || '', phone: profile.phone || '' }));
+          setDeliveryForm(prev => ({ ...prev, name: profile.name || '', email: user.email || '', phone: profile.phone || '' }));
         }
-        const { data: loyalty } = await supabase.from('loyalty_points').select('points, tier').eq('user_id', user.id).single();
+        const { data: loyalty } = await supabase.from('loyalty_points').select('points, tier').eq('user_id', user.id).maybeSingle();
         if (loyalty) {
           const tier = loyalty.tier || 'Bronze';
           const discountPercent = tier === 'Gold' ? 10 : tier === 'Silver' ? 5 : 0;
@@ -121,14 +121,14 @@ export default function CheckoutPage() {
   }, []);
 
   useEffect(() => {
-    if (billingForm.sameAsShipping) {
-      setBillingForm(prev => ({ ...prev, name: shippingForm.name, street: shippingForm.street, city: shippingForm.city, state: shippingForm.state, zipCode: shippingForm.zipCode, country: shippingForm.country }));
+    if (billingForm.sameAsDelivery) {
+      setBillingForm(prev => ({ ...prev, name: deliveryForm.name, street: deliveryForm.street, city: deliveryForm.city, state: deliveryForm.state, zipCode: deliveryForm.zipCode, country: deliveryForm.country }));
     }
-  }, [shippingForm, billingForm.sameAsShipping]);
+  }, [deliveryForm, billingForm.sameAsDelivery]);
 
-  // Initialize shipping method on mount to avoid hydration mismatch
+  // Initialize delivery method on mount to avoid hydration mismatch
   useEffect(() => {
-    setShippingMethod(shippingMethods[0]);
+    setDeliveryMethod(deliveryMethods[0]);
   }, []);
 
   // Get customer location
@@ -152,7 +152,7 @@ export default function CheckoutPage() {
         );
         const data = await response.json();
         
-        const address = data.display_name || `${shippingForm.street}, ${shippingForm.city}, ${shippingForm.state} ${shippingForm.zipCode}`;
+        const address = data.display_name || `${deliveryForm.street}, ${deliveryForm.city}, ${deliveryForm.state} ${deliveryForm.zipCode}`;
         
         setCustomerLocation({
           lat: latitude,
@@ -168,24 +168,24 @@ export default function CheckoutPage() {
   };
 
   const subtotal = getSubtotal();
-  const shippingCost = getShippingCost();
+  const deliveryCost = getDeliveryCost();
   const taxAmount = subtotal * 0.08;
   const discountAmount = getDiscountAmount();
   const loyaltyDiscountAmount = userLoyalty ? Math.round(subtotal * (userLoyalty.discountPercent / 100) * 100) / 100 : 0;
-  const total = Math.max(0, subtotal + shippingCost + taxAmount - discountAmount - loyaltyDiscountAmount);
+  const total = Math.max(0, subtotal + deliveryCost + taxAmount - discountAmount - loyaltyDiscountAmount);
 
   const validateStep = (step: CheckoutStep): boolean => {
     const errors: Record<string, string> = {};
-    if (step === 'shipping') {
-      if (!shippingForm.name.trim()) errors.name = 'Name is required';
-      if (!shippingForm.email.trim()) errors.email = 'Email is required';
-      else if (!/\S+@\S+\.\S+/.test(shippingForm.email)) errors.email = 'Invalid email format';
-      if (!shippingForm.phone.trim()) errors.phone = 'Phone number is required';
-      if (!shippingForm.street.trim()) errors.street = 'Street address is required';
-      if (!shippingForm.city.trim()) errors.city = 'City is required';
-      if (!shippingForm.state.trim()) errors.state = 'State is required';
-      if (!shippingForm.zipCode.trim()) errors.zipCode = 'ZIP code is required';
-      if (!billingForm.sameAsShipping) {
+    if (step === 'delivery') {
+      if (!deliveryForm.name.trim()) errors.name = 'Name is required';
+      if (!deliveryForm.email.trim()) errors.email = 'Email is required';
+      else if (!/\S+@\S+\.\S+/.test(deliveryForm.email)) errors.email = 'Invalid email format';
+      if (!deliveryForm.phone.trim()) errors.phone = 'Phone number is required';
+      if (!deliveryForm.street.trim()) errors.street = 'Street address is required';
+      if (!deliveryForm.city.trim()) errors.city = 'City is required';
+      if (!deliveryForm.state.trim()) errors.state = 'State is required';
+      if (!deliveryForm.zipCode.trim()) errors.zipCode = 'ZIP code is required';
+      if (!billingForm.sameAsDelivery) {
         if (!billingForm.name.trim()) errors.billingName = 'Billing name is required';
         if (!billingForm.street.trim()) errors.billingStreet = 'Billing street is required';
         if (!billingForm.city.trim()) errors.billingCity = 'Billing city is required';
@@ -193,7 +193,7 @@ export default function CheckoutPage() {
         if (!billingForm.zipCode.trim()) errors.billingZipCode = 'Billing ZIP code is required';
       }
       // Require location for delivery orders
-      if (shippingMethod?.id !== 'pickup' && !customerLocation) {
+      if (deliveryMethod?.id !== 'pickup' && !customerLocation) {
         errors.location = 'Location is required for delivery orders';
       }
     }
@@ -224,18 +224,18 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     if (!validateStep('payment')) { setCurrentStep('payment'); return; }
-    if (!shippingMethod) setShippingMethod(shippingMethods[0]);
+    if (!deliveryMethod) setDeliveryMethod(deliveryMethods[0]);
     setIsSubmitting(true);
     setValidationErrors({});
     try {
       const orderData = {
         user_id: currentUser?.id || null,
         total_amount: total,
-        delivery_address: `${shippingForm.name} - ${shippingForm.phone} - ${shippingForm.email} - ${shippingForm.street}, ${shippingForm.city}, ${shippingForm.state} ${shippingForm.zipCode}, ${shippingForm.country}${shippingForm.instructions ? ` - Instructions: ${shippingForm.instructions}` : ''}`,
+        delivery_address: `${deliveryForm.name} - ${deliveryForm.phone} - ${deliveryForm.email} - ${deliveryForm.street}, ${deliveryForm.city}, ${deliveryForm.state} ${deliveryForm.zipCode}, ${deliveryForm.country}${deliveryForm.instructions ? ` - Instructions: ${deliveryForm.instructions}` : ''}`,
         status: "pending",
         payment_status: "paid",
         customer_location: customerLocation,
-        shipping_method: shippingMethod?.id
+        shipping_method: deliveryMethod?.id
       };
       const orderItems = items.map((item) => ({
         menu_item_id: item.id,
@@ -265,14 +265,14 @@ export default function CheckoutPage() {
     }
   };
 
-  const nextStep = () => { if (validateStep(currentStep)) { if (currentStep === 'shipping') setCurrentStep('payment'); else if (currentStep === 'payment') setCurrentStep('review'); } };
-  const prevStep = () => { if (currentStep === 'payment') setCurrentStep('shipping'); else if (currentStep === 'review') setCurrentStep('payment'); };
+  const nextStep = () => { if (validateStep(currentStep)) { if (currentStep === 'delivery') setCurrentStep('payment'); else if (currentStep === 'payment') setCurrentStep('review'); } };
+  const prevStep = () => { if (currentStep === 'payment') setCurrentStep('delivery'); else if (currentStep === 'review') setCurrentStep('payment'); };
 
   if (orderPlaced) {
     return (
       <ConfirmationPage
         orderId={orderId}
-        orderDetails={{ items, shippingMethod: shippingMethod || shippingMethods[0], paymentMethod: paymentForm.method, coupon, shippingAddress: shippingForm, billingAddress: billingForm.sameAsShipping ? shippingForm : billingForm, totals: { subtotal, shippingCost, taxAmount, discountAmount, total } }}
+        orderDetails={{ items, deliveryMethod: deliveryMethod || deliveryMethods[0], paymentMethod: paymentForm.method, coupon, deliveryAddress: deliveryForm, billingAddress: billingForm.sameAsDelivery ? deliveryForm : billingForm, totals: { subtotal, deliveryCost, taxAmount, discountAmount, total } }}
       />
     );
   }
@@ -288,10 +288,10 @@ export default function CheckoutPage() {
         </div>
 
         <div className="flex items-center justify-center mb-8">
-          {(['shipping', 'payment', 'review'] as CheckoutStep[]).map((step, index) => (
+          {(['delivery', 'payment', 'review'] as CheckoutStep[]).map((step, index) => (
             <div key={step} className="flex items-center">
-              <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 font-bold text-sm transition-colors ${currentStep === step ? 'bg-red-600 border-red-600 text-white' : index < (['shipping', 'payment', 'review'] as CheckoutStep[]).indexOf(currentStep) ? 'bg-green-600 border-green-600 text-white' : 'bg-gray-200 border-gray-200 text-gray-600'}`}>
-                {index < (['shipping', 'payment', 'review'] as CheckoutStep[]).indexOf(currentStep) ? <CheckCircle className="w-5 h-5" /> : index + 1}
+              <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 font-bold text-sm transition-colors ${currentStep === step ? 'bg-red-600 border-red-600 text-white' : index < (['delivery', 'payment', 'review'] as CheckoutStep[]).indexOf(currentStep) ? 'bg-green-600 border-green-600 text-white' : 'bg-gray-200 border-gray-200 text-gray-600'}`}>
+                {index < (['delivery', 'payment', 'review'] as CheckoutStep[]).indexOf(currentStep) ? <CheckCircle className="w-5 h-5" /> : index + 1}
               </div>
               <span className={`ml-2 font-medium capitalize ${currentStep === step ? 'text-red-600' : 'text-gray-600'}`}>{step}</span>
               {index < 2 && <div className="w-12 h-[2px] bg-gray-200 mx-4" />}
@@ -302,8 +302,8 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <AnimatePresence mode="wait">
-              {currentStep === 'shipping' && (
-                <motion.div key="shipping" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+              {currentStep === 'delivery' && (
+                <motion.div key="delivery" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                   <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
                     <div className="flex items-center justify-between">
                       <div>
@@ -318,49 +318,49 @@ export default function CheckoutPage() {
                   </div>
 
                   <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                    <h2 className="text-xl font-bold mb-6 text-gray-900 flex items-center gap-2"><MapPin className="w-5 h-5" />Shipping Information</h2>
+                    <h2 className="text-xl font-bold mb-6 text-gray-900 flex items-center gap-2"><MapPin className="w-5 h-5" />Delivery Information</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
-                        <input type="text" value={shippingForm.name} onChange={(e) => setShippingForm({...shippingForm, name: e.target.value})} className={`w-full px-4 py-3 rounded-xl border focus:ring-2 transition-colors text-gray-900 ${validationErrors.name ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-gray-300 focus:border-red-600 focus:ring-red-600/20'}`} placeholder="John Doe" />
+                        <input type="text" value={deliveryForm.name} onChange={(e) => setDeliveryForm({...deliveryForm, name: e.target.value})} className={`w-full px-4 py-3 rounded-xl border focus:ring-2 transition-colors text-gray-900 ${validationErrors.name ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-gray-300 focus:border-red-600 focus:ring-red-600/20'}`} placeholder="John Doe" />
                         {validationErrors.name && <p className="text-red-600 text-sm mt-1 flex items-center gap-1"><AlertCircle className="w-4 h-4" />{validationErrors.name}</p>}
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
-                        <input type="email" value={shippingForm.email} onChange={(e) => setShippingForm({...shippingForm, email: e.target.value})} className={`w-full px-4 py-3 rounded-xl border focus:ring-2 transition-colors text-gray-900 ${validationErrors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-gray-300 focus:border-red-600 focus:ring-red-600/20'}`} placeholder="john@example.com" />
+                        <input type="email" value={deliveryForm.email} onChange={(e) => setDeliveryForm({...deliveryForm, email: e.target.value})} className={`w-full px-4 py-3 rounded-xl border focus:ring-2 transition-colors text-gray-900 ${validationErrors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-gray-300 focus:border-red-600 focus:ring-red-600/20'}`} placeholder="john@example.com" />
                         {validationErrors.email && <p className="text-red-600 text-sm mt-1 flex items-center gap-1"><AlertCircle className="w-4 h-4" />{validationErrors.email}</p>}
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
-                        <input type="tel" value={shippingForm.phone} onChange={(e) => setShippingForm({...shippingForm, phone: e.target.value})} className={`w-full px-4 py-3 rounded-xl border focus:ring-2 transition-colors text-gray-900 ${validationErrors.phone ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-gray-300 focus:border-red-600 focus:ring-red-600/20'}`} placeholder="(555) 123-4567" />
+                        <input type="tel" value={deliveryForm.phone} onChange={(e) => setDeliveryForm({...deliveryForm, phone: e.target.value})} className={`w-full px-4 py-3 rounded-xl border focus:ring-2 transition-colors text-gray-900 ${validationErrors.phone ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-gray-300 focus:border-red-600 focus:ring-red-600/20'}`} placeholder="(555) 123-4567" />
                         {validationErrors.phone && <p className="text-red-600 text-sm mt-1 flex items-center gap-1"><AlertCircle className="w-4 h-4" />{validationErrors.phone}</p>}
                       </div>
                     </div>
                     <div className="mt-4">
                       <label className="block text-sm font-medium text-gray-700 mb-2">Street Address *</label>
-                      <input type="text" value={shippingForm.street} onChange={(e) => setShippingForm({...shippingForm, street: e.target.value})} className={`w-full px-4 py-3 rounded-xl border focus:ring-2 transition-colors text-gray-900 ${validationErrors.street ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-gray-300 focus:border-red-600 focus:ring-red-600/20'}`} placeholder="123 Main Street" />
+                      <input type="text" value={deliveryForm.street} onChange={(e) => setDeliveryForm({...deliveryForm, street: e.target.value})} className={`w-full px-4 py-3 rounded-xl border focus:ring-2 transition-colors text-gray-900 ${validationErrors.street ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-gray-300 focus:border-red-600 focus:ring-red-600/20'}`} placeholder="123 Main Street" />
                       {validationErrors.street && <p className="text-red-600 text-sm mt-1 flex items-center gap-1"><AlertCircle className="w-4 h-4" />{validationErrors.street}</p>}
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">City *</label>
-                        <input type="text" value={shippingForm.city} onChange={(e) => setShippingForm({...shippingForm, city: e.target.value})} className={`w-full px-4 py-3 rounded-xl border focus:ring-2 transition-colors text-gray-900 ${validationErrors.city ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-gray-300 focus:border-red-600 focus:ring-red-600/20'}`} placeholder="New York" />
+                        <input type="text" value={deliveryForm.city} onChange={(e) => setDeliveryForm({...deliveryForm, city: e.target.value})} className={`w-full px-4 py-3 rounded-xl border focus:ring-2 transition-colors text-gray-900 ${validationErrors.city ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-gray-300 focus:border-red-600 focus:ring-red-600/20'}`} placeholder="New York" />
                         {validationErrors.city && <p className="text-red-600 text-sm mt-1 flex items-center gap-1"><AlertCircle className="w-4 h-4" />{validationErrors.city}</p>}
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">State *</label>
-                        <input type="text" value={shippingForm.state} onChange={(e) => setShippingForm({...shippingForm, state: e.target.value})} className={`w-full px-4 py-3 rounded-xl border focus:ring-2 transition-colors text-gray-900 ${validationErrors.state ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-gray-300 focus:border-red-600 focus:ring-red-600/20'}`} placeholder="NY" />
+                        <input type="text" value={deliveryForm.state} onChange={(e) => setDeliveryForm({...deliveryForm, state: e.target.value})} className={`w-full px-4 py-3 rounded-xl border focus:ring-2 transition-colors text-gray-900 ${validationErrors.state ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-gray-300 focus:border-red-600 focus:ring-red-600/20'}`} placeholder="NY" />
                         {validationErrors.state && <p className="text-red-600 text-sm mt-1 flex items-center gap-1"><AlertCircle className="w-4 h-4" />{validationErrors.state}</p>}
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">ZIP Code *</label>
-                        <input type="text" value={shippingForm.zipCode} onChange={(e) => setShippingForm({...shippingForm, zipCode: e.target.value})} className={`w-full px-4 py-3 rounded-xl border focus:ring-2 transition-colors text-gray-900 ${validationErrors.zipCode ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-gray-300 focus:border-red-600 focus:ring-red-600/20'}`} placeholder="10001" />
+                        <input type="text" value={deliveryForm.zipCode} onChange={(e) => setDeliveryForm({...deliveryForm, zipCode: e.target.value})} className={`w-full px-4 py-3 rounded-xl border focus:ring-2 transition-colors text-gray-900 ${validationErrors.zipCode ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-gray-300 focus:border-red-600 focus:ring-red-600/20'}`} placeholder="10001" />
                         {validationErrors.zipCode && <p className="text-red-600 text-sm mt-1 flex items-center gap-1"><AlertCircle className="w-4 h-4" />{validationErrors.zipCode}</p>}
                       </div>
                     </div>
                     <div className="mt-4">
                       <label className="block text-sm font-medium text-gray-700 mb-2">Special Instructions (Optional)</label>
-                      <textarea value={shippingForm.instructions} onChange={(e) => setShippingForm({...shippingForm, instructions: e.target.value})} rows={3} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-colors text-gray-900 resize-none" placeholder="Apartment number, delivery preferences, etc." />
+                      <textarea value={deliveryForm.instructions} onChange={(e) => setDeliveryForm({...deliveryForm, instructions: e.target.value})} rows={3} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-colors text-gray-900 resize-none" placeholder="Apartment number, delivery preferences, etc." />
                     </div>
 
                     {/* Location Capture */}
@@ -403,10 +403,10 @@ export default function CheckoutPage() {
 
                   <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
                     <div className="flex items-center gap-3 mb-4">
-                      <input type="checkbox" id="sameAsShipping" checked={billingForm.sameAsShipping} onChange={(e) => setBillingForm({...billingForm, sameAsShipping: e.target.checked})} className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-600" />
-                      <label htmlFor="sameAsShipping" className="text-sm font-medium text-gray-700">Billing address is the same as shipping</label>
+                      <input type="checkbox" id="sameAsDelivery" checked={billingForm.sameAsDelivery} onChange={(e) => setBillingForm({...billingForm, sameAsDelivery: e.target.checked})} className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-600" />
+                      <label htmlFor="sameAsDelivery" className="text-sm font-medium text-gray-700">Billing address is the same as delivery</label>
                     </div>
-                    {!billingForm.sameAsShipping && (
+                    {!billingForm.sameAsDelivery && (
                       <div className="space-y-4">
                         <h3 className="font-semibold text-gray-900">Billing Information</h3>
                         <div>
@@ -445,10 +445,10 @@ export default function CheckoutPage() {
               {currentStep === 'payment' && (
                 <motion.div key="payment" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                   <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                    <h2 className="text-xl font-bold mb-6 text-gray-900 flex items-center gap-2"><Truck className="w-5 h-5" />Shipping Method</h2>
+                    <h2 className="text-xl font-bold mb-6 text-gray-900 flex items-center gap-2"><Truck className="w-5 h-5" />Delivery Method</h2>
                     <div className="grid grid-cols-1 gap-4">
-                      {shippingMethods.map((method) => (
-                        <button key={method.id} onClick={() => setShippingMethod(method)} className={`p-4 rounded-xl border-2 text-left transition-all ${shippingMethod?.id === method.id ? 'border-red-600 bg-red-50' : 'border-gray-200 hover:border-red-300'}`}>
+                      {deliveryMethods.map((method) => (
+                        <button key={method.id} onClick={() => setDeliveryMethod(method)} className={`p-4 rounded-xl border-2 text-left transition-all ${deliveryMethod?.id === method.id ? 'border-red-600 bg-red-50' : 'border-gray-200 hover:border-red-300'}`}>
                           <div className="flex items-center justify-between">
                             <div><h3 className="font-semibold text-gray-900">{method.name}</h3><p className="text-sm text-gray-600">{method.description}</p></div>
                             <div className="text-right"><span className="font-bold text-gray-900">{method.cost === 0 ? 'Free' : `$${method.cost.toFixed(2)}`}</span><p className="text-sm text-gray-600">{method.estimatedDays === 0 ? 'Today' : `${method.estimatedDays} days`}</p></div>
@@ -508,9 +508,9 @@ export default function CheckoutPage() {
                   <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
                     <h2 className="text-xl font-bold mb-6 text-gray-900">Review Your Order</h2>
                     <div className="space-y-4">
-                      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl"><User className="w-5 h-5 text-gray-600" /><div><p className="font-medium text-gray-900">{shippingForm.name}</p><p className="text-sm text-gray-600">{shippingForm.email} • {shippingForm.phone}</p></div></div>
-                      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl"><MapPin className="w-5 h-5 text-gray-600" /><div><p className="font-medium text-gray-900">Shipping Address</p><p className="text-sm text-gray-600">{shippingForm.street}, {shippingForm.city}, {shippingForm.state} {shippingForm.zipCode}</p></div></div>
-                      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl"><Truck className="w-5 h-5 text-gray-600" /><div><p className="font-medium text-gray-900">{shippingMethod?.name}</p><p className="text-sm text-gray-600">{shippingMethod?.description}</p></div></div>
+                      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl"><User className="w-5 h-5 text-gray-600" /><div><p className="font-medium text-gray-900">{deliveryForm.name}</p><p className="text-sm text-gray-600">{deliveryForm.email} • {deliveryForm.phone}</p></div></div>
+                      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl"><MapPin className="w-5 h-5 text-gray-600" /><div><p className="font-medium text-gray-900">Delivery Address</p><p className="text-sm text-gray-600">{deliveryForm.street}, {deliveryForm.city}, {deliveryForm.state} {deliveryForm.zipCode}</p></div></div>
+                      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl"><Truck className="w-5 h-5 text-gray-600" /><div><p className="font-medium text-gray-900">{deliveryMethod?.name}</p><p className="text-sm text-gray-600">{deliveryMethod?.description}</p></div></div>
                       <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl"><CreditCard className="w-5 h-5 text-gray-600" /><div><p className="font-medium text-gray-900">{paymentMethods.find(m => m.id === paymentForm.method)?.name}</p><p className="text-sm text-gray-600">{paymentForm.method === 'card' ? `**** **** **** ${paymentForm.cardNumber.slice(-4)}` : 'Pay on delivery'}</p></div></div>
                     </div>
                   </div>
@@ -547,7 +547,7 @@ export default function CheckoutPage() {
               )}
               <div className="border-t border-gray-200 pt-4 space-y-3">
                 <div className="flex justify-between text-gray-600"><span>Subtotal</span><span className="font-semibold">${subtotal.toFixed(2)}</span></div>
-                <div className="flex justify-between text-gray-600"><span>Shipping</span><span className="font-semibold">{shippingCost === 0 ? "Free" : `$${shippingCost.toFixed(2)}`}</span></div>
+                <div className="flex justify-between text-gray-600"><span>Delivery</span><span className="font-semibold">{deliveryCost === 0 ? "Free" : `$${deliveryCost.toFixed(2)}`}</span></div>
                 <div className="flex justify-between text-gray-600"><span>Tax</span><span className="font-semibold">${taxAmount.toFixed(2)}</span></div>
                 {discountAmount > 0 && <div className="flex justify-between text-green-600"><span className="flex items-center gap-1"><Percent className="w-4 h-4" />Discount ({coupon?.code})</span><span className="font-semibold">-${discountAmount.toFixed(2)}</span></div>}
                 {userLoyalty && userLoyalty.discountPercent > 0 && <div className="flex justify-between text-green-600"><span className="flex items-center gap-1"><Award className="w-4 h-4" />{userLoyalty.tier} Member ({userLoyalty.discountPercent}% off)</span><span className="font-semibold">-${loyaltyDiscountAmount.toFixed(2)}</span></div>}
@@ -555,7 +555,7 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-2xl font-bold text-gray-900"><span>Total</span><span>${total.toFixed(2)}</span></div>
               </div>
               <div className="flex gap-3 mt-6">
-                {currentStep !== 'shipping' && <button onClick={prevStep} className="flex-1 py-3 px-4 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors">Back</button>}
+                {currentStep !== 'delivery' && <button onClick={prevStep} className="flex-1 py-3 px-4 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors">Back</button>}
                 {currentStep !== 'review' ? (
                   <button onClick={nextStep} className="flex-1 py-3 px-4 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 transition-colors">Continue</button>
                 ) : (
@@ -593,7 +593,7 @@ function ConfirmationPage({ orderId, orderDetails }: { orderId: string; orderDet
               </div>
               <div className="border-t border-gray-200 pt-4 mt-4 space-y-2">
                 <div className="flex justify-between text-gray-600"><span>Subtotal</span><span className="font-semibold">${orderDetails.totals.subtotal.toFixed(2)}</span></div>
-                <div className="flex justify-between text-gray-600"><span>Shipping</span><span className="font-semibold">${orderDetails.totals.shippingCost.toFixed(2)}</span></div>
+                <div className="flex justify-between text-gray-600"><span>Delivery</span><span className="font-semibold">${orderDetails.totals.deliveryCost.toFixed(2)}</span></div>
                 <div className="flex justify-between text-gray-600"><span>Tax</span><span className="font-semibold">${orderDetails.totals.taxAmount.toFixed(2)}</span></div>
                 {orderDetails.totals.discountAmount > 0 && <div className="flex justify-between text-green-600"><span>Discount ({orderDetails.coupon?.code})</span><span className="font-semibold">-${orderDetails.totals.discountAmount.toFixed(2)}</span></div>}
                 <div className="h-[1px] bg-gray-200 my-2" />
@@ -601,11 +601,11 @@ function ConfirmationPage({ orderId, orderDetails }: { orderId: string; orderDet
               </div>
             </div>
             <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-              <h2 className="text-xl font-bold mb-4 text-gray-900">Shipping Information</h2>
+              <h2 className="text-xl font-bold mb-4 text-gray-900">Delivery Information</h2>
               <div className="space-y-3">
-                <div className="flex items-center gap-3"><User className="w-5 h-5 text-gray-600" /><div><p className="font-medium text-gray-900">{orderDetails.shippingAddress.name}</p><p className="text-sm text-gray-600">{orderDetails.shippingAddress.email}</p><p className="text-sm text-gray-600">{orderDetails.shippingAddress.phone}</p></div></div>
-                <div className="flex items-center gap-3"><MapPin className="w-5 h-5 text-gray-600" /><div><p className="font-medium text-gray-900">Shipping Address</p><p className="text-sm text-gray-600">{orderDetails.shippingAddress.street}<br />{orderDetails.shippingAddress.city}, {orderDetails.shippingAddress.state} {orderDetails.shippingAddress.zipCode}</p></div></div>
-                <div className="flex items-center gap-3"><Truck className="w-5 h-5 text-gray-600" /><div><p className="font-medium text-gray-900">{orderDetails.shippingMethod?.name || 'Standard Delivery'}</p><p className="text-sm text-gray-600">{orderDetails.shippingMethod?.description || 'Delivery within 30-45 minutes'}</p></div></div>
+                <div className="flex items-center gap-3"><User className="w-5 h-5 text-gray-600" /><div><p className="font-medium text-gray-900">{orderDetails.deliveryAddress.name}</p><p className="text-sm text-gray-600">{orderDetails.deliveryAddress.email}</p><p className="text-sm text-gray-600">{orderDetails.deliveryAddress.phone}</p></div></div>
+                <div className="flex items-center gap-3"><MapPin className="w-5 h-5 text-gray-600" /><div><p className="font-medium text-gray-900">Delivery Address</p><p className="text-sm text-gray-600">{orderDetails.deliveryAddress.street}<br />{orderDetails.deliveryAddress.city}, {orderDetails.deliveryAddress.state} {orderDetails.deliveryAddress.zipCode}</p></div></div>
+                <div className="flex items-center gap-3"><Truck className="w-5 h-5 text-gray-600" /><div><p className="font-medium text-gray-900">{orderDetails.deliveryMethod?.name || 'Standard Delivery'}</p><p className="text-sm text-gray-600">{orderDetails.deliveryMethod?.description || 'Delivery within 30-45 minutes'}</p></div></div>
               </div>
             </div>
           </div>
@@ -620,7 +620,7 @@ function ConfirmationPage({ orderId, orderDetails }: { orderId: string; orderDet
               <div className="space-y-4">
                 <div className="flex items-start gap-3"><div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5"><span className="text-xs font-bold text-red-600">1</span></div><div><p className="font-medium text-gray-900">Order Confirmation</p><p className="text-sm text-gray-600">You'll receive an email confirmation shortly</p></div></div>
                 <div className="flex items-start gap-3"><div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5"><span className="text-xs font-bold text-red-600">2</span></div><div><p className="font-medium text-gray-900">Preparation</p><p className="text-sm text-gray-600">Our chefs are preparing your order with care</p></div></div>
-                <div className="flex items-start gap-3"><div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5"><span className="text-xs font-bold text-red-600">3</span></div><div><p className="font-medium text-gray-900">Delivery</p><p className="text-sm text-gray-600">{orderDetails.shippingMethod?.description || 'Delivery within 30-45 minutes'}</p></div></div>
+                <div className="flex items-start gap-3"><div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5"><span className="text-xs font-bold text-red-600">3</span></div><div><p className="font-medium text-gray-900">Delivery</p><p className="text-sm text-gray-600">{orderDetails.deliveryMethod?.description || 'Delivery within 30-45 minutes'}</p></div></div>
               </div>
             </div>
             <div className="flex gap-4">

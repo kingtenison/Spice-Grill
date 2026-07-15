@@ -1,20 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User, LogOut, Home, UtensilsCrossed, Award, BookOpen, History, Truck, MapPin } from "lucide-react";
+import { User, LogOut, Home, UtensilsCrossed, Award, BookOpen, History, Truck, MapPin, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient, safeGetUser } from "@/lib/supabase/client";
 import { User as SupabaseUser } from "@supabase/supabase-js";
+import { useCartStore } from "@/store/useCartStore";
 
 export function SidebarNav() {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isApprovedDispatcher, setIsApprovedDispatcher] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [deliveryOpen, setDeliveryOpen] = useState(false);
+  const deliveryRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const cartItems = useCartStore((state) => state.items);
+  const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -54,6 +59,20 @@ export function SidebarNav() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Close delivery dropdown on click outside
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (deliveryRef.current && !deliveryRef.current.contains(e.target as Node)) {
+        setDeliveryOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  // Close delivery dropdown on route change
+  useEffect(() => { setDeliveryOpen(false); }, [pathname]);
+
   const handleLogout = async () => {
     const supabase = createClient();
     try {
@@ -64,11 +83,13 @@ export function SidebarNav() {
     } catch (err) {
       console.warn("SidebarNav sign out timed out or failed:", err);
     }
-    // Clear cookies manually to ensure session is cleared locally
+    // Clear Supabase auth cookies only
     document.cookie.split(";").forEach((c) => {
       const eqPos = c.indexOf("=");
       const name = eqPos > -1 ? c.substring(0, eqPos).trim() : c.trim();
-      document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+      if (name.startsWith('sb-') || name.includes('supabase')) {
+        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+      }
     });
     window.location.href = '/';
   };
@@ -81,12 +102,10 @@ export function SidebarNav() {
     { href: "/orders", label: "Orders", icon: History },
   ];
 
-  const adminLinks = [
-    { href: "/admin/delivery", label: "Delivery Dashboard", icon: Truck },
-  ];
+  const cartLink = { href: "/cart", label: "Cart", icon: ShoppingCart };
 
   const userLinks = [
-    { href: "/account", label: "Track Order", icon: MapPin },
+    { href: "/account", label: "My Account", icon: MapPin },
   ];
 
   const isActive = (href: string) => {
@@ -99,7 +118,7 @@ export function SidebarNav() {
       {/* Desktop Floating Sidebar */}
       <aside
         className={cn(
-          "hidden lg:block fixed left-0 top-1/2 -translate-y-1/2 z-40",
+          "hidden lg:block fixed left-0 top-1/2 -translate-y-1/2 z-[45]",
           "bg-white/95 backdrop-blur-xl border border-gray-200 rounded-r-2xl shadow-xl",
           "transition-all duration-300 ease-in-out w-14 px-2 py-4"
         )}
@@ -146,48 +165,43 @@ export function SidebarNav() {
             );
           })}
 
-          {/* Admin/Employee Delivery Link */}
-          {(userRole === 'admin' || userRole === 'employee') && adminLinks.map((link) => {
-            const Icon = link.icon;
-            const active = isActive(link.href);
-            
-            return (
-              <div
-                key={link.href}
-                className="relative"
-                onMouseEnter={() => setHoveredItem(link.href)}
-                onMouseLeave={() => setHoveredItem(null)}
-              >
-                <Link
-                  href={link.href}
-                  className={cn(
-                    "relative flex items-center justify-center w-10 h-10 rounded-lg text-sm transition-all duration-200",
-                    active
-                      ? "bg-red-600 text-white shadow-md shadow-red-500/20"
-                      : "text-gray-700 hover:bg-gray-100 hover:text-red-600"
-                  )}
+          {/* Cart */}
+          <div
+            className="relative"
+            onMouseEnter={() => setHoveredItem("cart")}
+            onMouseLeave={() => setHoveredItem(null)}
+          >
+            <Link
+              href={cartLink.href}
+              className={cn(
+                "relative flex items-center justify-center w-10 h-10 rounded-lg text-sm transition-all duration-200",
+                isActive(cartLink.href)
+                  ? "bg-red-600 text-white shadow-md shadow-red-500/20"
+                  : "text-gray-700 hover:bg-gray-100 hover:text-red-600"
+              )}
+            >
+              <ShoppingCart className="w-4 h-4 flex-shrink-0" />
+              {cartCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[9px] font-bold text-white">
+                  {cartCount > 9 ? '9+' : cartCount}
+                </span>
+              )}
+            </Link>
+            <AnimatePresence>
+              {hoveredItem === "cart" && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md whitespace-nowrap pointer-events-none"
                 >
-                  <Icon className={cn("w-4 h-4 flex-shrink-0", active ? "text-white" : "text-gray-500")} />
-                </Link>
-                
-                {/* Tooltip */}
-                <AnimatePresence>
-                  {hoveredItem === link.href && (
-                    <motion.div
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md whitespace-nowrap pointer-events-none"
-                    >
-                      {link.label}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            );
-          })}
+                  Cart
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
-          {/* User Track Order Link */}
+          {/* User Account Link */}
           {user && userLinks.map((link) => {
             const Icon = link.icon;
             const active = isActive(link.href);
@@ -228,24 +242,23 @@ export function SidebarNav() {
             );
           })}
 
-          {/* Delivery Section - Always visible with dropdown */}
-          <div
-            className="relative"
-            onMouseEnter={() => setHoveredItem("delivery-menu")}
-            onMouseLeave={() => setHoveredItem(null)}
-          >
-            <div
+          {/* Delivery Section - Always visible with click-toggle dropdown */}
+          <div className="relative" ref={deliveryRef}>
+            <button
+              onClick={() => setDeliveryOpen((v) => !v)}
               className={cn(
-                "relative flex items-center justify-center w-10 h-10 rounded-lg text-sm transition-all duration-200 cursor-pointer",
-                "text-gray-700 hover:bg-gray-100 hover:text-red-600"
+                "relative flex items-center justify-center w-10 h-10 rounded-lg text-sm transition-all duration-200",
+                deliveryOpen
+                  ? "bg-red-50 text-red-600"
+                  : "text-gray-700 hover:bg-gray-100 hover:text-red-600"
               )}
             >
               <Truck className="w-4 h-4 flex-shrink-0" />
-            </div>
+            </button>
             
             {/* Delivery Dropdown */}
             <AnimatePresence>
-              {hoveredItem === "delivery-menu" && (
+              {deliveryOpen && (
                 <motion.div
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -253,38 +266,41 @@ export function SidebarNav() {
                   className="absolute left-full top-1/2 -translate-y-1/2 ml-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 p-2 z-50"
                 >
                   <div className="space-y-1">
-                    {user && (
+                    {user ? (
+                      <>
+                        <Link
+                          href="/account"
+                          onClick={() => setDeliveryOpen(false)}
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-50 text-gray-700 hover:text-red-600 transition-colors text-sm"
+                        >
+                          <MapPin className="w-4 h-4" />
+                          <span>My Account</span>
+                        </Link>
+                        <Link
+                          href="/orders"
+                          onClick={() => setDeliveryOpen(false)}
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-50 text-gray-700 hover:text-red-600 transition-colors text-sm"
+                        >
+                          <Truck className="w-4 h-4" />
+                          <span>Track Order</span>
+                        </Link>
+                      </>
+                    ) : (
                       <Link
-                        href="/account"
+                        href="/login"
+                        onClick={() => setDeliveryOpen(false)}
                         className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-50 text-gray-700 hover:text-red-600 transition-colors text-sm"
                       >
-                        <MapPin className="w-4 h-4" />
-                        <span>Track Order</span>
+                        <User className="w-4 h-4" />
+                        <span>Login to Track Orders</span>
                       </Link>
                     )}
-                    
-                    {isApprovedDispatcher ? (
-                      <Link
-                        href="/dispatcher"
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-50 text-gray-700 hover:text-red-600 transition-colors text-sm"
-                      >
-                        <Truck className="w-4 h-4" />
-                        <span>Dispatcher Portal</span>
-                      </Link>
-                    ) : user ? (
-                      <Link
-                        href="/dispatcher/register"
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-50 text-gray-700 hover:text-red-600 transition-colors text-sm"
-                      >
-                        <Truck className="w-4 h-4" />
-                        <span>Become Dispatcher</span>
-                      </Link>
-                    ) : null}
                     
                     {(userRole === 'admin' || userRole === 'employee') && (
                       <>
                         <Link
                           href="/admin/delivery"
+                          onClick={() => setDeliveryOpen(false)}
                           className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-50 text-gray-700 hover:text-red-600 transition-colors text-sm"
                         >
                           <Truck className="w-4 h-4" />
@@ -294,6 +310,7 @@ export function SidebarNav() {
                         {userRole === 'admin' && (
                           <Link
                             href="/admin/dispatcher-applications"
+                            onClick={() => setDeliveryOpen(false)}
                             className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-50 text-gray-700 hover:text-red-600 transition-colors text-sm"
                           >
                             <User className="w-4 h-4" />

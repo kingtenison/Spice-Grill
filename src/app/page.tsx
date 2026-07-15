@@ -22,7 +22,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
 
-import { Navbar } from "@/components/layout/Navbar";
+
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },
@@ -82,7 +82,7 @@ export default function HomePage() {
           .from("profiles")
           .select("role")
           .eq("id", user.id)
-          .single();
+          .maybeSingle();
 
         if (profile?.role === "admin") {
           window.location.replace("/admin");
@@ -260,8 +260,6 @@ export default function HomePage() {
 
   return (
     <div className="relative flex flex-col min-h-screen bg-white overflow-hidden">
-      <Navbar />
-
       {/* Hero Section — Split-Screen Editorial Design */}
       <section className="relative h-screen lg:min-h-screen lg:flex lg:divide-x divide-gray-200 bg-white">
         {/* Mobile: Full-screen background image with overlay */}
@@ -276,6 +274,7 @@ export default function HomePage() {
               src="/Fried Yam and Fish.jpg"
               alt="Fried Yam and Fish"
               className="w-full h-full object-cover"
+              fetchPriority="high"
             />
           </motion.div>
           {/* Dark overlay for text readability */}
@@ -547,13 +546,15 @@ export default function HomePage() {
                 )}
               >
                 {/* Image with zoom effect */}
-                <motion.img
-                  src={category.image}
-                  alt={category.name}
-                  className="object-cover w-full h-full"
-                  whileHover={{ scale: 1.1 }}
-                  transition={{ duration: 0.5 }}
-                />
+            <motion.img
+              src={category.image}
+              alt={category.name}
+              className="object-cover w-full h-full"
+              loading="lazy"
+              decoding="async"
+              whileHover={{ scale: 1.1 }}
+              transition={{ duration: 0.5 }}
+            />
                 
                 {/* Gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-90 group-hover:opacity-85 transition-opacity" />
@@ -687,6 +688,8 @@ export default function HomePage() {
                   src={heroDish?.image}
                   alt={heroDish?.name}
                   className="object-cover w-full h-full"
+                  loading="lazy"
+                  decoding="async"
                   whileHover={{ scale: 1.05 }}
                   transition={{ duration: 0.6 }}
                 />
@@ -1319,6 +1322,8 @@ export default function HomePage() {
                 <img
                   src={img.src}
                   alt={img.label}
+                  loading="lazy"
+                  decoding="async"
                   className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-stone-900/70 via-transparent to-transparent" />
@@ -1407,6 +1412,8 @@ export default function HomePage() {
                   <img
                     src={testimonial.image}
                     alt={testimonial.name}
+                    loading="lazy"
+                    decoding="async"
                     className="w-12 h-12 rounded-full object-cover border-2 border-red-600"
                   />
                   <div>

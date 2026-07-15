@@ -33,7 +33,7 @@ const STEPS = [
 
 export default function OrderTrackingPage() {
   const params = useParams();
-  const orderId = params.id as string;
+  const orderId = params?.id as string;
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,11 +41,12 @@ export default function OrderTrackingPage() {
 
   useEffect(() => {
     async function fetchOrder() {
+      if (!orderId) { setLoading(false); return; }
       const { data: orderData } = await supabase
         .from("orders")
         .select("*")
         .eq("id", orderId)
-        .single();
+        .maybeSingle();
 
       if (orderData) {
         setOrder(orderData);

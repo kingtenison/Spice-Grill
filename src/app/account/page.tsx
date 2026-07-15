@@ -27,6 +27,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { getMenuItemImage } from "@/lib/utils";
+import { ReviewModal } from "@/components/features/ReviewModal";
 
 interface OrderItem {
   id: string;
@@ -80,7 +81,8 @@ export default function AccountPage() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [cancellingOrder, setCancellingOrder] = useState<string | null>(null);
-  const [subscriptionActive, setSubscriptionActive] = useState(false);
+  const [reviewOrderId, setReviewOrderId] = useState<string | null>(null);
+  const [isApprovedDispatcher, setIsApprovedDispatcher] = useState(false);
 
   const handleCancelOrder = async (orderId: string) => {
     if (!confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
@@ -161,6 +163,7 @@ export default function AccountPage() {
         }
 
         setUser(authData.user);
+        setIsApprovedDispatcher(!!authData.isApprovedDispatcher);
         
         if (authData.profile) {
           setProfile({
@@ -180,40 +183,8 @@ export default function AccountPage() {
           console.error("Failed to load orders");
         }
 
-        // Set up real-time subscription for order updates (only once)
-        if (!subscriptionActive) {
-          setSubscriptionActive(true);
-
-          try {
-            const supabase = createClient();
-            channel = supabase.channel(`user-orders-${authData.user.id}`);
-            channel
-              .on(
-                'postgres_changes',
-                {
-                  event: 'UPDATE',
-                  schema: 'public',
-                  table: 'orders',
-                  filter: `user_id=eq.${authData.user.id}`
-                },
-                (payload: any) => {
-                  console.log('Order updated:', payload);
-                  setOrders(currentOrders =>
-                    currentOrders.map(order =>
-                      order.id === payload.new.id
-                        ? { ...order, ...payload.new }
-                        : order
-                    )
-                  );
-                }
-              )
-              .subscribe((status: string) => {
-                console.log('Subscription status:', status);
-              });
-          } catch (error) {
-            console.warn('Failed to set up realtime subscription:', error);
-          }
-        }
+        // Realtime subscription intentionally omitted — was causing WS retry loops
+        // Orders auto-refresh on page load via the REST API above
       } catch (err: any) {
         console.error('Failed to load user data:', err);
         if (active) {
@@ -230,13 +201,12 @@ export default function AccountPage() {
 
     return () => {
       active = false;
-      try {
-        setSubscriptionActive(false);
-        if (channel) {
+      if (channel) {
+        try {
           channel.unsubscribe();
+        } catch (error) {
+          console.warn('Error unsubscribing:', error);
         }
-      } catch (error) {
-        console.warn('Error unsubscribing from realtime channel:', error);
       }
     };
   }, []);
@@ -288,6 +258,37 @@ export default function AccountPage() {
             );
           })}
         </div>
+
+        {/* Delivery / Dispatcher Section — shows only relevant link */}
+        {isApprovedDispatcher ? (
+          <div className="mb-8 bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Delivery</h3>
+            <Link
+              href="/dispatcher"
+              className="flex items-center gap-3 w-full p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors"
+            >
+              <Truck className="w-5 h-5 text-purple-600" />
+              <div>
+                <p className="font-medium text-purple-900">Dispatcher Portal</p>
+                <p className="text-sm text-purple-700">Manage your deliveries</p>
+              </div>
+            </Link>
+          </div>
+        ) : (
+          <div className="mb-8 bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Delivery</h3>
+            <Link
+              href="/dispatcher/register"
+              className="flex items-center gap-3 w-full p-4 bg-orange-50 hover:bg-orange-100 rounded-xl transition-colors"
+            >
+              <Truck className="w-5 h-5 text-orange-600" />
+              <div>
+                <p className="font-medium text-orange-900">Become a Dispatcher</p>
+                <p className="text-sm text-orange-700">Deliver with Spice Grille</p>
+              </div>
+            </Link>
+          </div>
+        )}
 
         {/* Orders Tab */}
         {activeTab === 'orders' && (
@@ -480,6 +481,27 @@ export default function AccountPage() {
                                   Cancel Order
                                 </>
                               )}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Review Button for delivered orders */}
+                      {order.status === 'delivered' && (
+                        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Star className="w-5 h-5 text-green-600" />
+                              <span className="text-sm font-medium text-green-800">
+                                How was your order?
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => setReviewOrderId(order.id)}
+                              className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                            >
+                              <Star className="w-4 h-4" />
+                              Write a Review
                             </button>
                           </div>
                         </div>
@@ -681,19 +703,27 @@ export default function AccountPage() {
                        <p className="text-sm text-green-700">Get help with your orders</p>
                      </div>
                    </Link>
-                 </div>
+
+                  </div>
                </div>
              </div>
            </div>
          )}
 
-         {/* Loyalty Tab - Live Summary */}
-         {activeTab === 'loyalty' && (
-           <LoyaltySummary />
-         )}
-       </main>
-     </div>
-   );
+          {/* Loyalty Tab - Live Summary */}
+          {activeTab === 'loyalty' && (
+            <LoyaltySummary />
+          )}
+        </main>
+
+        {/* Review Modal */}
+        <ReviewModal
+          isOpen={reviewOrderId !== null}
+          onClose={() => setReviewOrderId(null)}
+          orderId={reviewOrderId || ''}
+        />
+      </div>
+    );
  }
 
 // Live Loyalty Summary Component (used in account page)

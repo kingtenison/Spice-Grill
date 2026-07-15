@@ -1,57 +1,23 @@
 {
   "name": "The Spice Grille - Afro-Caribbean Cuisine",
   "short_name": "Spice Grille",
-  "description": "Bringing you a redefined mix of Afro-Caribbean cuisine to the Fargo-Moorhead area.",
+  "description": "Order authentic Afro-Caribbean cuisine from The Spice Grille in Moorhead, MN. West African flavors, wood-fired grill, and bold spices.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ef4444",
   "orientation": "portrait-primary",
+  "lang": "en-US",
+  "categories": ["food", "restaurant", "lifestyle"],
   "icons": [
-    {
-      "src": "/Spice_Logo.jpg",
-      "sizes": "48x48",
-      "type": "image/jpg"
-    },
-    {
-      "src": "/Spice_Logo.jpg",
-      "sizes": "72x72",
-      "type": "image/jpg"
-    },
-    {
-      "src": "/Spice_Logo.jpg",
-      "sizes": "96x96",
-      "type": "image/jpg"
-    },
-    {
-      "src": "/Spice_Logo.jpg",
-      "sizes": "128x128",
-      "type": "image/jpg"
-    },
-    {
-      "src": "/Spice_Logo.jpg",
-      "sizes": "144x144",
-      "type": "image/jpg"
-    },
-    {
-      "src": "/Spice_Logo.jpg",
-      "sizes": "152x152",
-      "type": "image/jpg"
-    },
-    {
-      "src": "/Spice_Logo.jpg",
-      "sizes": "192x192",
-      "type": "image/jpg"
-    },
-    {
-      "src": "/Spice_Logo.jpg",
-      "sizes": "384x384",
-      "type": "image/jpg"
-    },
-    {
-      "src": "/Spice_Logo.jpg",
-      "sizes": "512x512",
-      "type": "image/jpg"
-    }
+    { "src": "/Spice_Logo.jpg", "sizes": "48x48", "type": "image/jpeg" },
+    { "src": "/Spice_Logo.jpg", "sizes": "72x72", "type": "image/jpeg" },
+    { "src": "/Spice_Logo.jpg", "sizes": "96x96", "type": "image/jpeg" },
+    { "src": "/Spice_Logo.jpg", "sizes": "128x128", "type": "image/jpeg", "purpose": "any" },
+    { "src": "/Spice_Logo.jpg", "sizes": "144x144", "type": "image/jpeg" },
+    { "src": "/Spice_Logo.jpg", "sizes": "152x152", "type": "image/jpeg" },
+    { "src": "/Spice_Logo.jpg", "sizes": "192x192", "type": "image/jpeg", "purpose": "any maskable" },
+    { "src": "/Spice_Logo.jpg", "sizes": "384x384", "type": "image/jpeg" },
+    { "src": "/Spice_Logo.jpg", "sizes": "512x512", "type": "image/jpeg", "purpose": "any maskable" }
   ]
 }

@@ -12,6 +12,13 @@ export function cn(...inputs: ClassValue[]) {
  * - items.image_url as string
  * - items.image_url as JSON stringified array (current DB hack for multi-image)
  */
+function isValidImageUrl(img: any): boolean {
+  return typeof img === 'string' &&
+    (img.startsWith('http') || img.startsWith('/')) &&
+    !img.includes('undefined') &&
+    !img.includes('null');
+}
+
 export function getMenuItemImage(item: any): string {
   const FALLBACK =
     'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=600&h=400&fit=crop';
@@ -20,13 +27,7 @@ export function getMenuItemImage(item: any): string {
 
   // 1. Prefer explicit images array (best case)
   if (Array.isArray(item.images) && item.images.length > 0) {
-    const valid = item.images.find(
-      (img: any) =>
-        typeof img === 'string' &&
-        img.startsWith('http') &&
-        !img.includes('undefined') &&
-        !img.includes('null')
-    );
+    const valid = item.images.find(isValidImageUrl);
     if (valid) return valid;
   }
 
@@ -34,9 +35,7 @@ export function getMenuItemImage(item: any): string {
   const raw = item.image_url;
   if (raw != null) {
     if (Array.isArray(raw)) {
-      const valid = raw.find(
-        (img: any) => typeof img === 'string' && img.startsWith('http')
-      );
+      const valid = raw.find(isValidImageUrl);
       if (valid) return valid;
     }
 
@@ -47,9 +46,7 @@ export function getMenuItemImage(item: any): string {
         try {
           const parsed = JSON.parse(trimmed);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            const valid = parsed.find(
-              (img: any) => typeof img === 'string' && img.startsWith('http')
-            );
+            const valid = parsed.find(isValidImageUrl);
             if (valid) return valid;
             if (typeof parsed[0] === 'string') return parsed[0];
           }
@@ -58,7 +55,7 @@ export function getMenuItemImage(item: any): string {
         }
       }
 
-      if (trimmed.startsWith('http')) {
+      if (isValidImageUrl(trimmed)) {
         return trimmed;
       }
     }
