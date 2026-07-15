@@ -140,11 +140,11 @@ export default function RootLayout({
         <main className="flex-grow pb-mobile-nav">
           {children}
         </main>
-        <Script
-          src="/sw.js"
-          strategy="afterInteractive"
-          id="sw-register"
-        />
+        <Script id="sw-register" strategy="afterInteractive">
+          {`if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('/sw.js', { scope: '/' });
+}`}
+        </Script>
       </body>
     </html>
   );
