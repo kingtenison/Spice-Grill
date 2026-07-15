@@ -11,21 +11,21 @@ export default function ContactPage() {
             <Phone className="w-6 h-6 text-red-600" />
             <div>
               <p className="font-semibold text-gray-900">Phone</p>
-              <p className="text-gray-600">(123) 456-7890</p>
+              <p className="text-gray-600">(218) 477-1112</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <Mail className="w-6 h-6 text-red-600" />
             <div>
               <p className="font-semibold text-gray-900">Email</p>
-              <p className="text-gray-600">info@thespicegrillemn.com</p>
+              <p className="text-gray-600">tsgmoorhead@gmail.com</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <MapPin className="w-6 h-6 text-red-600" />
             <div>
               <p className="font-semibold text-gray-900">Location</p>
-              <p className="text-gray-600">28 Moorhead Center Mall Avenue, Moorhead, MN</p>
+              <p className="text-gray-600">320 Red River Ave Ste D, Moorhead, MN 56560-8302</p>
             </div>
           </div>
           <div className="pt-4">

@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Loyalty Rewards - The Spice Grille | Afro-Caribbean Cuisine",
     description: "Earn points on every order and unlock exclusive rewards at The Spice Grille in Moorhead, MN.",
-    url: "https://thespicegrillemn.com/loyalty",
+    url: "https://www.thespicegrille.com/loyalty",
   },
   twitter: {
     title: "Loyalty Rewards - The Spice Grille",

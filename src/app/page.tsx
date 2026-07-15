@@ -1461,11 +1461,11 @@ export default function HomePage() {
               </Link>
 
               <Link
-                href="tel:+12185938000"
+                href="tel:+12184771112"
                 className="inline-flex items-center gap-3 px-10 py-5 text-lg font-semibold rounded-full border-2 border-gray-300 text-gray-900 hover:border-red-600 hover:text-red-600 transition-all duration-300"
               >
                 <Phone className="w-5 h-5" />
-                <span>Call Us: (218) 593-8000</span>
+                <span>Call Us: (218) 477-1112</span>
               </Link>
             </div>
           </motion.div>
@@ -1504,8 +1504,8 @@ export default function HomePage() {
                   <div>
                     <h4 className="font-bold text-lg mb-1 text-gray-900">Location</h4>
                     <p className="text-gray-600">
-                      28 Moorhead Center Mall Avenue<br />
-                      Moorhead, MN 56560
+                      320 Red River Ave Ste D<br />
+                      Moorhead, MN 56560-8302
                     </p>
                   </div>
                 </div>
@@ -1517,7 +1517,7 @@ export default function HomePage() {
                   <div>
                     <h4 className="font-bold text-lg mb-1 text-gray-900">Phone</h4>
                     <p className="text-gray-600">
-                      +1 (218) 593-8000
+                      +1 (218) 477-1112
                     </p>
                   </div>
                 </div>
@@ -1541,7 +1541,7 @@ export default function HomePage() {
                   <div>
                     <h4 className="font-bold text-lg mb-1 text-gray-900">Website</h4>
                     <p className="text-gray-600">
-                      thespicegrillemn.com
+                      www.thespicegrille.com
                     </p>
                   </div>
                 </div>
@@ -1663,11 +1663,11 @@ export default function HomePage() {
               <ul className="space-y-3 text-sm text-stone-400">
                 <li className="flex items-start gap-2.5">
                   <MapPin className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
-                  <span>28 Moorhead Center Mall Avenue<br />Moorhead, MN 56560</span>
+                  <span>320 Red River Ave Ste D<br />Moorhead, MN 56560-8302</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Phone className="w-4 h-4 text-orange-500 flex-shrink-0" />
-                  <a href="tel:+12185938000" className="hover:text-orange-500 transition-colors">+1 (218) 593-8000</a>
+                  <a href="tel:+12184771112" className="hover:text-orange-500 transition-colors">+1 (218) 477-1112</a>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Mail className="w-4 h-4 text-orange-500 flex-shrink-0" />

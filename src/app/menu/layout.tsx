@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     title: "Menu - The Spice Grille | Afro-Caribbean Cuisine Moorhead, MN",
     description:
       "Browse our full menu of Afro-Caribbean dishes. Jollof rice, waakye, banku, grilled tilapia, egusi soup, and more.",
-    url: "https://thespicegrillemn.com/menu",
+    url: "https://www.thespicegrille.com/menu",
   },
   twitter: {
     title: "Menu - The Spice Grille | Afro-Caribbean Cuisine",

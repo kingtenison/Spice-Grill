@@ -17,22 +17,22 @@ export function OrganizationSchema() {
         alternateName: "Spice Grille Afro-Caribbean Cuisine",
         description:
           "The Spice Grille brings a redefined mix of Afro-Caribbean cuisine to the Fargo-Moorhead area. Wood-fired grill, bold flavors, outdoor seating.",
-        url: "https://thespicegrillemn.com",
-        telephone: "+12185938000",
+        url: "https://www.thespicegrille.com",
+        telephone: "+12184771112",
         email: "tsgmoorhead@gmail.com",
-        logo: "https://thespicegrillemn.com/Spice_Logo.jpg",
-        image: "https://thespicegrillemn.com/Fried Yam and Fish.jpg",
+        logo: "https://www.thespicegrille.com/Spice_Logo.jpg",
+        image: "https://www.thespicegrille.com/Fried Yam and Fish.jpg",
         servesCuisine: ["Afro-Caribbean", "West African", "Ghanaian", "Caribbean"],
         priceRange: "$$",
         currencyAccepted: "USD",
         acceptsReservations: true,
-        hasMenu: "https://thespicegrillemn.com/menu",
+        hasMenu: "https://www.thespicegrille.com/menu",
         address: {
           "@type": "PostalAddress",
-          streetAddress: "28 Moorhead Center Mall Avenue",
+          streetAddress: "320 Red River Ave Ste D",
           addressLocality: "Moorhead",
           addressRegion: "MN",
-          postalCode: "56560",
+          postalCode: "56560-8302",
           addressCountry: "US",
         },
         geo: {
@@ -49,7 +49,7 @@ export function OrganizationSchema() {
           "https://www.tiktok.com/@tsgmoorhead",
           "https://www.facebook.com/share/1ETFUY425F/",
           "https://www.instagram.com/thespicegrillemn",
-          "https://wa.me/12185938000",
+          "https://wa.me/12184771112",
         ],
         aggregateRating: {
           "@type": "AggregateRating",
@@ -69,12 +69,12 @@ export function WebsiteSchema() {
         "@context": "https://schema.org",
         "@type": "WebSite",
         name: "The Spice Grille",
-        url: "https://thespicegrillemn.com",
+        url: "https://www.thespicegrille.com",
         potentialAction: {
           "@type": "SearchAction",
           target: {
             "@type": "EntryPoint",
-            urlTemplate: "https://thespicegrillemn.com/menu?search={search_term_string}",
+            urlTemplate: "https://www.thespicegrille.com/menu?search={search_term_string}",
           },
           "query-input": "required name=search_term_string",
         },
@@ -108,7 +108,7 @@ export function MenuSchema() {
         "@type": "Menu",
         name: "The Spice Grille Menu",
         description: "Afro-Caribbean cuisine menu featuring West African and Caribbean dishes.",
-        url: "https://thespicegrillemn.com/menu",
+        url: "https://www.thespicegrille.com/menu",
         hasMenuItem: [
           { "@type": "MenuItem", name: "Fried Yam & Fish", description: "Golden, crispy yam slices with seasoned fried fish.", offers: { "@type": "Offer", price: "14.00", priceCurrency: "USD" } },
           { "@type": "MenuItem", name: "Pounded Yam & Egusi Soup", description: "Smooth pounded yam with rich melon seed egusi soup.", offers: { "@type": "Offer", price: "16.00", priceCurrency: "USD" } },
@@ -146,7 +146,7 @@ export function FaqSchema() {
             name: "Where is The Spice Grille located?",
             acceptedAnswer: {
               "@type": "Answer",
-              text: "The Spice Grille is located at 28 Moorhead Center Mall Avenue, Moorhead, MN 56560, serving the Fargo-Moorhead area.",
+              text: "The Spice Grille is located at 320 Red River Ave Ste D, Moorhead, MN 56560-8302, serving the Fargo-Moorhead area.",
             },
           },
           {
@@ -178,7 +178,7 @@ export function FaqSchema() {
             name: "Can I make a reservation at The Spice Grille?",
             acceptedAnswer: {
               "@type": "Answer",
-              text: "Yes, reservations are accepted. You can book a table through our website or by calling (218) 593-8000.",
+              text: "Yes, reservations are accepted. You can book a table through our website or by calling (218) 477-1112.",
             },
           },
         ],
@@ -196,7 +196,7 @@ export function ReviewSchema() {
         itemReviewed: {
           "@type": "Restaurant",
           name: "The Spice Grille",
-          image: "https://thespicegrillemn.com/Spice_Logo.jpg",
+          image: "https://www.thespicegrille.com/Spice_Logo.jpg",
         },
         reviewRating: {
           "@type": "Rating",

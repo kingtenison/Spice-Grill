@@ -5,11 +5,11 @@ import { Navbar } from "@/components/layout/Navbar";
 import { RouteAwareNav } from "@/components/layout/RouteAwareNav";
 import { DefaultSeoSchema } from "@/components/seo/JsonLd";
 
-const siteUrl = "https://thespicegrillemn.com";
+const siteUrl = "https://www.thespicegrille.com";
 const siteName = "The Spice Grille";
 const defaultTitle = "The Spice Grille - Afro-Caribbean Cuisine | Moorhead, MN";
 const defaultDescription =
-  "The Spice Grille brings a redefined mix of Afro-Caribbean cuisine to the Fargo-Moorhead area. Wood-fired grill, bold flavors, outdoor seating. 28 Moorhead Center Mall Avenue, Moorhead, MN.";
+  "The Spice Grille brings a redefined mix of Afro-Caribbean cuisine to the Fargo-Moorhead area. Wood-fired grill, bold flavors, outdoor seating. 320 Red River Ave Ste D, Moorhead, MN.";
 const ogImage = `${siteUrl}/Spice_Logo.jpg`;
 
 export const metadata: Metadata = {

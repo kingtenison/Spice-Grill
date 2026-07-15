@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Blog & Stories - The Spice Grille | Afro-Caribbean Cuisine",
     description: "Explore stories, recipes, and news from The Spice Grille kitchen in Moorhead, MN.",
-    url: "https://thespicegrillemn.com/blog",
+    url: "https://www.thespicegrille.com/blog",
   },
   twitter: {
     title: "Blog & Stories - The Spice Grille",
