@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { RouteAwareNav } from "@/components/layout/RouteAwareNav";
@@ -139,6 +140,11 @@ export default function RootLayout({
         <main className="flex-grow pb-mobile-nav">
           {children}
         </main>
+        <Script
+          src="/sw.js"
+          strategy="afterInteractive"
+          id="sw-register"
+        />
       </body>
     </html>
   );
