@@ -83,6 +83,6 @@ export const config = {
      * - /dispatcher (has own login)
      * - /track (public order tracking)
      */
-     '/((?!api|_next/static|_next/image|favicon.ico|login|register|auth|debug|blog|loyalty|dispatcher|track|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+      '/((?!api|_next/static|_next/image|favicon.ico|sw\\.js|manifest\\.json|robots\\.txt|sitemap\\.xml|login|register|auth|debug|blog|loyalty|dispatcher|track|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|json|js|css|xml)$).*)',
   ],
 }
