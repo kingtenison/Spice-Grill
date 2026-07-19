@@ -83,7 +83,7 @@ export const metadata: Metadata = {
     },
   },
   verification: {
-    google: "googled477b98dc47e7837",
+    google: "BzjRA8maxGEIa0aADuWiZsRQse04NZrtPaodR99YiWI",
   },
   category: "food",
   classification: "Restaurant",
