@@ -1,7 +1,6 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
-  X,
   Plus,
   Minus,
   Clock,
@@ -54,25 +53,24 @@ export function ItemDetailModal({ item, isOpen, onClose }: ItemDetailModalProps)
   const [selectedImage, setSelectedImage] = useState(0);
 
   const addItem = useCartStore((state) => state.addItem);
-  const updateQuantity = useCartStore((state) => state.updateQuantity);
-  const items = useCartStore((state) => state.items);
 
   // Reset state when modal opens with a new item
+  const prevItemId = useRef(item?.id);
   useEffect(() => {
     if (isOpen) {
-      setQuantity(1);
-      setSelectedImage(0);
+      if (item?.id !== prevItemId.current) {
+        setQuantity(1);
+        setSelectedImage(0);
+        prevItemId.current = item?.id;
+      }
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'auto';
     }
     return () => { document.body.style.overflow = 'auto'; };
-  }, [isOpen, item]);
+  }, [isOpen, item?.id]);
 
   if (!item) return null;
-
-  const cartItem = items.find(cartItem => cartItem.id === item.id);
-  const currentQuantity = cartItem?.quantity || 0;
 
   const handleAddToCart = () => {
     for (let i = 0; i < quantity; i++) {

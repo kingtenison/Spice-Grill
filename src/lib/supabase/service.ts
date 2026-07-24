@@ -1,6 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-let serviceClient: SupabaseClient<any> | null = null;
+let serviceClient: SupabaseClient | null = null;
 
 export function getServiceClient() {
   if (!serviceClient) {
@@ -9,7 +9,7 @@ export function getServiceClient() {
     if (!url) throw new Error('Missing required environment variable: NEXT_PUBLIC_SUPABASE_URL');
     if (!key) throw new Error('Missing required environment variable: SUPABASE_SERVICE_ROLE_KEY');
 
-    serviceClient = createClient<any>(url, key,
+    serviceClient = createClient(url, key,
       {
         global: {
           fetch: (url: RequestInfo | URL, init?: RequestInit) => {

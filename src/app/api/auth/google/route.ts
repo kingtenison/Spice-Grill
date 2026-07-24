@@ -8,6 +8,7 @@ import { createServerClient } from '@supabase/ssr';
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const origin = requestUrl.origin;
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || origin;
 
   const response = NextResponse.next();
 
@@ -37,7 +38,7 @@ export async function GET(request: Request) {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${origin}/api/auth/callback`,
+      redirectTo: `${baseUrl}/api/auth/callback`,
     },
   });
 

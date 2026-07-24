@@ -29,6 +29,7 @@ const NAV_ITEMS = [
   { label: "Menu", href: "/admin/menu", icon: UtensilsCrossed },
   { label: "Delivery", href: "/admin/delivery", icon: Truck },
   { label: "Dispatcher Apps", href: "/admin/dispatcher-applications", icon: ClipboardCheck },
+  { label: "Financial", href: "/admin/financial", icon: BarChart3 },
   { label: "Blog", href: "/admin/blog", icon: BookOpen },
   { label: "Reviews", href: "/admin/reviews", icon: Star },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },

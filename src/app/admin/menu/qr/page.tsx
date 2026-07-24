@@ -9,10 +9,7 @@ export default function AdminMenuQR() {
   const [menuUrl, setMenuUrl] = useState("/menu/view");
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const baseUrl = window.location.origin.replace(/\/admin.*$/, "");
-      setMenuUrl(`${baseUrl}/menu/view`);
-    }
+    setMenuUrl(`${process.env.NEXT_PUBLIC_APP_URL}/menu/view`);
   }, []);
 
   return (

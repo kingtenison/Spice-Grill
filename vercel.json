@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "fable-os.vercel.app"
+        }
+      ],
+      "destination": "https://www.thespicegrille.com/$1",
+      "permanent": true
+    }
+  ]
+}

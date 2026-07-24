@@ -25,16 +25,39 @@ import {
   Film,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
-
 interface BlogEditorProps {
   content: string;
   onChange: (content: string) => void;
   placeholder?: string;
 }
 
+function ToolbarButton({
+  onClick,
+  active,
+  children,
+  title,
+}: {
+  onClick: () => void;
+  active?: boolean;
+  children: React.ReactNode;
+  title: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      className={cn(
+        "p-2 rounded-lg transition-all",
+        active ? "bg-red-100 text-red-600" : "hover:bg-gray-100 text-gray-600"
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
 export function BlogEditor({ content, onChange, placeholder = "Start writing your story..." }: BlogEditorProps) {
-  const supabase = createClient();
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [showMediaUpload, setShowMediaUpload] = useState<"image" | "video" | null>(null);
@@ -97,7 +120,7 @@ export function BlogEditor({ content, onChange, placeholder = "Start writing you
         }
       });
 
-      const result = await new Promise<any>((resolve, reject) => {
+      const result = await new Promise<{ url: string }>((resolve, reject) => {
         xhr.onload = () => {
           if (xhr.status === 200) resolve(JSON.parse(xhr.responseText));
           else reject(new Error(xhr.statusText));
@@ -141,30 +164,6 @@ export function BlogEditor({ content, onChange, placeholder = "Start writing you
   }, [editor, mediaUrl]);
 
   if (!editor) return null;
-
-  const ToolbarButton = ({
-    onClick,
-    active,
-    children,
-    title,
-  }: {
-    onClick: () => void;
-    active?: boolean;
-    children: React.ReactNode;
-    title: string;
-  }) => (
-    <button
-      type="button"
-      onClick={onClick}
-      title={title}
-      className={cn(
-        "p-2 rounded-lg transition-all",
-        active ? "bg-red-100 text-red-600" : "hover:bg-gray-100 text-gray-600"
-      )}
-    >
-      {children}
-    </button>
-  );
 
   return (
     <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm">

@@ -83,17 +83,6 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ orderI
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const init = async () => {
-      const { orderId: id } = await params;
-      setOrderId(id);
-      await fetchOrderData(id);
-      setupRealtimeSubscription(id);
-    };
-
-    init();
-  }, [params]);
-
   const fetchOrderData = async (id: string) => {
     try {
       const res = await fetch(`/api/track?order_id=${id}`);
@@ -109,7 +98,7 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ orderI
     }
   };
 
-  const setupRealtimeSubscription = (id: string) => {
+  function setupRealtimeSubscription(id: string) {
     const supabase = createAuthClientBrowser();
     
     const subscription = supabase
@@ -133,7 +122,23 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ orderI
     return () => {
       subscription.unsubscribe();
     };
-  };
+  }
+
+  useEffect(() => {
+    const init = async () => {
+      const { orderId: id } = await params;
+      setOrderId(id);
+      await fetchOrderData(id);
+    };
+
+    init();
+  }, [params]);
+
+  useEffect(() => {
+    if (!orderId) return;
+    const cleanup = setupRealtimeSubscription(orderId);
+    return () => cleanup();
+  }, [orderId]);
 
   const getCurrentStepIndex = () => {
     if (!delivery) return 0;

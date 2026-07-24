@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { MapPin, Navigation } from 'lucide-react';
+import type { Map as LeafletMap, Marker, Polyline } from 'leaflet';
 
 interface Location {
   lat: number;
@@ -15,17 +16,17 @@ interface LiveMapProps {
   onNavigate?: () => void;
 }
 
-export default function LiveMap({ customerLocation, dispatcherLocation, onNavigate }: LiveMapProps) {
+export default function LiveMap({ customerLocation, dispatcherLocation }: LiveMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<any>(null);
-  const customerMarkerRef = useRef<any>(null);
-  const dispatcherMarkerRef = useRef<any>(null);
-  const routeLineRef = useRef<any>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const customerMarkerRef = useRef<L.Marker | null>(null);
+  const dispatcherMarkerRef = useRef<L.Marker | null>(null);
+  const routeLineRef = useRef<L.Polyline | null>(null);
   const [mapError, setMapError] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
-    let L: any;
+    let L: typeof import('leaflet');
 
     async function initMap() {
       if (typeof window === 'undefined' || !mapContainerRef.current) return;

@@ -6,14 +6,13 @@ import { usePathname } from "next/navigation";
 import { User, LogOut, Home, UtensilsCrossed, Award, BookOpen, History, Truck, MapPin, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { createClient, safeGetUser } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { useCartStore } from "@/store/useCartStore";
 
 export function SidebarNav() {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [isApprovedDispatcher, setIsApprovedDispatcher] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [deliveryOpen, setDeliveryOpen] = useState(false);
   const deliveryRef = useRef<HTMLDivElement>(null);
@@ -29,11 +28,9 @@ export function SidebarNav() {
           const data = await res.json();
           setUser(data.user);
           setUserRole(data.role);
-          setIsApprovedDispatcher(!!data.isApprovedDispatcher);
         } else {
           setUser(null);
           setUserRole(null);
-          setIsApprovedDispatcher(false);
         }
       } catch (err) {
         console.warn("[SidebarNav] Auth check failed:", err);
@@ -45,14 +42,13 @@ export function SidebarNav() {
     checkAuth();
 
     const supabase = createClient();
-    const { data: { subscription } } = (supabase.auth as any).onAuthStateChange(async (_event: any, session: any) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         setUser(session.user);
         checkAuth(); // refresh roles and statuses safely
       } else {
         setUser(null);
         setUserRole(null);
-        setIsApprovedDispatcher(false);
       }
     });
 
@@ -71,7 +67,13 @@ export function SidebarNav() {
   }, []);
 
   // Close delivery dropdown on route change
-  useEffect(() => { setDeliveryOpen(false); }, [pathname]);
+  const prevPathname = useRef(pathname);
+  useEffect(() => {
+    if (prevPathname.current !== pathname) {
+      setDeliveryOpen(false);
+      prevPathname.current = pathname;
+    }
+  }, [pathname]);
 
   const handleLogout = async () => {
     const supabase = createClient();

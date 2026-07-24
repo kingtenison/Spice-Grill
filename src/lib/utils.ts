@@ -12,27 +12,29 @@ export function cn(...inputs: ClassValue[]) {
  * - items.image_url as string
  * - items.image_url as JSON stringified array (current DB hack for multi-image)
  */
-function isValidImageUrl(img: any): boolean {
+function isValidImageUrl(img: unknown): boolean {
   return typeof img === 'string' &&
     (img.startsWith('http') || img.startsWith('/')) &&
     !img.includes('undefined') &&
     !img.includes('null');
 }
 
-export function getMenuItemImage(item: any): string {
+export function getMenuItemImage(item: unknown): string {
   const FALLBACK =
     'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=600&h=400&fit=crop';
 
-  if (!item) return FALLBACK;
+  if (!item || typeof item !== 'object') return FALLBACK;
+
+  const obj = item as { [key: string]: unknown };
 
   // 1. Prefer explicit images array (best case)
-  if (Array.isArray(item.images) && item.images.length > 0) {
-    const valid = item.images.find(isValidImageUrl);
+  if (Array.isArray(obj.images) && obj.images.length > 0) {
+    const valid = obj.images.find(isValidImageUrl);
     if (valid) return valid;
   }
 
   // 2. Handle image_url column (frequently contains JSON.stringify([...]) )
-  const raw = item.image_url;
+  const raw = obj.image_url;
   if (raw != null) {
     if (Array.isArray(raw)) {
       const valid = raw.find(isValidImageUrl);

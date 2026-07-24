@@ -1,7 +1,7 @@
 
 import Image from "next/image";
 import { cn, getMenuItemImage } from '@/lib/utils';
-import { Plus, ShoppingCart, Clock, Flame, Leaf, Wheat } from 'lucide-react';
+import { Plus, Clock, Flame, Leaf, Wheat } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface MenuItem {

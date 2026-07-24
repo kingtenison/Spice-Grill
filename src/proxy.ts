@@ -42,8 +42,6 @@ export async function updateSession(request: NextRequest) {
   if (
     !user &&
     !request.nextUrl.pathname.startsWith('/login') &&
-    !request.nextUrl.pathname.startsWith('/register') &&
-    !request.nextUrl.pathname.startsWith('/auth') &&
     !request.nextUrl.pathname.startsWith('/menu') &&
     !request.nextUrl.pathname.startsWith('/cart') &&
     !request.nextUrl.pathname.startsWith('/checkout') &&
@@ -74,8 +72,6 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - /login (public auth page)
-     * - /register (public registration page)
-     * - /auth (OAuth callback and auth routes)
      * - /api (API routes)
      * - /debug (debug pages)
      * - /blog (public blog)
@@ -83,6 +79,6 @@ export const config = {
      * - /dispatcher (has own login)
      * - /track (public order tracking)
      */
-      '/((?!api|_next/static|_next/image|favicon.ico|sw\\.js|manifest\\.json|robots\\.txt|sitemap\\.xml|login|register|auth|debug|blog|loyalty|dispatcher|track|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|json|js|css|xml)$).*)',
+      '/((?!api|_next/static|_next/image|favicon.ico|sw\\.js|manifest\\.json|robots\\.txt|sitemap\\.xml|login|debug|blog|loyalty|dispatcher|track|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|json|js|css|xml)$).*)',
   ],
 }

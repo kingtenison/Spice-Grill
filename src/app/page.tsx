@@ -698,7 +698,7 @@ export default function HomePage() {
                 {/* Badges */}
                 <div className="absolute top-4 left-4 flex flex-wrap gap-2">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-600 text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-red-600/30">
-                    <Flame className="w-3.5 h-3.5 animate-pulse" /> Chef's Pick
+                    <Flame className="w-3.5 h-3.5 animate-pulse" /> Chef&apos;s Pick
                   </span>
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-orange-400 text-xs font-semibold border border-white/10">
                     <Star className="w-3 h-3 fill-orange-400 text-orange-400" /> 4.9
@@ -1599,8 +1599,8 @@ export default function HomePage() {
             {/* Brand + Socials */}
             <div className="sm:col-span-2 lg:col-span-1">
               <h3 className="font-heading text-2xl font-bold mb-3">
-                <span className="text-white">THE SPICE</span>
-                <span className="text-orange-500"> GRILLE</span>
+                <span className="text-white">The Spice</span>
+                <span className="text-orange-500"> Grille</span>
               </h3>
               <p className="text-stone-400 text-sm leading-relaxed mb-5 max-w-xs">
                 Bringing you a redefined mix of Afro-Caribbean cuisine to the Fargo-Moorhead area. Bold flavors, warm hospitality.

@@ -95,22 +95,6 @@ interface CartState {
   validateCoupon: (code: string) => Promise<boolean>
 }
 
-const defaultDeliveryMethods: ShippingMethod[] = [
-  {
-    id: 'standard',
-    name: 'Standard Delivery',
-    description: 'Delivery within 30-45 minutes',
-    cost: 0,
-    estimatedDays: 0
-  },
-  {
-    id: 'express',
-    name: 'Express Delivery',
-    description: 'Delivery within 15-20 minutes',
-    cost: 4.99,
-    estimatedDays: 0
-  }
-]
 
 export const useCartStore = create<CartState>()(
   persist(

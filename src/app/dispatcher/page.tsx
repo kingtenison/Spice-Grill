@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   Truck, MapPin, Phone, User, CheckCircle, Navigation,
-  Clock, AlertCircle, LogOut, RefreshCw
+  Clock, AlertCircle, LogOut, RefreshCw, DollarSign, CreditCard
 } from "lucide-react";
 import dynamic from "next/dynamic";
 const LiveMap = dynamic(() => import("@/components/dispatcher/LiveMap"), { ssr: false });
@@ -203,7 +203,7 @@ export default function DispatcherPortal() {
     };
   }, [activeDeliveries, dispatcherProfile]);
 
-  const fetchDispatcherProfile = async (dispatcherId: string, retries = 1) => {
+  async function fetchDispatcherProfile(dispatcherId: string, retries = 1) {
     try {
       const res = await fetch(`/api/dispatcher?dispatcher_id=${dispatcherId}`);
       if (!res.ok) throw new Error('Failed to fetch');
@@ -247,7 +247,7 @@ export default function DispatcherPortal() {
     }
   };
 
-  const fetchDeliveries = async (dispatcherId: string) => {
+  async function fetchDeliveries(dispatcherId: string) {
     try {
       const res = await fetch(`/api/dispatcher?dispatcher_id=${dispatcherId}`);
       if (!res.ok) throw new Error('Failed to fetch');
@@ -260,7 +260,7 @@ export default function DispatcherPortal() {
     }
   };
 
-  const startPolling = (dispatcherId: string) => {
+  function startPolling(dispatcherId: string) {
     // Clear any existing interval first
     if (pollingRef.current) {
       clearInterval(pollingRef.current);
@@ -385,25 +385,25 @@ export default function DispatcherPortal() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pt-20 lg:pl-sidebar">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <div className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center gap-4">
-              <Truck className="w-8 h-8 text-red-600" />
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">Dispatcher Portal</h1>
-                <p className="text-sm text-gray-600">{dispatcherProfile.name}</p>
+              <Truck className="w-8 h-8 text-red-600 shrink-0" />
+              <div className="min-w-0">
+                <h1 className="text-xl font-bold text-gray-900 truncate">Dispatcher Portal</h1>
+                <p className="text-sm text-gray-600 truncate">{dispatcherProfile.name}</p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">Status:</span>
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">Status:</span>
                 <select
                   value={dispatcherProfile.status}
                   onChange={(e) => updateDispatcherStatus(e.target.value)}
-                  className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-600"
+                  className="px-2 sm:px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-600"
                 >
                   <option value="available">Available</option>
                   <option value="busy">Busy</option>
@@ -411,12 +411,26 @@ export default function DispatcherPortal() {
                   <option value="offline">Offline</option>
                 </select>
               </div>
+              <a
+                href="/dispatcher/earnings"
+                className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium"
+              >
+                <DollarSign className="w-4 h-4" />
+                <span className="hidden sm:inline">Earnings</span>
+              </a>
+              <a
+                href="/dispatcher/payment-settings"
+                className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium"
+              >
+                <CreditCard className="w-4 h-4" />
+                <span className="hidden sm:inline">Bank</span>
+              </a>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
               >
                 <LogOut className="w-4 h-4" />
-                Logout
+                <span className="hidden sm:inline">Logout</span>
               </button>
             </div>
           </div>

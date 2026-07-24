@@ -55,42 +55,42 @@ export function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-2 sm:gap-3">
             <img
               src="/Spice_Logo.jpg"
               alt="Spice Grille Logo"
-              className="w-10 h-10 rounded-xl object-cover shadow-lg"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl object-cover shadow-lg shrink-0"
             />
-            <span className="font-heading text-2xl font-bold text-gray-900">
-              <span className="text-gray-900">SPICE</span>
-              <span className="text-red-600">GRILLE</span>
+            <span className="font-heading text-lg sm:text-2xl font-bold text-gray-900">
+              <span className="text-gray-900">Spice</span>
+              <span className="text-red-600">Grille</span>
             </span>
           </Link>
 
           {/* Right side — Order Now + Login/Account */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <Link
               href="/menu"
-              className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors rounded-xl shadow-sm"
+              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors rounded-xl shadow-sm"
             >
-              <ShoppingBag className="w-4 h-4" />
-              <span>Order Now</span>
+              <ShoppingBag className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">Order Now</span>
             </Link>
 
             {user ? (
               <Link
                 href="/account"
-                className="flex items-center justify-center w-10 h-10 rounded-xl text-gray-700 hover:bg-gray-100 hover:text-red-600 transition-colors"
+                className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl text-gray-700 hover:bg-gray-100 hover:text-red-600 transition-colors"
               >
-                <User className="w-5 h-5" />
+                <User className="w-4 h-4 sm:w-5 sm:h-5" />
               </Link>
             ) : (
               <Link
                 href="/login"
-                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-red-600 transition-colors rounded-xl"
+                className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-red-600 transition-colors rounded-xl"
               >
-                <User className="w-4 h-4" />
-                <span>Login</span>
+                <User className="w-4 h-4 shrink-0" />
+                <span className="hidden sm:inline">Login</span>
               </Link>
             )}
           </div>

@@ -78,7 +78,7 @@ function LoginPromptPage() {
               Sign In &amp; Get Benefits
             </Link>
             <Link
-              href="/register"
+              href="/login"
               className="flex items-center justify-center gap-2 w-full py-3.5 px-6 rounded-xl bg-white border border-gray-200 text-gray-700 font-bold text-base hover:border-gray-300 hover:bg-gray-50 transition-colors"
             >
               Create Account

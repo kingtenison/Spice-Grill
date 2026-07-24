@@ -14,28 +14,20 @@ import { createAuthClientBrowser } from "@/lib/supabase/client";
 
 type CheckoutStep = 'delivery' | 'payment' | 'review';
 
-const deliveryMethods: ShippingMethod[] = [
-  {
-    id: 'standard',
-    name: 'Standard Delivery',
-    description: 'Delivery within 30-45 minutes',
-    cost: 0,
-    estimatedDays: 0
-  },
-  {
-    id: 'express',
-    name: 'Express Delivery',
-    description: 'Delivery within 15-20 minutes',
-    cost: 4.99,
-    estimatedDays: 0
-  },
-  {
-    id: 'scheduled',
-    name: 'Scheduled Delivery',
-    description: 'Choose your preferred delivery time',
-    cost: 2.99,
-    estimatedDays: 0
-  }
+interface DeliverySettings {
+  delivery_fee: number;
+  service_fee: number;
+  service_fee_radius_miles: number;
+  per_mile_rate: number;
+  free_delivery_radius_miles: number;
+  small_order_threshold: number;
+  small_order_fee: number;
+}
+
+const defaultDeliveryMethods: ShippingMethod[] = [
+  { id: 'standard', name: 'Standard Delivery', description: 'Delivery within 30-45 minutes', cost: 0, estimatedDays: 0 },
+  { id: 'express', name: 'Express Delivery', description: 'Delivery within 15-20 minutes', cost: 4.99, estimatedDays: 0 },
+  { id: 'scheduled', name: 'Scheduled Delivery', description: 'Choose your preferred delivery time', cost: 2.99, estimatedDays: 0 },
 ];
 
 const paymentMethods: { id: PaymentMethod; name: string; description: string; icon: any }[] = [
@@ -75,6 +67,10 @@ export default function CheckoutPage() {
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderId, setOrderId] = useState("");
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [deliverySettings, setDeliverySettings] = useState<DeliverySettings | null>(null);
+  const [deliveryMethods, setDeliveryMethods] = useState<ShippingMethod[]>(defaultDeliveryMethods);
+  const [distanceMiles, setDistanceMiles] = useState<number>(0);
+  const [calculatedFees, setCalculatedFees] = useState({ deliveryFee: 0, serviceFee: 0, smallOrderFee: 0 });
 
   const [deliveryForm, setDeliveryForm] = useState({
     name: '', email: '', phone: '',
@@ -126,10 +122,31 @@ export default function CheckoutPage() {
     }
   }, [deliveryForm, billingForm.sameAsDelivery]);
 
+  // Fetch delivery settings on mount
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch('/api/admin/delivery-settings');
+        if (res.ok) {
+          const settings: DeliverySettings = await res.json();
+          setDeliverySettings(settings);
+          setDeliveryMethods([
+            { id: 'standard', name: 'Standard Delivery', description: 'Delivery within 30-45 minutes', cost: settings.delivery_fee, estimatedDays: 0 },
+            { id: 'express', name: 'Express Delivery', description: 'Delivery within 15-20 minutes', cost: settings.delivery_fee + 1.00, estimatedDays: 0 },
+            { id: 'scheduled', name: 'Scheduled Delivery', description: 'Choose your preferred delivery time', cost: settings.delivery_fee, estimatedDays: 0 },
+          ]);
+        }
+      } catch (e) {
+        console.error('Failed to load delivery settings:', e);
+      }
+    };
+    fetchSettings();
+  }, []);
+
   // Initialize delivery method on mount to avoid hydration mismatch
   useEffect(() => {
-    setDeliveryMethod(deliveryMethods[0]);
-  }, []);
+    if (deliveryMethods.length > 0) setDeliveryMethod(deliveryMethods[0]);
+  }, [deliveryMethods]);
 
   // Get customer location
   const getLocation = async () => {
@@ -167,12 +184,58 @@ export default function CheckoutPage() {
     }
   };
 
+  // Calculate distance when customer location changes
+  useEffect(() => {
+    if (!customerLocation || !deliverySettings) return;
+    const calcDistance = async () => {
+      try {
+        const res = await fetch(`/api/distance?lat=${customerLocation.lat}&lng=${customerLocation.lng}`);
+        if (res.ok) {
+          const data = await res.json();
+          const miles = data.distance_miles || 0;
+          setDistanceMiles(miles);
+
+          // Calculate fees based on distance
+          let deliveryFee = deliverySettings.delivery_fee;
+          let serviceFee = 0;
+
+          // Free delivery within radius
+          if (miles <= deliverySettings.free_delivery_radius_miles) {
+            deliveryFee = 0;
+          }
+
+          // Service fee: full fee within radius, then per-mile after
+          if (miles <= deliverySettings.service_fee_radius_miles) {
+            serviceFee = deliverySettings.service_fee;
+          } else {
+            serviceFee = deliverySettings.service_fee + (miles - deliverySettings.service_fee_radius_miles) * deliverySettings.per_mile_rate;
+          }
+
+          // Small order fee
+          const currentSubtotal = getSubtotal();
+          const smallOrderFee = currentSubtotal < deliverySettings.small_order_threshold ? deliverySettings.small_order_fee : 0;
+
+          setCalculatedFees({
+            deliveryFee: Math.round(deliveryFee * 100) / 100,
+            serviceFee: Math.round(serviceFee * 100) / 100,
+            smallOrderFee,
+          });
+        }
+      } catch (e) {
+        console.error('Failed to calculate distance:', e);
+      }
+    };
+    calcDistance();
+  }, [customerLocation, deliverySettings]);
+
   const subtotal = getSubtotal();
-  const deliveryCost = getDeliveryCost();
+  const deliveryCost = deliveryMethod?.id === 'pickup' ? 0 : (calculatedFees.deliveryFee || getDeliveryCost());
+  const serviceFee = deliveryMethod?.id === 'pickup' ? 0 : calculatedFees.serviceFee;
+  const smallOrderFee = deliveryMethod?.id === 'pickup' ? 0 : calculatedFees.smallOrderFee;
   const taxAmount = subtotal * 0.08;
   const discountAmount = getDiscountAmount();
   const loyaltyDiscountAmount = userLoyalty ? Math.round(subtotal * (userLoyalty.discountPercent / 100) * 100) / 100 : 0;
-  const total = Math.max(0, subtotal + deliveryCost + taxAmount - discountAmount - loyaltyDiscountAmount);
+  const total = Math.max(0, subtotal + deliveryCost + serviceFee + smallOrderFee + taxAmount - discountAmount - loyaltyDiscountAmount);
 
   const validateStep = (step: CheckoutStep): boolean => {
     const errors: Record<string, string> = {};
@@ -235,7 +298,11 @@ export default function CheckoutPage() {
         status: "pending",
         payment_status: "paid",
         customer_location: customerLocation,
-        shipping_method: deliveryMethod?.id
+        shipping_method: deliveryMethod?.id,
+        delivery_fee: deliveryCost,
+        service_fee: serviceFee,
+        small_order_fee: smallOrderFee,
+        distance_miles: distanceMiles,
       };
       const orderItems = items.map((item) => ({
         menu_item_id: item.id,
@@ -272,7 +339,7 @@ export default function CheckoutPage() {
     return (
       <ConfirmationPage
         orderId={orderId}
-        orderDetails={{ items, deliveryMethod: deliveryMethod || deliveryMethods[0], paymentMethod: paymentForm.method, coupon, deliveryAddress: deliveryForm, billingAddress: billingForm.sameAsDelivery ? deliveryForm : billingForm, totals: { subtotal, deliveryCost, taxAmount, discountAmount, total } }}
+        orderDetails={{ items, deliveryMethod: deliveryMethod || deliveryMethods[0], paymentMethod: paymentForm.method, coupon, deliveryAddress: deliveryForm, billingAddress: billingForm.sameAsDelivery ? deliveryForm : billingForm, totals: { subtotal, deliveryCost, serviceFee, smallOrderFee, taxAmount, discountAmount, total } }}
       />
     );
   }
@@ -392,7 +459,7 @@ export default function CheckoutPage() {
                       )}
                       {!customerLocation && (
                         <div>
-                          <p className="text-xs text-gray-600 mt-2">We'll use your GPS location for accurate delivery tracking</p>
+                          <p className="text-xs text-gray-600 mt-2">We&apos;ll use your GPS location for accurate delivery tracking</p>
                           {validationErrors.location && (
                             <p className="text-red-600 text-sm mt-1 flex items-center gap-1"><AlertCircle className="w-4 h-4" />{validationErrors.location}</p>
                           )}
@@ -497,7 +564,7 @@ export default function CheckoutPage() {
                       </div>
                     )}
                     {paymentForm.method === 'cash' && (
-                      <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl"><p className="text-sm text-yellow-800">💰 You'll pay in cash when your order is delivered. Please have exact change ready.</p></div>
+                      <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl"><p className="text-sm text-yellow-800">💰 You&apos;ll pay in cash when your order is delivered. Please have exact change ready.</p></div>
                     )}
                   </div>
                 </motion.div>
@@ -547,7 +614,13 @@ export default function CheckoutPage() {
               )}
               <div className="border-t border-gray-200 pt-4 space-y-3">
                 <div className="flex justify-between text-gray-600"><span>Subtotal</span><span className="font-semibold">${subtotal.toFixed(2)}</span></div>
-                <div className="flex justify-between text-gray-600"><span>Delivery</span><span className="font-semibold">{deliveryCost === 0 ? "Free" : `$${deliveryCost.toFixed(2)}`}</span></div>
+                {deliveryMethod?.id !== 'pickup' && (
+                  <>
+                    <div className="flex justify-between text-gray-600"><span>Delivery Fee{distanceMiles > 0 ? ` (${distanceMiles.toFixed(1)} mi)` : ''}</span><span className="font-semibold">{deliveryCost === 0 ? "Free" : `$${deliveryCost.toFixed(2)}`}</span></div>
+                    {serviceFee > 0 && <div className="flex justify-between text-gray-600"><span>Service Fee</span><span className="font-semibold">${serviceFee.toFixed(2)}</span></div>}
+                    {smallOrderFee > 0 && <div className="flex justify-between text-orange-600"><span>Small Order Fee</span><span className="font-semibold">${smallOrderFee.toFixed(2)}</span></div>}
+                  </>
+                )}
                 <div className="flex justify-between text-gray-600"><span>Tax</span><span className="font-semibold">${taxAmount.toFixed(2)}</span></div>
                 {discountAmount > 0 && <div className="flex justify-between text-green-600"><span className="flex items-center gap-1"><Percent className="w-4 h-4" />Discount ({coupon?.code})</span><span className="font-semibold">-${discountAmount.toFixed(2)}</span></div>}
                 {userLoyalty && userLoyalty.discountPercent > 0 && <div className="flex justify-between text-green-600"><span className="flex items-center gap-1"><Award className="w-4 h-4" />{userLoyalty.tier} Member ({userLoyalty.discountPercent}% off)</span><span className="font-semibold">-${loyaltyDiscountAmount.toFixed(2)}</span></div>}
@@ -593,7 +666,13 @@ function ConfirmationPage({ orderId, orderDetails }: { orderId: string; orderDet
               </div>
               <div className="border-t border-gray-200 pt-4 mt-4 space-y-2">
                 <div className="flex justify-between text-gray-600"><span>Subtotal</span><span className="font-semibold">${orderDetails.totals.subtotal.toFixed(2)}</span></div>
-                <div className="flex justify-between text-gray-600"><span>Delivery</span><span className="font-semibold">${orderDetails.totals.deliveryCost.toFixed(2)}</span></div>
+                {orderDetails.deliveryMethod?.id !== 'pickup' && (
+                  <>
+                    <div className="flex justify-between text-gray-600"><span>Delivery Fee</span><span className="font-semibold">{orderDetails.totals.deliveryCost === 0 ? "Free" : `$${orderDetails.totals.deliveryCost.toFixed(2)}`}</span></div>
+                    {orderDetails.totals.serviceFee > 0 && <div className="flex justify-between text-gray-600"><span>Service Fee</span><span className="font-semibold">${orderDetails.totals.serviceFee.toFixed(2)}</span></div>}
+                    {orderDetails.totals.smallOrderFee > 0 && <div className="flex justify-between text-orange-600"><span>Small Order Fee</span><span className="font-semibold">${orderDetails.totals.smallOrderFee.toFixed(2)}</span></div>}
+                  </>
+                )}
                 <div className="flex justify-between text-gray-600"><span>Tax</span><span className="font-semibold">${orderDetails.totals.taxAmount.toFixed(2)}</span></div>
                 {orderDetails.totals.discountAmount > 0 && <div className="flex justify-between text-green-600"><span>Discount ({orderDetails.coupon?.code})</span><span className="font-semibold">-${orderDetails.totals.discountAmount.toFixed(2)}</span></div>}
                 <div className="h-[1px] bg-gray-200 my-2" />
@@ -616,9 +695,9 @@ function ConfirmationPage({ orderId, orderDetails }: { orderId: string; orderDet
               {orderDetails.coupon && <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-200"><Tag className="w-5 h-5 text-green-600" /><div><p className="font-medium text-green-800">Coupon Applied</p><p className="text-sm text-green-600">{orderDetails.coupon.description}</p></div></div>}
             </div>
             <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-              <h2 className="text-xl font-bold mb-4 text-gray-900">What's Next?</h2>
+              <h2 className="text-xl font-bold mb-4 text-gray-900">What&apos;s Next?</h2>
               <div className="space-y-4">
-                <div className="flex items-start gap-3"><div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5"><span className="text-xs font-bold text-red-600">1</span></div><div><p className="font-medium text-gray-900">Order Confirmation</p><p className="text-sm text-gray-600">You'll receive an email confirmation shortly</p></div></div>
+                <div className="flex items-start gap-3"><div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5"><span className="text-xs font-bold text-red-600">1</span></div><div><p className="font-medium text-gray-900">Order Confirmation</p><p className="text-sm text-gray-600">You&apos;ll receive an email confirmation shortly</p></div></div>
                 <div className="flex items-start gap-3"><div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5"><span className="text-xs font-bold text-red-600">2</span></div><div><p className="font-medium text-gray-900">Preparation</p><p className="text-sm text-gray-600">Our chefs are preparing your order with care</p></div></div>
                 <div className="flex items-start gap-3"><div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5"><span className="text-xs font-bold text-red-600">3</span></div><div><p className="font-medium text-gray-900">Delivery</p><p className="text-sm text-gray-600">{orderDetails.deliveryMethod?.description || 'Delivery within 30-45 minutes'}</p></div></div>
               </div>

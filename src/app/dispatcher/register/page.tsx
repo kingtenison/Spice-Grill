@@ -119,7 +119,7 @@ export default function DispatcherRegistrationPage() {
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Application Submitted!</h1>
           <p className="text-gray-600 mb-6">
             Thank you for applying to become a dispatcher. Your application is now pending review by our admin team.
-            We'll notify you once your application has been approved.
+            We&apos;ll notify you once your application has been approved.
           </p>
           <button
             onClick={() => router.push("/")}
@@ -295,7 +295,7 @@ export default function DispatcherRegistrationPage() {
               </h3>
               <ul className="text-sm text-blue-800 space-y-1">
                 <li>• Must be at least 18 years old</li>
-                <li>• Valid driver's license</li>
+                <li>• Valid driver&apos;s license</li>
                 <li>• Reliable vehicle</li>
                 <li>• Smartphone with data plan</li>
                 <li>• Available to work flexible hours</li>

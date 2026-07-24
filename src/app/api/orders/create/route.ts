@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
       'shipping_cost', 'discount_amount', 'delivery_address', 'shipping_address',
       'billing_address', 'special_instructions', 'coupon_code', 'payment_method',
       'payment_status', 'payment_reference', 'guest_checkout', 'customer_location',
-      'shipping_method',
+      'shipping_method', 'delivery_fee', 'service_fee', 'small_order_fee', 'distance_miles',
     ];
 
     const orderRecord: any = {};
@@ -19,6 +19,11 @@ export async function POST(request: NextRequest) {
       if (orderData[field] !== undefined) {
         orderRecord[field] = orderData[field];
       }
+    }
+
+    // Set shipping_cost to delivery_fee for backward compat
+    if (orderData.delivery_fee !== undefined) {
+      orderRecord.shipping_cost = orderData.delivery_fee;
     }
 
     let methodName = '';
@@ -71,10 +76,48 @@ export async function POST(request: NextRequest) {
         .insert({ 
           order_id: order.id, 
           status: 'pending',
-          estimated_delivery_time: new Date(Date.now() + 45 * 60 * 1000).toISOString() // 45 min estimate
+          estimated_delivery_time: new Date(Date.now() + 45 * 60 * 1000).toISOString()
         });
       if (deliveryError) {
         console.error('Delivery assignment creation error:', deliveryError);
+      }
+
+      // Create platform_fees record for financial tracking
+      const deliveryFee = orderData.delivery_fee || 0;
+      const serviceFee = orderData.service_fee || 0;
+      const smallOrderFee = orderData.small_order_fee || 0;
+      const distanceMiles = orderData.distance_miles || 0;
+      const totalCollected = deliveryFee + serviceFee + smallOrderFee;
+
+      // Calculate dispatcher payout: base + mileage
+      let dispatcherPayout = 0;
+      if (distanceMiles > 0) {
+        const { data: settings } = await supabase
+          .from('delivery_settings')
+          .select('driver_base_pay, driver_mileage_pay')
+          .limit(1)
+          .single();
+        const basePay = settings?.driver_base_pay || 3.00;
+        const mileagePay = settings?.driver_mileage_pay || 0.70;
+        dispatcherPayout = basePay + (mileagePay * distanceMiles);
+      }
+
+      const platformNet = totalCollected - dispatcherPayout;
+
+      const { error: feesError } = await supabase
+        .from('platform_fees')
+        .insert({
+          order_id: order.id,
+          delivery_fee: deliveryFee,
+          service_fee: serviceFee,
+          small_order_fee: smallOrderFee,
+          total_collected: totalCollected,
+          dispatcher_payout: dispatcherPayout,
+          platform_net: platformNet,
+          distance_miles: distanceMiles,
+        });
+      if (feesError) {
+        console.error('Platform fees insert error:', feesError);
       }
     }
 

@@ -25,7 +25,6 @@ export function TaxonomySelector({
 }: TaxonomySelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [creating, setCreating] = useState(false);
   const [newItem, setNewItem] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -49,10 +48,8 @@ export function TaxonomySelector({
 
   const handleCreate = () => {
     if (newItem.trim() && onCreate) {
-      setCreating(true);
       onCreate(newItem.trim());
       setNewItem("");
-      setCreating(false);
     }
   };
 
@@ -138,7 +135,7 @@ export function TaxonomySelector({
                       className="flex items-center justify-center gap-2 w-full py-2 text-red-600 hover:bg-red-50 rounded-lg"
                     >
                       <Plus className="w-4 h-4" />
-                      Create "{newItem.trim()}"
+                      Create &ldquo;{newItem.trim()}&rdquo;
                     </button>
                   ) : (
                     "No items found"
@@ -177,7 +174,7 @@ export function TaxonomySelector({
                     className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg"
                   >
                     <Plus className="w-4 h-4" />
-                    Create "{search}"
+                    Create &ldquo;{search}&rdquo;
                   </button>
                 </div>
               )}

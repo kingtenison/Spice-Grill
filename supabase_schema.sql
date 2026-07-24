@@ -119,7 +119,81 @@ create table public.campaigns (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- 4. ROW LEVEL SECURITY (RLS)
+-- 4. DELIVERY FEE SYSTEM
+
+-- Delivery Settings (admin-configurable rates, single row)
+create table public.delivery_settings (
+  id uuid default uuid_generate_v4() primary key,
+  delivery_fee numeric default 3.99 not null,
+  service_fee numeric default 4.00 not null,
+  service_fee_radius_miles numeric default 5.0 not null,
+  per_mile_rate numeric default 0.70 not null,
+  free_delivery_radius_miles numeric default 0 not null,
+  small_order_threshold numeric default 15.00 not null,
+  small_order_fee numeric default 2.50 not null,
+  driver_base_pay numeric default 3.00 not null,
+  driver_mileage_pay numeric default 0.70 not null,
+  restaurant_lat numeric default 46.8772 not null,
+  restaurant_lng numeric default -96.7898 not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Insert default settings
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.delivery_settings LIMIT 1) THEN
+    INSERT INTO public.delivery_settings (id) VALUES (default);
+  END IF;
+END $$;
+
+-- Dispatcher Bank Accounts
+create table public.dispatcher_bank_accounts (
+  id uuid default uuid_generate_v4() primary key,
+  dispatcher_id uuid references public.dispatchers on delete cascade unique not null,
+  routing_number text not null,
+  account_number_encrypted text not null,
+  account_last_four text not null,
+  is_verified boolean default false,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Dispatcher Earnings (one row per delivery)
+create table public.dispatcher_earnings (
+  id uuid default uuid_generate_v4() primary key,
+  dispatcher_id uuid references public.dispatchers on delete cascade not null,
+  order_id uuid references public.orders on delete cascade not null,
+  distance_miles numeric default 0 not null,
+  base_pay numeric default 0 not null,
+  mileage_pay numeric default 0 not null,
+  total_earned numeric default 0 not null,
+  is_paid boolean default false,
+  paid_at timestamp with time zone,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Platform Fees (financial tracking per order)
+create table public.platform_fees (
+  id uuid default uuid_generate_v4() primary key,
+  order_id uuid references public.orders on delete cascade unique not null,
+  delivery_fee numeric default 0 not null,
+  service_fee numeric default 0 not null,
+  small_order_fee numeric default 0 not null,
+  total_collected numeric default 0 not null,
+  dispatcher_payout numeric default 0 not null,
+  platform_net numeric default 0 not null,
+  distance_miles numeric default 0 not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Add delivery fee columns to orders
+alter table public.orders add column if not exists delivery_fee numeric default 0;
+alter table public.orders add column if not exists service_fee numeric default 0;
+alter table public.orders add column if not exists small_order_fee numeric default 0;
+alter table public.orders add column if not exists distance_miles numeric default 0;
+alter table public.orders add column if not exists customer_location jsonb;
+
+-- 5. ROW LEVEL SECURITY (RLS)
 
 alter table public.profiles enable row level security;
 alter table public.categories enable row level security;
@@ -168,7 +242,46 @@ create policy "Admins can manage blogs." on public.blogs for all using (
   exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
 );
 
--- 5. TRIGGERS
+-- Enable RLS for new tables
+alter table public.delivery_settings enable row level security;
+alter table public.dispatcher_bank_accounts enable row level security;
+alter table public.dispatcher_earnings enable row level security;
+alter table public.platform_fees enable row level security;
+
+-- Delivery Settings: anyone can read, only admins can update
+create policy "Anyone can view delivery settings." on public.delivery_settings for select using (true);
+create policy "Admins can update delivery settings." on public.delivery_settings for update using (
+  exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+);
+
+-- Dispatcher Bank Accounts: dispatchers can view/edit their own, admins can view all
+create policy "Dispatchers can view own bank account." on public.dispatcher_bank_accounts for select using (
+  exists (select 1 from public.dispatchers where id = dispatcher_id and user_id = auth.uid())
+);
+create policy "Dispatchers can update own bank account." on public.dispatcher_bank_accounts for update using (
+  exists (select 1 from public.dispatchers where id = dispatcher_id and user_id = auth.uid())
+);
+create policy "Dispatchers can insert own bank account." on public.dispatcher_bank_accounts for insert with check (
+  exists (select 1 from public.dispatchers where id = dispatcher_id and user_id = auth.uid())
+);
+create policy "Admins can view all bank accounts." on public.dispatcher_bank_accounts for select using (
+  exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+);
+
+-- Dispatcher Earnings: dispatchers can view their own, admins can view all
+create policy "Dispatchers can view own earnings." on public.dispatcher_earnings for select using (
+  exists (select 1 from public.dispatchers where id = dispatcher_id and user_id = auth.uid())
+);
+create policy "Admins can manage all earnings." on public.dispatcher_earnings for all using (
+  exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+);
+
+-- Platform Fees: only admins can view
+create policy "Admins can manage platform fees." on public.platform_fees for all using (
+  exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+);
+
+-- 6. TRIGGERS
 
 -- Automatically create profile on signup
 create function public.handle_new_user()
@@ -188,7 +301,7 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
--- 6. LOYALTY POINTS POLICIES (add after table creation)
+-- 7. LOYALTY POINTS POLICIES (add after table creation)
 -- Drop old policies if they exist (safe re-run)
 drop policy if exists "Users can view own loyalty points." on public.loyalty_points;
 drop policy if exists "Users can update own loyalty points." on public.loyalty_points;
@@ -201,7 +314,7 @@ create policy "Users can view own loyalty points." on public.loyalty_points
 create policy "Users can update own loyalty points." on public.loyalty_points 
   for update using (auth.uid() = user_id);
 
--- 7. LOYALTY COUPONS TABLE (for redeemed point rewards)
+-- 8. LOYALTY COUPONS TABLE (for redeemed point rewards)
 create table if not exists public.loyalty_coupons (
   id uuid default uuid_generate_v4() primary key,
   user_id uuid references public.profiles on delete cascade not null,
@@ -229,7 +342,7 @@ create policy "Admins can manage loyalty coupons." on public.loyalty_coupons
     exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
   );
 
--- 8. HELPER FUNCTION: Safely award loyalty points (callable from API)
+-- 9. HELPER FUNCTION: Safely award loyalty points (callable from API)
 create or replace function public.award_loyalty_points(p_user_id uuid, p_points int)
 returns void
 language plpgsql
@@ -272,7 +385,7 @@ begin
 end;
 $$;
 
--- 9. HELPER FUNCTION: Redeem loyalty points for a coupon
+-- 10. HELPER FUNCTION: Redeem loyalty points for a coupon
 create or replace function public.redeem_loyalty_points(
   p_user_id uuid, 
   p_points_cost int,

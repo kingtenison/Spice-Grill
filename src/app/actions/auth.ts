@@ -1,46 +1,7 @@
 "use client";
 
-import { createAuthClientBrowser } from "@/lib/supabase/client";
-
-export async function signInWithPassword(email: string, password: string) {
-  const supabase = createAuthClientBrowser();
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-  return { data, error };
-}
-
-export async function signUpWithPassword(email: string, password: string, metadata: Record<string, unknown>) {
-  const supabase = createAuthClientBrowser();
-  
-  if (!email || !password) {
-    return { data: null, error: { message: "Email and password are required" } };
-  }
-  
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: metadata,
-      emailRedirectTo: typeof window !== 'undefined' ? window.location.origin + '/auth/callback-client' : undefined,
-    }
-  });
-  return { data, error };
-}
-
-export async function signInWithGoogle() {
-  const supabase = createAuthClientBrowser();
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: typeof window !== 'undefined' ? window.location.origin + '/auth/callback-client' : undefined,
-    }
-  });
-  return { data, error };
-}
-
 export async function signOut() {
+  const { createAuthClientBrowser } = await import("@/lib/supabase/client");
   const supabase = createAuthClientBrowser();
   try {
     await Promise.race([
