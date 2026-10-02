@@ -128,18 +128,20 @@ export default function HomePage() {
     },
   ];
 
-  const featuredDishes = [
+  const defaultDishes = [
     {
-      id: "fried-yam-fish",
+      slug: "fried-yam-fish",
+      id: "a360869e-91e3-4410-814a-e565fdc4d0ec",
       name: "Fried Yam & Fish",
       description: "Golden, crispy yam slices paired with perfectly seasoned fried fish. A beloved West African classic that crunchs with every bite.",
-      price: 14,
+      price: 22.99,
       image: "/Fried Yam and Fish.jpg",
       category: "Mains",
       featured: true,
     },
     {
-      id: "fried-chicken",
+      slug: "fried-chicken",
+      id: "a5560352-8a96-47e8-879b-55df5a4d0024",
       name: "Fried Chicken",
       description: "Juicy, succulent chicken coated in our secret spice blend and fried to golden perfection. Crispy outside, tender inside.",
       price: 12,
@@ -148,7 +150,8 @@ export default function HomePage() {
       featured: false,
     },
     {
-      id: "fried-rice",
+      slug: "fried-rice",
+      id: "a75f53f4-e2fb-49e3-a646-29bef4ec4c11",
       name: "Fried Rice",
       description: "Wok-tossed rice with aromatic spices, fresh vegetables, and your choice of protein. A fiery, satisfying plate that hits every note.",
       price: 13,
@@ -157,25 +160,28 @@ export default function HomePage() {
       featured: false,
     },
     {
-      id: "pounded-yam-egusi",
+      slug: "pounded-yam-egusi",
+      id: "8fd09b14-5495-496f-8463-4827cab17ffb",
       name: "Pounded Yam & Egusi Soup",
       description: "Smooth, pillowy pounded yam served with rich, melon seed-based egusi soup. A timeless Nigerian delicacy done right.",
-      price: 16,
+      price: 21.99,
       image: "/Pounded _Yam and Egusi.jpg",
       category: "Signature",
       featured: false,
     },
     {
-      id: "waakye",
+      slug: "waakye",
+      id: "6a723860-0fdf-4cec-98c4-bde01496f769",
       name: "Waakye",
       description: "Fragrant rice and beans cooked together with millet leaves, served with gari, spaghetti, and your favorite protein. The ultimate comfort plate.",
-      price: 15,
+      price: 22.99,
       image: "/Waakye.jpg",
       category: "Signature",
       featured: false,
     },
     {
-      id: "tilapia",
+      slug: "tilapia",
+      id: "1455f3f9-a547-48c4-bf33-4188f1e07484",
       name: "Grilled Tilapia",
       description: "Whole tilapia grilled over open flame with our signature pepper sauce. Smoky, spicy, and impossibly fresh.",
       price: 18,
@@ -184,16 +190,18 @@ export default function HomePage() {
       featured: true,
     },
     {
-      id: "kenkey-pepper",
+      slug: "kenkey-pepper",
+      id: "8691584c-0e0c-4aff-b874-cc8910bc8a55",
       name: "Kenkey with Pepper",
       description: "Fermented corn dough served with fiery homemade pepper sauce and fresh fish. A bold Ghanaian staple that packs serious heat.",
-      price: 13,
+      price: 23.99,
       image: "/Kenkey+with+Pepper-+Sheeda+Travel+Tribe.png",
       category: "Signature",
       featured: false,
     },
     {
-      id: "mango-drink",
+      slug: "mango-drink",
+      id: "436cedf2-5837-450e-9ab6-3b4962df8473",
       name: "Fresh Mango Drink",
       description: "Sun-ripened mangoes blended into a smooth, tropical refresher. Sweet, creamy, and the perfect companion to any spicy dish.",
       price: 5,
@@ -202,33 +210,71 @@ export default function HomePage() {
       featured: false,
     },
     {
-      id: "pineapple-drink",
+      slug: "pineapple-drink",
+      id: "a893542c-295a-4adb-91bf-9c183d6a0216",
       name: "Pineapple Punch",
       description: "Tangy, sweet pineapple juice with a hint of ginger. Refreshingly bright and bursting with island sunshine.",
-      price: 5,
+      price: 12,
       image: "/Pineapple_Drink.png",
       category: "Drinks",
       featured: false,
     },
     {
-      id: "strawberry-drink",
+      slug: "strawberry-drink",
+      id: "04f29dbc-56f1-4c9a-ae11-c9d563f6887c",
       name: "Strawberry Bliss",
       description: "Luscious strawberries blended into a vibrant, silky drink. A sweet escape in every sip.",
-      price: 5,
+      price: 100,
       image: "/Strawberry_Drink.jpg",
       category: "Drinks",
       featured: false,
     },
   ];
 
+  const [featuredDishes, setFeaturedDishes] = useState(defaultDishes);
+
+  useEffect(() => {
+    const fetchLiveItems = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("menu_items")
+          .select("id, name, price, image_url, description, is_available");
+        if (!error && data && data.length > 0) {
+          setFeaturedDishes((prev) =>
+            prev.map((dish) => {
+              const matched = data.find(
+                (item) =>
+                  item.id === dish.id ||
+                  item.name.toLowerCase().trim() === dish.name.toLowerCase().trim()
+              );
+              if (matched) {
+                return {
+                  ...dish,
+                  id: matched.id,
+                  price: Number(matched.price) || dish.price,
+                  description: matched.description || dish.description,
+                };
+              }
+              return dish;
+            })
+          );
+        }
+      } catch {
+        // Fallback to default dishes
+      }
+    };
+    fetchLiveItems();
+  }, []);
+
   // Helper variables to locate specific items for the redesigned Bento layout
-  const heroDish = featuredDishes.find(d => d.id === "fried-yam-fish");
-  const chickenDish = featuredDishes.find(d => d.id === "fried-chicken");
-  const riceDish = featuredDishes.find(d => d.id === "fried-rice");
-  const poundedYamDish = featuredDishes.find(d => d.id === "pounded-yam-egusi");
-  const waakyeDish = featuredDishes.find(d => d.id === "waakye");
-  const tilapiaDish = featuredDishes.find(d => d.id === "tilapia");
-  const kenkeyDish = featuredDishes.find(d => d.id === "kenkey-pepper");
+  const heroDish = featuredDishes.find(d => d.slug === "fried-yam-fish" || d.id === "a360869e-91e3-4410-814a-e565fdc4d0ec" || d.id === "fried-yam-fish");
+  const chickenDish = featuredDishes.find(d => d.slug === "fried-chicken" || d.id === "a5560352-8a96-47e8-879b-55df5a4d0024" || d.id === "fried-chicken");
+  const riceDish = featuredDishes.find(d => d.slug === "fried-rice" || d.id === "a75f53f4-e2fb-49e3-a646-29bef4ec4c11" || d.id === "fried-rice");
+  const poundedYamDish = featuredDishes.find(d => d.slug === "pounded-yam-egusi" || d.id === "8fd09b14-5495-496f-8463-4827cab17ffb" || d.id === "pounded-yam-egusi");
+  const waakyeDish = featuredDishes.find(d => d.slug === "waakye" || d.id === "6a723860-0fdf-4cec-98c4-bde01496f769" || d.id === "waakye");
+  const tilapiaDish = featuredDishes.find(d => d.slug === "tilapia" || d.id === "1455f3f9-a547-48c4-bf33-4188f1e07484" || d.id === "tilapia");
+  const kenkeyDish = featuredDishes.find(d => d.slug === "kenkey-pepper" || d.id === "8691584c-0e0c-4aff-b874-cc8910bc8a55" || d.id === "kenkey-pepper");
   const drinkDishes = featuredDishes.filter(d => d.category === "Drinks");
 
   const [activeDrinkIdx, setActiveDrinkIdx] = useState(0);

@@ -24,7 +24,7 @@ export type ShippingMethod = {
   estimatedDays: number
 }
 
-export type PaymentMethod = 'card' | 'paypal' | 'apple_pay' | 'google_pay' | 'cash'
+export type PaymentMethod = 'card' | 'cash'
 
 export type Address = {
   id: string
@@ -105,16 +105,22 @@ export const useCartStore = create<CartState>()(
 
       addItem: (item) => {
         const currentItems = get().items
+        const resolvedImage = item.image || item.image_url || (Array.isArray(item.images) ? item.images[0] : undefined)
+        const normalizedItem = {
+          ...item,
+          image: resolvedImage,
+          image_url: resolvedImage,
+        }
         const existingItem = currentItems.find((i) => i.id === item.id)
 
         if (existingItem) {
           set({
             items: currentItems.map((i) =>
-              i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+              i.id === item.id ? { ...i, ...normalizedItem, quantity: i.quantity + 1 } : i
             ),
           })
         } else {
-          set({ items: [...currentItems, { ...item, quantity: 1 }] })
+          set({ items: [...currentItems, { ...normalizedItem, quantity: 1 }] })
         }
       },
 

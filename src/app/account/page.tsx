@@ -26,7 +26,7 @@ import { createClient, safeGetUser } from "@/lib/supabase/client";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { getMenuItemImage } from "@/lib/utils";
+import { getMenuItemImage, getMenuItemName } from "@/lib/utils";
 import { ReviewModal } from "@/components/features/ReviewModal";
 
 interface OrderItem {
@@ -37,7 +37,10 @@ interface OrderItem {
   menu_items?: {
     name: string;
     image_url?: string;
-  };
+  } | {
+    name: string;
+    image_url?: string;
+  }[];
 }
 
 interface Order {
@@ -424,7 +427,7 @@ export default function AccountPage() {
                                {item.menu_items ? (
                                  <img
                                    src={getMenuItemImage(item.menu_items)}
-                                   alt={item.menu_items.name}
+                                   alt={getMenuItemName(item.menu_items)}
                                    className="w-full h-full object-cover rounded-lg"
                                  />
                                ) : (
@@ -432,7 +435,7 @@ export default function AccountPage() {
                               )}
                                 </div>
                                 <div className="flex-1">
-                                  <p className="font-medium text-gray-900 text-sm">{item.menu_items?.name || 'Menu Item'}</p>
+                                  <p className="font-medium text-gray-900 text-sm">{getMenuItemName(item.menu_items)}</p>
                                   <p className="text-xs text-gray-600">Qty: {item.quantity} × ${item.unit_price.toFixed(2)}</p>
                                 </div>
                               </div>
@@ -529,7 +532,7 @@ export default function AccountPage() {
                                            {item.menu_items ? (
                                              <img
                                                src={getMenuItemImage(item.menu_items)}
-                                               alt={item.menu_items.name}
+                                               alt={getMenuItemName(item.menu_items)}
                                                className="w-full h-full object-cover rounded"
                                              />
                                            ) : (
@@ -537,7 +540,7 @@ export default function AccountPage() {
                                           )}
                                           </div>
                                           <div>
-                                            <p className="font-medium text-gray-900">{item.menu_items?.name || 'Menu Item'}</p>
+                                            <p className="font-medium text-gray-900">{getMenuItemName(item.menu_items)}</p>
                                             <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
                                           </div>
                                         </div>

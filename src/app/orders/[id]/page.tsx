@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { createAuthClientBrowser } from "@/lib/supabase/client";
-import { cn } from "@/lib/utils";
+import { cn, getMenuItemImage, getMenuItemName } from "@/lib/utils";
 
 interface Order {
   id: string;
@@ -19,8 +19,9 @@ interface Order {
 interface OrderItem {
   id: string;
   quantity: number;
-  subtotal: number;
-  menu_items?: { name: string };
+  unit_price?: number;
+  subtotal?: number;
+  menu_items?: { name: string; image_url?: string } | { name: string; image_url?: string }[];
 }
 
 const STEPS = [
@@ -53,7 +54,7 @@ export default function OrderTrackingPage() {
 
         const { data: itemsData } = await supabase
           .from("order_items")
-          .select("*, menu_items(name, image)")
+          .select("*, menu_items(name, image_url)")
           .eq("order_id", orderId);
 
         if (itemsData) setItems(itemsData);
@@ -164,13 +165,24 @@ return (
            <div className="space-y-4">
              {items.map((item) => (
                <div key={item.id} className="flex items-center justify-between py-3 border-b border-gray-200 last:border-0">
-                 <div className="flex items-center gap-4">
+                 <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                     {item.menu_items ? (
+                       <img
+                         src={getMenuItemImage(item.menu_items)}
+                         alt={getMenuItemName(item.menu_items)}
+                         className="w-full h-full object-cover"
+                       />
+                     ) : (
+                       <Package className="w-5 h-5 text-gray-400" />
+                     )}
+                   </div>
                    <span className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center font-black text-xs text-red-600">
                      {item.quantity}x
                    </span>
-                   <span className="font-bold text-sm text-gray-900">{item.menu_items?.name || "Menu Item"}</span>
+                   <span className="font-bold text-sm text-gray-900">{getMenuItemName(item.menu_items)}</span>
                  </div>
-                 <span className="font-extrabold text-gray-900">${item.subtotal.toFixed(2)}</span>
+                 <span className="font-extrabold text-gray-900">${(((Number(item.unit_price) || 0) * (Number(item.quantity) || 1)) || (Number(item.subtotal) || 0)).toFixed(2)}</span>
                </div>
              ))}
            </div>

@@ -22,7 +22,7 @@ import Link from "next/link";
 import { createClient, safeGetUser } from "@/lib/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { getMenuItemImage } from "@/lib/utils";
+import { getMenuItemImage, getMenuItemName } from "@/lib/utils";
 
 interface OrderItem {
   id: string;
@@ -32,7 +32,10 @@ interface OrderItem {
   menu_items?: {
     name: string;
     image_url?: string;
-  };
+  } | {
+    name: string;
+    image_url?: string;
+  }[];
 }
 
 interface Order {
@@ -344,7 +347,7 @@ return (
                                {item.menu_items ? (
                                  <img
                                    src={getMenuItemImage(item.menu_items)}
-                                   alt={item.menu_items.name}
+                                   alt={getMenuItemName(item.menu_items)}
                                    className="w-full h-full object-cover rounded-lg"
                                  />
                                ) : (
@@ -352,7 +355,7 @@ return (
                               )}
                           </div>
                           <div className="flex-1">
-                            <p className="font-medium text-gray-900 text-sm">{item.menu_items?.name}</p>
+                            <p className="font-medium text-gray-900 text-sm">{getMenuItemName(item.menu_items)}</p>
                             <p className="text-xs text-gray-600">Qty: {item.quantity} × ${item.unit_price.toFixed(2)}</p>
                           </div>
                         </div>
@@ -457,7 +460,7 @@ return (
                                            {item.menu_items ? (
                                              <img
                                                src={getMenuItemImage(item.menu_items)}
-                                               alt={item.menu_items.name}
+                                               alt={getMenuItemName(item.menu_items)}
                                                className="w-full h-full object-cover rounded"
                                              />
                                            ) : (
@@ -465,7 +468,7 @@ return (
                                           )}
                                       </div>
                                       <div>
-                                        <p className="font-medium text-gray-900">{item.menu_items?.name}</p>
+                                        <p className="font-medium text-gray-900">{getMenuItemName(item.menu_items)}</p>
                                         <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
                                       </div>
                                     </div>

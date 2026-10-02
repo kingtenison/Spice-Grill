@@ -1,18 +1,53 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useCartStore, type Address, type ShippingMethod, type PaymentMethod, type OrderDetails } from "@/store/useCartStore";
+import { useState, useEffect, useRef } from "react";
+import { useCartStore, type Address, type ShippingMethod, type PaymentMethod, type CartItem, type Coupon } from "@/store/useCartStore";
 import {
   Trash2, Plus, Minus, ArrowRight, ArrowLeft, MapPin, Clock,
-  CreditCard, Smartphone, DollarSign, Truck, Tag, Percent,
+  CreditCard, DollarSign, Truck, Tag, Percent,
   CheckCircle, AlertCircle, User, Mail, Phone, Home, Building,
   Award
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { createAuthClientBrowser } from "@/lib/supabase/client";
+import type { SquareCardFormHandle } from "@/components/payment/SquareCardForm";
+import { MAX_DELIVERY_RADIUS_MILES } from "@/lib/delivery";
+import { getMenuItemImage } from "@/lib/utils";
+
+const SquareCardForm = dynamic(() => import("@/components/payment/SquareCardForm"), { ssr: false });
 
 type CheckoutStep = 'delivery' | 'payment' | 'review';
+
+interface CheckoutSummaryAddress {
+  name: string;
+  email?: string;
+  phone?: string;
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+}
+
+interface CheckoutSummary {
+  items: CartItem[];
+  deliveryMethod: ShippingMethod | null;
+  paymentMethod: PaymentMethod;
+  coupon: Coupon | null;
+  deliveryAddress: CheckoutSummaryAddress;
+  billingAddress: CheckoutSummaryAddress;
+  totals: {
+    subtotal: number;
+    deliveryCost: number;
+    serviceFee: number;
+    smallOrderFee: number;
+    taxAmount: number;
+    discountAmount: number;
+    total: number;
+  };
+}
 
 interface DeliverySettings {
   delivery_fee: number;
@@ -24,17 +59,15 @@ interface DeliverySettings {
   small_order_fee: number;
 }
 
-const defaultDeliveryMethods: ShippingMethod[] = [
-  { id: 'standard', name: 'Standard Delivery', description: 'Delivery within 30-45 minutes', cost: 0, estimatedDays: 0 },
-  { id: 'express', name: 'Express Delivery', description: 'Delivery within 15-20 minutes', cost: 4.99, estimatedDays: 0 },
-  { id: 'scheduled', name: 'Scheduled Delivery', description: 'Choose your preferred delivery time', cost: 2.99, estimatedDays: 0 },
-];
+  const defaultDeliveryMethods: ShippingMethod[] = [
+    { id: 'pickup', name: 'Pickup', description: 'Ready in 15-20 minutes — order ahead and we\'ll have it waiting', cost: 0, estimatedDays: 0 },
+    { id: 'standard', name: 'Standard Delivery', description: 'Delivery within 30-45 minutes', cost: 0, estimatedDays: 0 },
+    { id: 'express', name: 'Express Delivery', description: 'Delivery within 15-20 minutes', cost: 4.99, estimatedDays: 0 },
+    { id: 'scheduled', name: 'Scheduled Delivery', description: 'Choose your preferred delivery time', cost: 2.99, estimatedDays: 0 },
+  ];
 
-const paymentMethods: { id: PaymentMethod; name: string; description: string; icon: any }[] = [
-  { id: 'card', name: 'Credit/Debit Card', description: 'Visa, Mastercard, American Express', icon: CreditCard },
-  { id: 'paypal', name: 'PayPal', description: 'Pay with your PayPal account', icon: DollarSign },
-  { id: 'apple_pay', name: 'Apple Pay', description: 'Quick and secure with Touch ID', icon: Smartphone },
-  { id: 'google_pay', name: 'Google Pay', description: 'Fast checkout with Google Pay', icon: Smartphone },
+const paymentMethods: { id: PaymentMethod; name: string; description: string; icon: LucideIcon }[] = [
+  { id: 'card', name: 'Credit/Debit Card', description: 'Visa, Mastercard, American Express — securely processed by Square', icon: CreditCard },
   { id: 'cash', name: 'Cash on Delivery', description: 'Pay when your order arrives', icon: DollarSign }
 ];
 
@@ -70,6 +103,7 @@ export default function CheckoutPage() {
   const [deliverySettings, setDeliverySettings] = useState<DeliverySettings | null>(null);
   const [deliveryMethods, setDeliveryMethods] = useState<ShippingMethod[]>(defaultDeliveryMethods);
   const [distanceMiles, setDistanceMiles] = useState<number>(0);
+  const [deliveryUnavailable, setDeliveryUnavailable] = useState(false);
   const [calculatedFees, setCalculatedFees] = useState({ deliveryFee: 0, serviceFee: 0, smallOrderFee: 0 });
 
   const [deliveryForm, setDeliveryForm] = useState({
@@ -86,9 +120,20 @@ export default function CheckoutPage() {
   });
 
   const [paymentForm, setPaymentForm] = useState({
-    method: 'card' as PaymentMethod,
-    cardNumber: '', expiryDate: '', cvv: '', cardholderName: ''
+    method: 'card' as PaymentMethod
   });
+  const tokenizeRef = useRef<((details?: Record<string, unknown>) => Promise<string>) | null>(null);
+  const cardTokenRef = useRef<string | null>(null);
+  const [squareCardError, setSquareCardError] = useState("");
+  const [confirmationData, setConfirmationData] = useState<CheckoutSummary | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // Standard mount flag: keeps the first client render identical to the
+    // server HTML so the persisted cart doesn't cause a hydration mismatch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -131,6 +176,7 @@ export default function CheckoutPage() {
           const settings: DeliverySettings = await res.json();
           setDeliverySettings(settings);
           setDeliveryMethods([
+            { id: 'pickup', name: 'Pickup', description: 'Ready in 15-20 minutes — order ahead and we\'ll have it waiting', cost: 0, estimatedDays: 0 },
             { id: 'standard', name: 'Standard Delivery', description: 'Delivery within 30-45 minutes', cost: settings.delivery_fee, estimatedDays: 0 },
             { id: 'express', name: 'Express Delivery', description: 'Delivery within 15-20 minutes', cost: settings.delivery_fee + 1.00, estimatedDays: 0 },
             { id: 'scheduled', name: 'Scheduled Delivery', description: 'Choose your preferred delivery time', cost: settings.delivery_fee, estimatedDays: 0 },
@@ -194,6 +240,15 @@ export default function CheckoutPage() {
           const data = await res.json();
           const miles = data.distance_miles || 0;
           setDistanceMiles(miles);
+          const unavailable = miles > MAX_DELIVERY_RADIUS_MILES;
+          setDeliveryUnavailable(unavailable);
+
+          if (unavailable) {
+            const pickup = deliveryMethods.find((m) => m.id === 'pickup');
+            if (pickup && deliveryMethod && deliveryMethod.id !== 'pickup') {
+              setDeliveryMethod(pickup);
+            }
+          }
 
           // Calculate fees based on distance
           let deliveryFee = deliverySettings.delivery_fee;
@@ -229,7 +284,7 @@ export default function CheckoutPage() {
   }, [customerLocation, deliverySettings]);
 
   const subtotal = getSubtotal();
-  const deliveryCost = deliveryMethod?.id === 'pickup' ? 0 : (calculatedFees.deliveryFee || getDeliveryCost());
+  const deliveryCost = deliveryMethod?.id === 'pickup' ? 0 : (calculatedFees.deliveryFee !== undefined ? calculatedFees.deliveryFee : getDeliveryCost());
   const serviceFee = deliveryMethod?.id === 'pickup' ? 0 : calculatedFees.serviceFee;
   const smallOrderFee = deliveryMethod?.id === 'pickup' ? 0 : calculatedFees.smallOrderFee;
   const taxAmount = subtotal * 0.08;
@@ -261,14 +316,9 @@ export default function CheckoutPage() {
       }
     }
     if (step === 'payment') {
-      if (paymentForm.method === 'card') {
-        if (!paymentForm.cardNumber.trim()) errors.cardNumber = 'Card number is required';
-        else if (!/^\d{4}\s\d{4}\s\d{4}\s\d{4}$/.test(paymentForm.cardNumber.replace(/\s/g, ''))) errors.cardNumber = 'Invalid card number format';
-        if (!paymentForm.expiryDate.trim()) errors.expiryDate = 'Expiry date is required';
-        else if (!/^\d{2}\/\d{2}$/.test(paymentForm.expiryDate)) errors.expiryDate = 'Invalid expiry format (MM/YY)';
-        if (!paymentForm.cvv.trim()) errors.cvv = 'CVV is required';
-        else if (!/^\d{3,4}$/.test(paymentForm.cvv)) errors.cvv = 'Invalid CVV';
-        if (!paymentForm.cardholderName.trim()) errors.cardholderName = 'Cardholder name is required';
+      // Card details are collected and validated by the Square Web Payments SDK
+      if (deliveryMethod?.id !== 'pickup' && deliveryUnavailable) {
+        errors.general = `Delivery is not available ${distanceMiles.toFixed(0)} miles away (max ${MAX_DELIVERY_RADIUS_MILES} mi). Please select Pickup.`;
       }
     }
     setValidationErrors(errors);
@@ -291,12 +341,29 @@ export default function CheckoutPage() {
     setIsSubmitting(true);
     setValidationErrors({});
     try {
+      let paymentToken: string | undefined;
+      if (paymentForm.method === 'card') {
+        if (!cardTokenRef.current) {
+          setValidationErrors({ general: 'Card payment could not be initialized. Please go back to the payment step and try again.' });
+          setCurrentStep('payment');
+          setIsSubmitting(false);
+          return;
+        }
+        paymentToken = cardTokenRef.current;
+        cardTokenRef.current = null;
+      }
       const orderData = {
         user_id: currentUser?.id || null,
-        total_amount: total,
+        total_amount: Math.round(total * 100) / 100,
+        subtotal: Math.round(subtotal * 100) / 100,
+        tax_amount: Math.round(taxAmount * 100) / 100,
+        discount_amount: Math.round(discountAmount * 100) / 100,
+        loyalty_discount_amount: loyaltyDiscountAmount,
         delivery_address: `${deliveryForm.name} - ${deliveryForm.phone} - ${deliveryForm.email} - ${deliveryForm.street}, ${deliveryForm.city}, ${deliveryForm.state} ${deliveryForm.zipCode}, ${deliveryForm.country}${deliveryForm.instructions ? ` - Instructions: ${deliveryForm.instructions}` : ''}`,
         status: "pending",
-        payment_status: "paid",
+        payment_method: paymentForm.method,
+        payment_token: paymentToken,
+        coupon_code: coupon?.code,
         customer_location: customerLocation,
         shipping_method: deliveryMethod?.id,
         delivery_fee: deliveryCost,
@@ -319,27 +386,83 @@ export default function CheckoutPage() {
         throw new Error(data.error || 'Failed to place order');
       }
       setOrderId(data.orderId);
+      setConfirmationData({
+        items: items.map((item) => ({ ...item })),
+        deliveryMethod: deliveryMethod || deliveryMethods[0],
+        paymentMethod: paymentForm.method,
+        coupon: coupon ?? null,
+        deliveryAddress: deliveryForm,
+        billingAddress: billingForm.sameAsDelivery ? deliveryForm : billingForm,
+        totals: { subtotal, deliveryCost, serviceFee, smallOrderFee, taxAmount, discountAmount, total },
+      });
       setOrderPlaced(true);
       clearCart();
       if (currentUser?.id) {
         try { await fetch('/api/loyalty/award', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId: data.orderId }) }); } catch { /* non-blocking */ }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error placing order:', error);
-      setValidationErrors({ general: error.message || 'Failed to place order. Please try again.' });
+      const message = error instanceof Error ? error.message : 'Failed to place order. Please try again.';
+      setValidationErrors({ general: message });
+      if (paymentForm.method === 'card') setCurrentStep('payment');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const nextStep = () => { if (validateStep(currentStep)) { if (currentStep === 'delivery') setCurrentStep('payment'); else if (currentStep === 'payment') setCurrentStep('review'); } };
+  const buildVerificationDetails = (): Record<string, unknown> => {
+    const nameParts = deliveryForm.name.trim().split(/\s+/);
+    return {
+      amount: total.toFixed(2),
+      currencyCode: "USD",
+      intent: "CHARGE",
+      customerInitiated: true,
+      sellerKeyedIn: false,
+      billingContact: {
+        givenName: nameParts.slice(0, -1).join(" ") || nameParts[0] || "",
+        familyName: nameParts[nameParts.length - 1] || "",
+        email: deliveryForm.email,
+        phone: deliveryForm.phone,
+        addressLines: [deliveryForm.street],
+        city: deliveryForm.city,
+        state: deliveryForm.state,
+        postalCode: deliveryForm.zipCode,
+        countryCode: (deliveryForm.country || "US").slice(0, 2).toUpperCase(),
+      },
+    };
+  };
+
+  const nextStep = async () => {
+    if (!validateStep(currentStep)) return;
+    if (currentStep === 'delivery') { setCurrentStep('payment'); return; }
+    if (currentStep === 'payment') {
+      if (paymentForm.method === 'card') {
+        if (!tokenizeRef.current) {
+          setValidationErrors({ general: squareCardError || 'Card payment is still loading. Please wait a moment and try again.' });
+          return;
+        }
+        setIsSubmitting(true);
+        setValidationErrors({});
+        try {
+          cardTokenRef.current = await tokenizeRef.current(buildVerificationDetails());
+        } catch (tokenError: unknown) {
+          const message = tokenError instanceof Error ? tokenError.message : 'Unable to process your card. Please check the card details and try again.';
+          setValidationErrors({ general: message });
+          return;
+        } finally {
+          setIsSubmitting(false);
+        }
+      }
+      setCurrentStep('review');
+    }
+  };
   const prevStep = () => { if (currentStep === 'payment') setCurrentStep('delivery'); else if (currentStep === 'review') setCurrentStep('payment'); };
 
-  if (orderPlaced) {
+  if (orderPlaced && confirmationData) {
     return (
       <ConfirmationPage
         orderId={orderId}
-        orderDetails={{ items, deliveryMethod: deliveryMethod || deliveryMethods[0], paymentMethod: paymentForm.method, coupon, deliveryAddress: deliveryForm, billingAddress: billingForm.sameAsDelivery ? deliveryForm : billingForm, totals: { subtotal, deliveryCost, serviceFee, smallOrderFee, taxAmount, discountAmount, total } }}
+        orderDetails={confirmationData}
       />
     );
   }
@@ -455,6 +578,12 @@ export default function CheckoutPage() {
                               <p className="text-xs text-gray-400 mt-1">Lat: {customerLocation.lat.toFixed(6)}, Lng: {customerLocation.lng.toFixed(6)}</p>
                             </div>
                           </div>
+                          {deliveryUnavailable && (
+                            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                              <p className="text-sm text-red-700 font-medium flex items-center gap-1"><AlertCircle className="w-4 h-4" />Delivery not available at this distance ({distanceMiles.toFixed(1)} mi)</p>
+                              <p className="text-xs text-red-600 mt-1">Maximum delivery radius is {MAX_DELIVERY_RADIUS_MILES} mi. Please select Pickup at checkout.</p>
+                            </div>
+                          )}
                         </div>
                       )}
                       {!customerLocation && (
@@ -513,15 +642,24 @@ export default function CheckoutPage() {
                 <motion.div key="payment" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                   <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
                     <h2 className="text-xl font-bold mb-6 text-gray-900 flex items-center gap-2"><Truck className="w-5 h-5" />Delivery Method</h2>
+                    {deliveryUnavailable && (
+                      <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+                        <p className="text-sm text-red-700 font-medium flex items-center gap-1"><AlertCircle className="w-4 h-4" />Delivery is unavailable at this distance ({distanceMiles.toFixed(1)} mi away)</p>
+                        <p className="text-xs text-red-600 mt-1">Maximum delivery radius is {MAX_DELIVERY_RADIUS_MILES} mi. Only Pickup is available for your location.</p>
+                      </div>
+                    )}
                     <div className="grid grid-cols-1 gap-4">
-                      {deliveryMethods.map((method) => (
-                        <button key={method.id} onClick={() => setDeliveryMethod(method)} className={`p-4 rounded-xl border-2 text-left transition-all ${deliveryMethod?.id === method.id ? 'border-red-600 bg-red-50' : 'border-gray-200 hover:border-red-300'}`}>
+                      {deliveryMethods.map((method) => {
+                        const disabled = deliveryUnavailable && method.id !== 'pickup';
+                        return (
+                        <button key={method.id} disabled={disabled} onClick={() => setDeliveryMethod(method)} className={`p-4 rounded-xl border-2 text-left transition-all ${deliveryMethod?.id === method.id ? 'border-red-600 bg-red-50' : 'border-gray-200 hover:border-red-300'} ${disabled ? 'opacity-50 cursor-not-allowed hover:border-gray-200' : ''}`}>
                           <div className="flex items-center justify-between">
                             <div><h3 className="font-semibold text-gray-900">{method.name}</h3><p className="text-sm text-gray-600">{method.description}</p></div>
                             <div className="text-right"><span className="font-bold text-gray-900">{method.cost === 0 ? 'Free' : `$${method.cost.toFixed(2)}`}</span><p className="text-sm text-gray-600">{method.estimatedDays === 0 ? 'Today' : `${method.estimatedDays} days`}</p></div>
                           </div>
                         </button>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -539,28 +677,16 @@ export default function CheckoutPage() {
                     </div>
                     {paymentForm.method === 'card' && (
                       <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Card Number *</label>
-                          <input type="text" value={paymentForm.cardNumber} onChange={(e) => { const v = e.target.value.replace(/\s/g, ''); const f = v.replace(/(\d{4})(?=\d)/g, '$1 '); setPaymentForm({...paymentForm, cardNumber: f.slice(0, 19)}); }} className={`w-full px-4 py-3 rounded-xl border focus:ring-2 transition-colors text-gray-900 ${validationErrors.cardNumber ? 'border-red-500' : 'border-gray-300'}`} placeholder="1234 5678 9012 3456" />
-                          {validationErrors.cardNumber && <p className="text-red-600 text-sm mt-1">{validationErrors.cardNumber}</p>}
+                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                          <p className="text-sm text-blue-800">🔒 Card details are entered into Square&apos;s secure, PCI-compliant payment form. Your card number never touches our servers.</p>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Expiry Date *</label>
-                            <input type="text" value={paymentForm.expiryDate} onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); const f = v.replace(/(\d{2})(?=\d)/, '$1/'); setPaymentForm({...paymentForm, expiryDate: f.slice(0, 5)}); }} className={`w-full px-4 py-3 rounded-xl border focus:ring-2 transition-colors text-gray-900 ${validationErrors.expiryDate ? 'border-red-500' : 'border-gray-300'}`} placeholder="MM/YY" />
-                            {validationErrors.expiryDate && <p className="text-red-600 text-sm mt-1">{validationErrors.expiryDate}</p>}
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">CVV *</label>
-                            <input type="text" value={paymentForm.cvv} onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); setPaymentForm({...paymentForm, cvv: v.slice(0, 4)}); }} className={`w-full px-4 py-3 rounded-xl border focus:ring-2 transition-colors text-gray-900 ${validationErrors.cvv ? 'border-red-500' : 'border-gray-300'}`} placeholder="123" />
-                            {validationErrors.cvv && <p className="text-red-600 text-sm mt-1">{validationErrors.cvv}</p>}
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Cardholder Name *</label>
-                          <input type="text" value={paymentForm.cardholderName} onChange={(e) => setPaymentForm({...paymentForm, cardholderName: e.target.value})} className={`w-full px-4 py-3 rounded-xl border focus:ring-2 transition-colors text-gray-900 ${validationErrors.cardholderName ? 'border-red-500' : 'border-gray-300'}`} placeholder="John Doe" />
-                          {validationErrors.cardholderName && <p className="text-red-600 text-sm mt-1">{validationErrors.cardholderName}</p>}
-                        </div>
+                        <SquareCardForm
+                          onReady={(handle: SquareCardFormHandle) => {
+                            tokenizeRef.current = () => handle.tokenize();
+                            setSquareCardError("");
+                          }}
+                          onError={(message: string) => setSquareCardError(message)}
+                        />
                       </div>
                     )}
                     {paymentForm.method === 'cash' && (
@@ -578,7 +704,7 @@ export default function CheckoutPage() {
                       <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl"><User className="w-5 h-5 text-gray-600" /><div><p className="font-medium text-gray-900">{deliveryForm.name}</p><p className="text-sm text-gray-600">{deliveryForm.email} • {deliveryForm.phone}</p></div></div>
                       <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl"><MapPin className="w-5 h-5 text-gray-600" /><div><p className="font-medium text-gray-900">Delivery Address</p><p className="text-sm text-gray-600">{deliveryForm.street}, {deliveryForm.city}, {deliveryForm.state} {deliveryForm.zipCode}</p></div></div>
                       <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl"><Truck className="w-5 h-5 text-gray-600" /><div><p className="font-medium text-gray-900">{deliveryMethod?.name}</p><p className="text-sm text-gray-600">{deliveryMethod?.description}</p></div></div>
-                      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl"><CreditCard className="w-5 h-5 text-gray-600" /><div><p className="font-medium text-gray-900">{paymentMethods.find(m => m.id === paymentForm.method)?.name}</p><p className="text-sm text-gray-600">{paymentForm.method === 'card' ? `**** **** **** ${paymentForm.cardNumber.slice(-4)}` : 'Pay on delivery'}</p></div></div>
+                      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl"><CreditCard className="w-5 h-5 text-gray-600" /><div><p className="font-medium text-gray-900">{paymentMethods.find(m => m.id === paymentForm.method)?.name}</p><p className="text-sm text-gray-600">{paymentForm.method === 'card' ? 'Paid securely with card' : 'Pay on delivery'}</p></div></div>
                     </div>
                   </div>
                 </motion.div>
@@ -589,10 +715,25 @@ export default function CheckoutPage() {
           <div className="lg:col-span-1">
             <div className="sticky top-28 p-6 rounded-2xl bg-white border border-gray-200 shadow-lg">
               <h2 className="text-xl font-bold mb-6 text-gray-900">Order Summary</h2>
+              {!mounted && (
+                <div className="space-y-3">
+                  <div className="h-4 bg-gray-100 rounded animate-pulse" />
+                  <div className="h-4 bg-gray-100 rounded animate-pulse" />
+                  <div className="h-8 bg-gray-100 rounded animate-pulse" />
+                </div>
+              )}
+              {mounted && (
+              <div>
               <div className="space-y-4 mb-6 max-h-64 overflow-y-auto">
                 {items.map((item) => (
-                  <div key={item.id} className="flex justify-between items-center">
-                    <div className="flex-1"><p className="font-medium text-gray-900">{item.name}</p><p className="text-sm text-gray-600">Qty: {item.quantity}</p></div>
+                  <div key={item.id} className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      <img src={getMenuItemImage(item)} alt={item.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 truncate">{item.name}</p>
+                      <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                    </div>
                     <span className="font-semibold text-gray-900">${(item.price * item.quantity).toFixed(2)}</span>
                   </div>
                 ))}
@@ -630,12 +771,14 @@ export default function CheckoutPage() {
               <div className="flex gap-3 mt-6">
                 {currentStep !== 'delivery' && <button onClick={prevStep} className="flex-1 py-3 px-4 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors">Back</button>}
                 {currentStep !== 'review' ? (
-                  <button onClick={nextStep} className="flex-1 py-3 px-4 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 transition-colors">Continue</button>
+                  <button onClick={nextStep} disabled={isSubmitting} className="flex-1 py-3 px-4 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors">{isSubmitting ? "Processing..." : "Continue"}</button>
                 ) : (
                   <button onClick={handlePlaceOrder} disabled={isSubmitting} className="flex-1 py-3 px-4 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors">{isSubmitting ? "Placing Order..." : `Place Order - $${total.toFixed(2)}`}</button>
                 )}
               </div>
               {validationErrors.general && <p className="text-red-600 text-sm mt-3 text-center">{validationErrors.general}</p>}
+              </div>
+              )}
             </div>
           </div>
         </div>
@@ -644,8 +787,8 @@ export default function CheckoutPage() {
   );
 }
 
-function ConfirmationPage({ orderId, orderDetails }: { orderId: string; orderDetails: any }) {
-  const paymentMethodName = ( { card: 'Credit/Debit Card', paypal: 'PayPal', apple_pay: 'Apple Pay', google_pay: 'Google Pay', cash: 'Cash on Delivery' } as Record<string, string> )[orderDetails.paymentMethod] || orderDetails.paymentMethod;
+function ConfirmationPage({ orderId, orderDetails }: { orderId: string; orderDetails: CheckoutSummary }) {
+  const paymentMethodName = ( { card: 'Credit/Debit Card', cash: 'Cash on Delivery' } as Record<string, string> )[orderDetails.paymentMethod] || orderDetails.paymentMethod;
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="container px-4 pt-24 pb-12 mx-auto max-w-4xl">
@@ -660,8 +803,17 @@ function ConfirmationPage({ orderId, orderDetails }: { orderId: string; orderDet
             <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
               <h2 className="text-xl font-bold mb-4 text-gray-900">Order Details</h2>
               <div className="space-y-4">
-                {orderDetails.items.map((item: any) => (
-                  <div key={item.id} className="flex justify-between items-center"><div className="flex-1"><p className="font-medium text-gray-900">{item.name}</p><p className="text-sm text-gray-600">Qty: {item.quantity}</p></div><span className="font-semibold text-gray-900">${(item.price * item.quantity).toFixed(2)}</span></div>
+                {orderDetails.items.map((item: CartItem) => (
+                  <div key={item.id} className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      <img src={getMenuItemImage(item)} alt={item.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 truncate">{item.name}</p>
+                      <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                    </div>
+                    <span className="font-semibold text-gray-900">${(item.price * item.quantity).toFixed(2)}</span>
+                  </div>
                 ))}
               </div>
               <div className="border-t border-gray-200 pt-4 mt-4 space-y-2">
@@ -691,7 +843,7 @@ function ConfirmationPage({ orderId, orderDetails }: { orderId: string; orderDet
           <div className="space-y-6">
             <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
               <h2 className="text-xl font-bold mb-4 text-gray-900">Payment Information</h2>
-              <div className="flex items-center gap-3"><CreditCard className="w-5 h-5 text-gray-600" /><div><p className="font-medium text-gray-900">{paymentMethodName}</p><p className="text-sm text-gray-600">Payment completed successfully</p></div></div>
+              <div className="flex items-center gap-3"><CreditCard className="w-5 h-5 text-gray-600" /><div><p className="font-medium text-gray-900">{paymentMethodName}</p><p className="text-sm text-gray-600">{orderDetails.paymentMethod === 'cash' ? 'Please pay when your order arrives' : 'Payment completed successfully'}</p></div></div>
               {orderDetails.coupon && <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-200"><Tag className="w-5 h-5 text-green-600" /><div><p className="font-medium text-green-800">Coupon Applied</p><p className="text-sm text-green-600">{orderDetails.coupon.description}</p></div></div>}
             </div>
             <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">

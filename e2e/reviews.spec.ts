@@ -6,10 +6,7 @@ test.describe("ReviewModal Component", () => {
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(2000);
     // Account page redirects to login when not authenticated
-    const url = page.url();
-    if (url.includes("login")) {
-      test.skip("Not authenticated — ReviewModal requires logged-in user");
-    }
+    test.skip(page.url().includes("login"), "Not authenticated — ReviewModal requires logged-in user");
     // Check for review buttons on order cards
     const reviewBtn = page.locator("button:has-text('Review'), button:has-text('review'), button:has-text('Rate')").first();
     if (await reviewBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
@@ -24,9 +21,7 @@ test.describe("ReviewModal Component", () => {
     await page.goto("/account");
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(2000);
-    if (page.url().includes("login")) {
-      test.skip("Not authenticated");
-    }
+    test.skip(page.url().includes("login"), "Not authenticated");
     const reviewBtn = page.locator("button:has-text('Review')").first();
     if (await reviewBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
       await reviewBtn.click();

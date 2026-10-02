@@ -9,7 +9,7 @@ import {
   Truck,
   Loader2
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getMenuItemName, getMenuItemImage } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { createAuthClientBrowser } from "@/lib/supabase/client";
 
@@ -19,6 +19,10 @@ interface OrderItem {
   unit_price: number;
   menu_items?: {
     name: string;
+    image_url?: string;
+  } | {
+    name: string;
+    image_url?: string;
   }[];
 }
 
@@ -53,7 +57,7 @@ export default function EmployeeDashboard() {
           id,
           quantity,
           unit_price,
-          menu_items (name)
+          menu_items (name, image_url)
         )
       `)
       .in("status", ["pending", "accepted", "preparing", "ready"])
@@ -182,11 +186,18 @@ export default function EmployeeDashboard() {
                 <div className="space-y-3 mb-8">
                   {order.order_items?.map((item, idx) => (
                     <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-red-50/40">
-                      <div className="flex items-center gap-4">
-                        <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center font-black text-red-600 shadow-sm">
-                          {item.quantity}
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-white overflow-hidden flex items-center justify-center flex-shrink-0 shadow-sm">
+                          <img
+                            src={getMenuItemImage(item.menu_items)}
+                            alt={getMenuItemName(item.menu_items)}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
-                        <span className="font-bold text-lg text-gray-900">{item.menu_items?.[0]?.name || "Item"}</span>
+                        <div className="w-7 h-7 rounded-lg bg-white flex items-center justify-center font-black text-xs text-red-600 shadow-sm flex-shrink-0">
+                          {item.quantity}x
+                        </div>
+                        <span className="font-bold text-base text-gray-900">{getMenuItemName(item.menu_items)}</span>
                       </div>
                       <span className="font-medium text-gray-600">${(item.unit_price * item.quantity).toFixed(2)}</span>
                     </div>

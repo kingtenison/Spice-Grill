@@ -8,40 +8,29 @@ test.describe("Account Page", () => {
     expect(page.url()).toContain("login");
   });
 
-  test("login page renders email and password fields", async ({ page }) => {
+  test("login page renders Google OAuth sign-in", async ({ page }) => {
     await page.goto("/login");
     await page.waitForLoadState("networkidle");
-    await expect(page.locator('input[type="email"]')).toBeVisible();
-    await expect(page.locator('input[type="password"]')).toBeVisible();
+    await expect(page.locator("a[href='/api/auth/google']")).toBeVisible();
+    await expect(page.locator("button:has-text('Sign In'), a:has-text('Continue with Google')").first()).toBeVisible();
   });
 
-  test("login has sign in button", async ({ page }) => {
+  test("login page has no legacy email/password form", async ({ page }) => {
     await page.goto("/login");
     await page.waitForLoadState("networkidle");
-    await expect(page.locator("button:has-text('Sign In')")).toBeVisible();
+    expect(await page.locator('input[type="password"]').count()).toBe(0);
   });
 
-  test("login has Google OAuth button", async ({ page }) => {
+  test("login page shows brand", async ({ page }) => {
     await page.goto("/login");
     await page.waitForLoadState("networkidle");
-    const googleBtn = page.locator("a:has-text('Google'), a[href*='google']").first();
-    await expect(googleBtn).toBeVisible({ timeout: 3000 }).catch(() => {});
+    await expect(page.locator("h1:has-text('Welcome Back')")).toBeVisible();
   });
 
-  test("login has sign up link", async ({ page }) => {
+  test("login page shows brand tagline", async ({ page }) => {
     await page.goto("/login");
     await page.waitForLoadState("networkidle");
-    await expect(page.locator("a[href='/register']")).toBeVisible();
-  });
-
-  test("login form has validation", async ({ page }) => {
-    await page.goto("/login");
-    await page.waitForLoadState("networkidle");
-    const submitBtn = page.locator("button:has-text('Sign In')");
-    // Try submitting empty form
-    await submitBtn.click();
-    // Browser validation should prevent submission or show error
-    await page.waitForTimeout(1000);
+    await expect(page.locator("p:has-text('Afro-Caribbean Cuisine')")).toBeVisible();
   });
 });
 

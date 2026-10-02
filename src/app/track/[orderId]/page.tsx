@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { createAuthClientBrowser } from "@/lib/supabase/client";
+import { getMenuItemImage, getMenuItemName } from "@/lib/utils";
 
 type DeliveryStatus = 'pending' | 'preparing' | 'ready_for_pickup' | 'assigned' | 'picked_up' | 'on_the_way' | 'arrived' | 'delivered' | 'cancelled' | 'delayed';
 
@@ -296,15 +297,19 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ orderI
             {order.order_items.map((item) => (
               <div key={item.id} className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center overflow-hidden">
-                    {item.menu_items.image_url ? (
-                      <img src={item.menu_items.image_url} alt={item.menu_items.name} className="w-full h-full object-cover" />
+                  <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    {item.menu_items ? (
+                      <img
+                        src={getMenuItemImage(item.menu_items)}
+                        alt={getMenuItemName(item.menu_items)}
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
                       <Package className="w-6 h-6 text-gray-400" />
                     )}
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">{item.menu_items.name}</p>
+                    <p className="font-medium text-gray-900">{getMenuItemName(item.menu_items)}</p>
                     <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
                   </div>
                 </div>
