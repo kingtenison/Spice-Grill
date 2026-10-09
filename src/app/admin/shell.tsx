@@ -22,6 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { signOut } from "@/app/actions/auth";
+import { NotificationCenter } from "@/components/admin/NotificationCenter";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -145,10 +146,7 @@ export default function AdminShell({ children, profile }: AdminShellProps) {
         </button>
         <h2 className="font-bold text-gray-900">Spice Grille OS</h2>
         <div className="flex items-center gap-2">
-          <button className="relative p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-all">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 border-2 border-white"></span>
-          </button>
+          <NotificationCenter />
         </div>
       </header>
 
@@ -242,10 +240,7 @@ export default function AdminShell({ children, profile }: AdminShellProps) {
           </div>
 
           <div className="flex items-center gap-4">
-            <button className="relative p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-all">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500 border-2 border-white"></span>
-            </button>
+            <NotificationCenter />
             <div className="flex items-center gap-3 pl-4 border-l">
               <div className="text-right">
                 <p className="text-sm font-bold text-gray-900">{profile?.full_name || "Admin"}</p>

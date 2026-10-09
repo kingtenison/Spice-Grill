@@ -5,6 +5,7 @@ import { Search, MoreVertical, CheckCircle, RefreshCw, Package, Truck, X, Eye } 
 import { cn } from "@/lib/utils";
 import { createAuthClientBrowser } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { notifyNewOrder, playNotificationSound } from "@/lib/notifications";
 
 interface Order {
   id: string;
@@ -88,10 +89,12 @@ export default function AdminOrdersPage() {
         },
         (payload) => {
           console.log('Order updated:', payload);
+          const updated = payload.new as Order;
+          playNotificationSound("status_change");
           setOrders(currentOrders =>
             currentOrders.map(order =>
-              order.id === payload.new.id
-                ? { ...order, ...payload.new }
+              order.id === updated.id
+                ? { ...order, ...updated }
                 : order
             )
           );
@@ -106,7 +109,13 @@ export default function AdminOrdersPage() {
         },
         (payload) => {
           console.log('New order:', payload);
-          setOrders(currentOrders => [payload.new as Order, ...currentOrders]);
+          const newOrder = payload.new as Order;
+          notifyNewOrder({
+            id: newOrder.id,
+            total_amount: newOrder.total_amount,
+            customer_name: newOrder.profiles?.full_name,
+          });
+          setOrders(currentOrders => [newOrder, ...currentOrders]);
         }
       )
       .subscribe();

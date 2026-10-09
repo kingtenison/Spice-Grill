@@ -23,6 +23,7 @@ import { createClient, safeGetUser } from "@/lib/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { getMenuItemImage, getMenuItemName } from "@/lib/utils";
+import { playNotificationSound, sendBrowserNotification } from "@/lib/notifications";
 
 interface OrderItem {
   id: string;
@@ -159,6 +160,19 @@ export default function OrdersPage() {
             },
             (payload: any) => {
               console.log('Order updated:', payload);
+              const updatedOrder = payload.new;
+              if (updatedOrder) {
+                playNotificationSound("status_change");
+                const statusLabel = (updatedOrder.status || "").replace("_", " ").toUpperCase();
+                const shortId = (updatedOrder.id || "").slice(0, 8).toUpperCase();
+                toast.info(`Order #${shortId} Status Update`, {
+                  description: `Your order is now ${statusLabel}!`,
+                  duration: 6000,
+                });
+                sendBrowserNotification(`Order #${shortId} Update`, {
+                  body: `Your order is now ${statusLabel}!`,
+                });
+              }
               setOrders(currentOrders =>
                 currentOrders.map(order =>
                   order.id === payload.new.id

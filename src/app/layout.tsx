@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { RouteAwareNav } from "@/components/layout/RouteAwareNav";
 import { DefaultSeoSchema } from "@/components/seo/JsonLd";
+import { Toaster } from "sonner";
 
 const siteUrl = "https://www.thespicegrille.com";
 const siteName = "The Spice Grille";
@@ -135,6 +136,7 @@ export default function RootLayout({
         <DefaultSeoSchema />
       </head>
       <body className="min-h-full flex flex-col bg-white text-gray-900">
+        <Toaster richColors position="top-right" closeButton />
         <Navbar />
         <RouteAwareNav />
         <main className="flex-grow pb-mobile-nav">

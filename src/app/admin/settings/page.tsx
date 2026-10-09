@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Save, Store, Truck, Bell, Shield, Globe, X, Check, Lock, CheckCircle2 } from "lucide-react";
+import { Save, Store, Truck, Bell, Shield, Globe, X, Check, Lock, CheckCircle2, Volume2 } from "lucide-react";
+import { 
+  playNotificationSound, 
+  isSoundEnabled, 
+  setSoundEnabled, 
+  requestNotificationPermission, 
+  getNotificationPermission 
+} from "@/lib/notifications";
 
 interface RestaurantSettings {
   restaurantName: string;
@@ -557,57 +564,91 @@ export default function AdminSettingsPage() {
             )}
 
             <div className="mt-5 space-y-4">
-              <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50">
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-gray-50">
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">New Order Audio Alert</p>
-                  <p className="text-xs text-gray-500">Play chime when order is placed</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-gray-900">New Order Audio Chime</p>
+                    <button
+                      type="button"
+                      onClick={() => playNotificationSound("new_order")}
+                      className="px-2 py-0.5 rounded-md bg-white border border-gray-200 text-[11px] font-semibold text-red-600 hover:bg-red-50 hover:border-red-200 transition-colors cursor-pointer"
+                    >
+                      🔊 Test Chime
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5">Play bell chime whenever an order is placed</p>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setNotificationSettings(p => ({ ...p, orderSound: !p.orderSound }))}
-                  className={`w-12 h-6 rounded-full transition-colors relative ${notificationSettings.orderSound ? 'bg-red-600' : 'bg-gray-200'}`}
+                  onClick={() => {
+                    const next = !notificationSettings.orderSound;
+                    setNotificationSettings(p => ({ ...p, orderSound: next }));
+                    if (next) playNotificationSound("new_order");
+                  }}
+                  className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${notificationSettings.orderSound ? 'bg-red-600' : 'bg-gray-200'}`}
                 >
                   <span className={`block w-4 h-4 rounded-full bg-white shadow-md transform transition-transform absolute top-1 ${notificationSettings.orderSound ? 'right-1' : 'left-1'}`} />
                 </button>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50">
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-gray-50">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Desktop / Browser Alerts</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Receive notifications when tab is in background</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const perm = await requestNotificationPermission();
+                    if (perm === "granted") {
+                      setModalMessage("Browser notifications allowed!");
+                    } else {
+                      setModalMessage("Browser notification permission denied by browser.");
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-xs font-bold text-gray-700 hover:text-red-600 hover:border-red-300 transition-all cursor-pointer"
+                >
+                  Request Permission
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-gray-50">
                 <div>
                   <p className="text-sm font-semibold text-gray-900">Email Notifications</p>
-                  <p className="text-xs text-gray-500">Send order summaries to owner email</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Send order summaries to owner email</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setNotificationSettings(p => ({ ...p, emailAlerts: !p.emailAlerts }))}
-                  className={`w-12 h-6 rounded-full transition-colors relative ${notificationSettings.emailAlerts ? 'bg-red-600' : 'bg-gray-200'}`}
+                  className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${notificationSettings.emailAlerts ? 'bg-red-600' : 'bg-gray-200'}`}
                 >
                   <span className={`block w-4 h-4 rounded-full bg-white shadow-md transform transition-transform absolute top-1 ${notificationSettings.emailAlerts ? 'right-1' : 'left-1'}`} />
                 </button>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50">
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-gray-50">
                 <div>
                   <p className="text-sm font-semibold text-gray-900">Low Stock Alerts</p>
-                  <p className="text-xs text-gray-500">Alert when menu items fall below 5 units</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Alert when menu items fall below 5 units</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setNotificationSettings(p => ({ ...p, stockAlerts: !p.stockAlerts }))}
-                  className={`w-12 h-6 rounded-full transition-colors relative ${notificationSettings.stockAlerts ? 'bg-red-600' : 'bg-gray-200'}`}
+                  className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${notificationSettings.stockAlerts ? 'bg-red-600' : 'bg-gray-200'}`}
                 >
                   <span className={`block w-4 h-4 rounded-full bg-white shadow-md transform transition-transform absolute top-1 ${notificationSettings.stockAlerts ? 'right-1' : 'left-1'}`} />
                 </button>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50">
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-gray-50">
                 <div>
                   <p className="text-sm font-semibold text-gray-900">Dispatcher Status Alerts</p>
-                  <p className="text-xs text-gray-500">Notify on delivery completion/delays</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Notify on delivery completion/delays</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setNotificationSettings(p => ({ ...p, dispatcherAlerts: !p.dispatcherAlerts }))}
-                  className={`w-12 h-6 rounded-full transition-colors relative ${notificationSettings.dispatcherAlerts ? 'bg-red-600' : 'bg-gray-200'}`}
+                  className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${notificationSettings.dispatcherAlerts ? 'bg-red-600' : 'bg-gray-200'}`}
                 >
                   <span className={`block w-4 h-4 rounded-full bg-white shadow-md transform transition-transform absolute top-1 ${notificationSettings.dispatcherAlerts ? 'right-1' : 'left-1'}`} />
                 </button>
@@ -617,7 +658,7 @@ export default function AdminSettingsPage() {
                 <button
                   type="button"
                   onClick={() => setActiveModal(null)}
-                  className="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all"
+                  className="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -626,7 +667,8 @@ export default function AdminSettingsPage() {
                   disabled={isModalSaving}
                   onClick={async () => {
                     setIsModalSaving(true);
-                    await new Promise(r => setTimeout(r, 400));
+                    setSoundEnabled(notificationSettings.orderSound);
+                    await new Promise(r => setTimeout(r, 300));
                     setModalMessage("Notification preferences saved!");
                     setIsModalSaving(false);
                     setTimeout(() => {
@@ -634,7 +676,7 @@ export default function AdminSettingsPage() {
                       setModalMessage("");
                     }, 1200);
                   }}
-                  className="flex-1 py-2.5 px-4 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-all shadow-md shadow-red-500/20 disabled:opacity-50"
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-all shadow-md shadow-red-500/20 disabled:opacity-50 cursor-pointer"
                 >
                   {isModalSaving ? "Saving..." : "Save Preferences"}
                 </button>
