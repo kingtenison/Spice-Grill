@@ -241,7 +241,7 @@ export default function OrdersPage() {
 
 return (
     <div className="min-h-screen bg-gray-50">
-      <main className="container px-4 pt-20 pb-24 mx-auto lg:pl-sidebar space-y-6 sm:space-y-8">
+      <main className="container px-4 pt-20 pb-32 sm:pb-24 mx-auto lg:pl-sidebar space-y-6 sm:space-y-8">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-4xl font-bold text-gray-900 mb-2">My Orders</h1>

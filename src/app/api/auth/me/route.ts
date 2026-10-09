@@ -37,6 +37,7 @@ export async function GET() {
     // Check for cached role cookie to avoid DB query
     const cachedRole = cookieStore.get('sb-user-role')?.value;
     const cachedName = cookieStore.get('sb-user-fullname')?.value;
+    const cachedPhone = cookieStore.get('sb-user-phone')?.value;
     const cachedDispatcher = cookieStore.get('sb-user-dispatcher')?.value;
 
     if (cachedRole) {
@@ -46,7 +47,8 @@ export async function GET() {
           id: user.id,
           role: cachedRole,
           full_name: cachedName || user.user_metadata?.full_name || 'User',
-          email: user.email
+          email: user.email,
+          phone: cachedPhone || user.user_metadata?.phone || user.phone || ''
         },
         role: cachedRole,
         isApprovedDispatcher: cachedDispatcher === 'approved'
@@ -88,9 +90,10 @@ export async function GET() {
 
     const role = profileData?.role ?? 'customer';
     const fullName = profileData?.full_name ?? user.user_metadata?.full_name ?? 'User';
+    const phone = profileData?.phone ?? user.user_metadata?.phone ?? user.phone ?? '';
     const isApprovedDispatcher = dispatcherData?.application_status === 'approved';
 
-    // Cache role/name/dispatcher in cookies for future requests (valid for 1 week)
+    // Cache role/name/dispatcher/phone in cookies for future requests (valid for 1 week)
     const cookieOpts = {
       path: '/',
       maxAge: 60 * 60 * 24 * 7,
@@ -104,7 +107,8 @@ export async function GET() {
         id: user.id,
         role,
         full_name: fullName,
-        email: user.email
+        email: user.email,
+        phone
       },
       role,
       isApprovedDispatcher
@@ -112,6 +116,7 @@ export async function GET() {
 
     response.cookies.set('sb-user-role', role, cookieOpts);
     response.cookies.set('sb-user-fullname', fullName, cookieOpts);
+    response.cookies.set('sb-user-phone', phone, cookieOpts);
     response.cookies.set('sb-user-dispatcher', isApprovedDispatcher ? 'approved' : 'none', cookieOpts);
 
     return response;

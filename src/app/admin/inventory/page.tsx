@@ -171,13 +171,13 @@ export default function AdminInventoryPage() {
             />
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 overflow-x-auto max-w-full pb-1 shrink-0">
             {(['all', 'low', 'critical', 'out'] as const).map(f => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
                 className={cn(
-                  "px-4 py-2 rounded-xl text-sm font-medium transition-colors",
+                  "px-4 py-2 rounded-xl text-sm font-medium transition-colors shrink-0",
                   filter === f ? "bg-red-600 text-white" : "bg-gray-100 hover:bg-gray-200"
                 )}
               >
@@ -186,7 +186,7 @@ export default function AdminInventoryPage() {
             ))}
           </div>
 
-          <button onClick={fetchItems} className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50">
+          <button onClick={fetchItems} className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 shrink-0">
             <RefreshCw className="w-4 h-4" /> Refresh
           </button>
         </div>
@@ -224,8 +224,8 @@ export default function AdminInventoryPage() {
       </div>
 
       {/* Items Table */}
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-        <table className="w-full">
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-x-auto shadow-sm">
+        <table className="w-full min-w-[680px]">
           <thead className="bg-gray-50 border-b">
             <tr>
               <th className="p-4 text-left w-8">

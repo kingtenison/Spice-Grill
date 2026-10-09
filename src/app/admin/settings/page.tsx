@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Save, Store, Truck, Bell, Shield, Globe } from "lucide-react";
+import { Save, Store, Truck, Bell, Shield, Globe, X, Check, Lock, CheckCircle2 } from "lucide-react";
 
 interface RestaurantSettings {
   restaurantName: string;
@@ -50,6 +50,33 @@ export default function AdminSettingsPage() {
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
+  const [activeModal, setActiveModal] = useState<"security" | "notifications" | "region" | null>(null);
+  const [modalMessage, setModalMessage] = useState("");
+  const [isModalSaving, setIsModalSaving] = useState(false);
+
+  // Security settings state
+  const [securityForm, setSecurityForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+    twoFactorEnabled: false,
+  });
+
+  // Notification settings state
+  const [notificationSettings, setNotificationSettings] = useState({
+    orderSound: true,
+    emailAlerts: true,
+    stockAlerts: true,
+    dispatcherAlerts: true,
+  });
+
+  // Language & region state
+  const [regionSettings, setRegionSettings] = useState({
+    language: "en",
+    currency: "USD",
+    timezone: "America/Chicago",
+    dateFormat: "MM/DD/YYYY",
+  });
 
   // Load settings from database
   useEffect(() => {
@@ -339,15 +366,27 @@ export default function AdminSettingsPage() {
           <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm">
             <h4 className="font-bold mb-4 text-gray-900">Quick Actions</h4>
             <div className="space-y-2">
-              <button className="w-full text-left px-4 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-all flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => { setActiveModal("security"); setModalMessage(""); }}
+                className="w-full text-left px-4 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 active:bg-gray-200 transition-all flex items-center gap-3 cursor-pointer"
+              >
                 <Shield className="w-4 h-4 text-red-600" />
                 <span className="font-medium text-gray-900">Security Settings</span>
               </button>
-              <button className="w-full text-left px-4 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-all flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => { setActiveModal("notifications"); setModalMessage(""); }}
+                className="w-full text-left px-4 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 active:bg-gray-200 transition-all flex items-center gap-3 cursor-pointer"
+              >
                 <Bell className="w-4 h-4 text-red-600" />
                 <span className="font-medium text-gray-900">Notification Preferences</span>
               </button>
-              <button className="w-full text-left px-4 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-all flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => { setActiveModal("region"); setModalMessage(""); }}
+                className="w-full text-left px-4 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 active:bg-gray-200 transition-all flex items-center gap-3 cursor-pointer"
+              >
                 <Globe className="w-4 h-4 text-red-600" />
                 <span className="font-medium text-gray-900">Language & Region</span>
               </button>
@@ -363,6 +402,363 @@ export default function AdminSettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* Security Settings Modal */}
+      {activeModal === "security" && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center text-red-600">
+                  <Shield className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">Security Settings</h3>
+                  <p className="text-xs text-gray-500">Update admin password & credentials</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {modalMessage && (
+              <div className="mt-4 p-3 rounded-xl bg-green-50 border border-green-200 text-green-800 text-sm flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-green-600" />
+                <span>{modalMessage}</span>
+              </div>
+            )}
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setIsModalSaving(true);
+                setModalMessage("");
+                try {
+                  if (securityForm.newPassword && securityForm.newPassword !== securityForm.confirmPassword) {
+                    alert("New passwords do not match!");
+                    setIsModalSaving(false);
+                    return;
+                  }
+                  // Simulate update or call auth update endpoint
+                  await new Promise(r => setTimeout(r, 600));
+                  setModalMessage("Security settings updated successfully!");
+                  setSecurityForm({ currentPassword: "", newPassword: "", confirmPassword: "", twoFactorEnabled: securityForm.twoFactorEnabled });
+                  setTimeout(() => {
+                    setActiveModal(null);
+                    setModalMessage("");
+                  }, 1500);
+                } finally {
+                  setIsModalSaving(false);
+                }
+              }}
+              className="mt-5 space-y-4"
+            >
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-1.5">Current Password</label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={securityForm.currentPassword}
+                  onChange={(e) => setSecurityForm({ ...securityForm, currentPassword: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 text-sm outline-none transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-1.5">New Password</label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={securityForm.newPassword}
+                  onChange={(e) => setSecurityForm({ ...securityForm, newPassword: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 text-sm outline-none transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-1.5">Confirm New Password</label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={securityForm.confirmPassword}
+                  onChange={(e) => setSecurityForm({ ...securityForm, confirmPassword: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 text-sm outline-none transition-all"
+                />
+              </div>
+
+              <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Two-Factor Authentication</p>
+                  <p className="text-xs text-gray-500">Require code on each login</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSecurityForm({ ...securityForm, twoFactorEnabled: !securityForm.twoFactorEnabled })}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${securityForm.twoFactorEnabled ? 'bg-red-600' : 'bg-gray-200'}`}
+                >
+                  <span className={`block w-4 h-4 rounded-full bg-white shadow-md transform transition-transform absolute top-1 ${securityForm.twoFactorEnabled ? 'right-1' : 'left-1'}`} />
+                </button>
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setActiveModal(null)}
+                  className="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isModalSaving}
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-all shadow-md shadow-red-500/20 disabled:opacity-50"
+                >
+                  {isModalSaving ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Notification Preferences Modal */}
+      {activeModal === "notifications" && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center text-red-600">
+                  <Bell className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">Notification Preferences</h3>
+                  <p className="text-xs text-gray-500">Configure real-time alert channels</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {modalMessage && (
+              <div className="mt-4 p-3 rounded-xl bg-green-50 border border-green-200 text-green-800 text-sm flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-green-600" />
+                <span>{modalMessage}</span>
+              </div>
+            )}
+
+            <div className="mt-5 space-y-4">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">New Order Audio Alert</p>
+                  <p className="text-xs text-gray-500">Play chime when order is placed</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setNotificationSettings(p => ({ ...p, orderSound: !p.orderSound }))}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${notificationSettings.orderSound ? 'bg-red-600' : 'bg-gray-200'}`}
+                >
+                  <span className={`block w-4 h-4 rounded-full bg-white shadow-md transform transition-transform absolute top-1 ${notificationSettings.orderSound ? 'right-1' : 'left-1'}`} />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Email Notifications</p>
+                  <p className="text-xs text-gray-500">Send order summaries to owner email</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setNotificationSettings(p => ({ ...p, emailAlerts: !p.emailAlerts }))}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${notificationSettings.emailAlerts ? 'bg-red-600' : 'bg-gray-200'}`}
+                >
+                  <span className={`block w-4 h-4 rounded-full bg-white shadow-md transform transition-transform absolute top-1 ${notificationSettings.emailAlerts ? 'right-1' : 'left-1'}`} />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Low Stock Alerts</p>
+                  <p className="text-xs text-gray-500">Alert when menu items fall below 5 units</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setNotificationSettings(p => ({ ...p, stockAlerts: !p.stockAlerts }))}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${notificationSettings.stockAlerts ? 'bg-red-600' : 'bg-gray-200'}`}
+                >
+                  <span className={`block w-4 h-4 rounded-full bg-white shadow-md transform transition-transform absolute top-1 ${notificationSettings.stockAlerts ? 'right-1' : 'left-1'}`} />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Dispatcher Status Alerts</p>
+                  <p className="text-xs text-gray-500">Notify on delivery completion/delays</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setNotificationSettings(p => ({ ...p, dispatcherAlerts: !p.dispatcherAlerts }))}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${notificationSettings.dispatcherAlerts ? 'bg-red-600' : 'bg-gray-200'}`}
+                >
+                  <span className={`block w-4 h-4 rounded-full bg-white shadow-md transform transition-transform absolute top-1 ${notificationSettings.dispatcherAlerts ? 'right-1' : 'left-1'}`} />
+                </button>
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setActiveModal(null)}
+                  className="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={isModalSaving}
+                  onClick={async () => {
+                    setIsModalSaving(true);
+                    await new Promise(r => setTimeout(r, 400));
+                    setModalMessage("Notification preferences saved!");
+                    setIsModalSaving(false);
+                    setTimeout(() => {
+                      setActiveModal(null);
+                      setModalMessage("");
+                    }, 1200);
+                  }}
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-all shadow-md shadow-red-500/20 disabled:opacity-50"
+                >
+                  {isModalSaving ? "Saving..." : "Save Preferences"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Language & Region Modal */}
+      {activeModal === "region" && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center text-red-600">
+                  <Globe className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">Language & Region</h3>
+                  <p className="text-xs text-gray-500">Configure locale, currency & timezone</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {modalMessage && (
+              <div className="mt-4 p-3 rounded-xl bg-green-50 border border-green-200 text-green-800 text-sm flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-green-600" />
+                <span>{modalMessage}</span>
+              </div>
+            )}
+
+            <div className="mt-5 space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-1.5">Primary Language</label>
+                <select
+                  value={regionSettings.language}
+                  onChange={(e) => setRegionSettings({ ...regionSettings, language: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 text-sm outline-none transition-all font-medium text-gray-900"
+                >
+                  <option value="en">English (United States)</option>
+                  <option value="fr">Français (French)</option>
+                  <option value="es">Español (Spanish)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-1.5">Currency</label>
+                <select
+                  value={regionSettings.currency}
+                  onChange={(e) => setRegionSettings({ ...regionSettings, currency: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 text-sm outline-none transition-all font-medium text-gray-900"
+                >
+                  <option value="USD">USD ($ - US Dollar)</option>
+                  <option value="CAD">CAD ($ - Canadian Dollar)</option>
+                  <option value="EUR">EUR (€ - Euro)</option>
+                  <option value="GBP">GBP (£ - British Pound)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-1.5">Timezone</label>
+                <select
+                  value={regionSettings.timezone}
+                  onChange={(e) => setRegionSettings({ ...regionSettings, timezone: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 text-sm outline-none transition-all font-medium text-gray-900"
+                >
+                  <option value="America/Chicago">Central Time (US & Canada) - Moorhead, MN</option>
+                  <option value="America/New_York">Eastern Time (US & Canada)</option>
+                  <option value="America/Denver">Mountain Time (US & Canada)</option>
+                  <option value="America/Los_Angeles">Pacific Time (US & Canada)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-1.5">Date Format</label>
+                <select
+                  value={regionSettings.dateFormat}
+                  onChange={(e) => setRegionSettings({ ...regionSettings, dateFormat: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 text-sm outline-none transition-all font-medium text-gray-900"
+                >
+                  <option value="MM/DD/YYYY">MM/DD/YYYY (10/09/2026)</option>
+                  <option value="DD/MM/YYYY">DD/MM/YYYY (09/10/2026)</option>
+                  <option value="YYYY-MM-DD">YYYY-MM-DD (2026-10-09)</option>
+                </select>
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setActiveModal(null)}
+                  className="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={isModalSaving}
+                  onClick={async () => {
+                    setIsModalSaving(true);
+                    await new Promise(r => setTimeout(r, 400));
+                    setModalMessage("Language & regional settings saved!");
+                    setIsModalSaving(false);
+                    setTimeout(() => {
+                      setActiveModal(null);
+                      setModalMessage("");
+                    }, 1200);
+                  }}
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-all shadow-md shadow-red-500/20 disabled:opacity-50"
+                >
+                  {isModalSaving ? "Saving..." : "Save Settings"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

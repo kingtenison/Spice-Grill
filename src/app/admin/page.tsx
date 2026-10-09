@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { 
   TrendingUp, 
   ShoppingBag, 
@@ -146,11 +147,13 @@ export default function AdminDashboard() {
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-gray-900">Recent Orders</h2>
-            <button className="text-sm font-bold text-red-500 hover:underline">View All</button>
+            <Link href="/admin/orders" className="text-sm font-bold text-red-500 hover:underline">
+              View All
+            </Link>
           </div>
           
-          <div className="rounded-2xl bg-white border border-gray-200 overflow-hidden shadow-sm">
-            <table className="w-full text-left">
+          <div className="rounded-2xl bg-white border border-gray-200 overflow-x-auto shadow-sm">
+            <table className="w-full text-left min-w-[540px]">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
                   <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-500">Order ID</th>
@@ -161,11 +164,15 @@ export default function AdminDashboard() {
                   <th className="px-6 py-4"></th>
                 </tr>
               </thead>
-<tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200">
                 {recentOrders.map((order) => {
                   return (
                     <tr key={order.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 font-bold text-sm text-gray-900">#{order.id.slice(-5)}</td>
+                      <td className="px-6 py-4 font-bold text-sm text-gray-900">
+                        <Link href="/admin/orders" className="hover:text-red-600 transition-colors">
+                          #{order.id.slice(-5)}
+                        </Link>
+                      </td>
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">{order.profiles?.full_name || "—"}</td>
                       <td className="px-6 py-4 text-sm text-gray-500">1</td>
                       <td className="px-6 py-4 font-bold text-sm text-gray-900">{formatCurrency(order.total_amount)}</td>
@@ -181,21 +188,21 @@ export default function AdminDashboard() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button className="p-2 hover:bg-gray-100 rounded-lg transition-all">
-                          <MoreVertical className="w-4 h-4 text-gray-500" />
-                        </button>
+                        <Link href="/admin/orders" className="p-2 hover:bg-gray-100 rounded-lg transition-all inline-flex items-center text-gray-500 hover:text-gray-900">
+                          <MoreVertical className="w-4 h-4" />
+                        </Link>
                       </td>
                     </tr>
                   );
                 })}
-               {recentOrders.length === 0 && !loading && (
-                    <tr>
-                      <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                        No recent orders found
-                      </td>
-                    </tr>
-                  )}
-               </tbody>
+                {recentOrders.length === 0 && !loading && (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                      No recent orders found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
             </table>
           </div>
         </div>
@@ -215,9 +222,12 @@ export default function AdminDashboard() {
                 </div>
               </div>
             ))}
-            <button className="w-full py-3 rounded-xl border border-dashed border-gray-200 text-xs font-bold text-gray-500 hover:border-red-500/50 hover:text-red-500 transition-all">
+            <Link
+              href="/admin/orders"
+              className="block text-center w-full py-3 rounded-xl border border-dashed border-gray-200 text-xs font-bold text-gray-500 hover:border-red-500/50 hover:text-red-500 transition-all"
+            >
               View All Activity
-            </button>
+            </Link>
           </div>
         </div>
       </div>
