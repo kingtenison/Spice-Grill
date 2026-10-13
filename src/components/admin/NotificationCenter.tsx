@@ -31,13 +31,87 @@ import {
 } from "@/lib/notifications";
 import { createAuthClientBrowser } from "@/lib/supabase/client";
 
+let activeRealtimeChannel: any = null;
+let activeRealtimeSubscribers = 0;
+const knownStatusesGlobal = new Map<string, string>();
+
+function subscribeAdminRealtime(supabase: any) {
+  activeRealtimeSubscribers++;
+
+  if (!activeRealtimeChannel) {
+    try {
+      activeRealtimeChannel = supabase
+        .channel(`admin-realtime-orders-${Date.now()}`)
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "orders" },
+          (payload: any) => {
+            const order = payload.new;
+            if (order) {
+              if (order.id && order.status) {
+                knownStatusesGlobal.set(order.id, order.status);
+              }
+              notifyNewOrder({
+                id: order.id,
+                total_amount: order.total_amount,
+                customer_name: order.delivery_address ? "Customer" : undefined,
+              });
+            }
+          }
+        )
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "orders" },
+          (payload: any) => {
+            const order = payload.new;
+            const oldOrder = payload.old;
+            if (order) {
+              const prevStatus = (oldOrder && oldOrder.status) ? oldOrder.status : knownStatusesGlobal.get(order.id);
+              if (prevStatus && prevStatus === order.status) {
+                return;
+              }
+              knownStatusesGlobal.set(order.id, order.status);
+
+              if (prevStatus && prevStatus !== order.status) {
+                const shortId = order.id.slice(-5).toUpperCase();
+                const title = `Order #${shortId} status changed to ${order.status.replace("_", " ")}`;
+                const message = `Order total: $${order.total_amount?.toFixed(2) || "0.00"}`;
+                
+                playNotificationSound("status_change");
+                saveNotification({
+                  title,
+                  message,
+                  type: order.status === "cancelled" ? "alert" : "status",
+                  link: "/admin/orders",
+                });
+              }
+            }
+          }
+        )
+        .subscribe();
+    } catch (err) {
+      console.warn("Failed to subscribe to admin realtime orders channel:", err);
+    }
+  }
+
+  return () => {
+    activeRealtimeSubscribers--;
+    if (activeRealtimeSubscribers <= 0 && activeRealtimeChannel) {
+      try {
+        supabase.removeChannel(activeRealtimeChannel);
+      } catch {}
+      activeRealtimeChannel = null;
+      activeRealtimeSubscribers = 0;
+    }
+  };
+}
+
 export function NotificationCenter() {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [soundOn, setSoundOn] = useState(true);
   const [permission, setPermission] = useState<NotificationPermission>("default");
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const knownStatuses = useRef<Map<string, string>>(new Map());
 
   // Load notifications and permissions
   useEffect(() => {
@@ -68,59 +142,10 @@ export function NotificationCenter() {
   // Set up real-time listener for incoming orders and updates
   useEffect(() => {
     const supabase = createAuthClientBrowser();
-
-    const channel = supabase
-      .channel("admin-notification-center")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "orders" },
-        (payload: any) => {
-          const order = payload.new;
-          if (order) {
-            if (order.id && order.status) {
-              knownStatuses.current.set(order.id, order.status);
-            }
-            notifyNewOrder({
-              id: order.id,
-              total_amount: order.total_amount,
-              customer_name: order.delivery_address ? "Customer" : undefined,
-            });
-          }
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "orders" },
-        (payload: any) => {
-          const order = payload.new;
-          const oldOrder = payload.old;
-          if (order) {
-            const prevStatus = (oldOrder && oldOrder.status) ? oldOrder.status : knownStatuses.current.get(order.id);
-            if (prevStatus && prevStatus === order.status) {
-              return;
-            }
-            knownStatuses.current.set(order.id, order.status);
-
-            if (prevStatus && prevStatus !== order.status) {
-              const shortId = order.id.slice(-5).toUpperCase();
-              const title = `Order #${shortId} status changed to ${order.status.replace("_", " ")}`;
-              const message = `Order total: $${order.total_amount?.toFixed(2) || "0.00"}`;
-              
-              playNotificationSound("status_change");
-              saveNotification({
-                title,
-                message,
-                type: order.status === "cancelled" ? "alert" : "status",
-                link: "/admin/orders",
-              });
-            }
-          }
-        }
-      )
-      .subscribe();
+    const unsubscribe = subscribeAdminRealtime(supabase);
 
     return () => {
-      supabase.removeChannel(channel);
+      unsubscribe();
     };
   }, []);
 

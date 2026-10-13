@@ -4,26 +4,17 @@ let serviceClient: SupabaseClient | null = null;
 
 export function getServiceClient() {
   if (!serviceClient) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
+    const key = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
     if (!url) throw new Error('Missing required environment variable: NEXT_PUBLIC_SUPABASE_URL');
     if (!key) throw new Error('Missing required environment variable: SUPABASE_SERVICE_ROLE_KEY');
 
-    serviceClient = createClient(url, key,
-      {
-        global: {
-          fetch: (url: RequestInfo | URL, init?: RequestInit) => {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3_000);
-
-            return fetch(url, {
-              ...init,
-              signal: controller.signal,
-            }).finally(() => clearTimeout(timeoutId));
-          },
-        },
-      }
-    );
+    serviceClient = createClient(url, key, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
   }
   return serviceClient;
 }

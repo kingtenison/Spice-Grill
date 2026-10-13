@@ -79,7 +79,7 @@ export default function AdminOrdersPage() {
     // Set up real-time subscription for order updates
     const supabase = createAuthClientBrowser();
     const subscription = supabase
-      .channel('admin-orders')
+      .channel(`admin-orders-${Date.now()}`)
       .on(
         'postgres_changes',
         {
@@ -121,7 +121,9 @@ export default function AdminOrdersPage() {
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      try {
+        supabase.removeChannel(subscription);
+      } catch {}
     };
   }, []);
 

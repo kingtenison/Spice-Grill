@@ -4,17 +4,17 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 let browserClient: SupabaseClient | null = null;
 
 export const createClient = (): SupabaseClient => {
+  const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
+  const anonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
+
   if (typeof window === 'undefined') {
-    return createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-    );
+    return createBrowserClient(url, anonKey);
   }
 
   if (!browserClient) {
     browserClient = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+      url,
+      anonKey,
       {
         auth: {
           persistSession: true,

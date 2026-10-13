@@ -7,7 +7,7 @@ import {
   AlertCircle, Package, Navigation, RefreshCw, Filter,
   Search, Plus, Edit, Trash2, X
 } from "lucide-react";
-import { createClient } from "@supabase/supabase-js";
+import { createAuthClientBrowser } from "@/lib/supabase/client";
 
 type DeliveryStatus = 'pending' | 'preparing' | 'ready_for_pickup' | 'assigned' | 'picked_up' | 'on_the_way' | 'arrived' | 'delivered' | 'cancelled' | 'delayed';
 
@@ -94,10 +94,10 @@ export default function DeliveryDashboard() {
 
   useEffect(() => {
     fetchData();
-    setupRealtimeSubscription();
+    const cleanup = setupRealtimeSubscription();
 
     return () => {
-      // Cleanup will be handled in setupRealtimeSubscription
+      cleanup?.();
     };
   }, []);
 
@@ -121,14 +121,12 @@ export default function DeliveryDashboard() {
 
   const setupRealtimeSubscription = () => {
     try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      const supabase = createAuthClientBrowser();
+      const ts = Date.now();
 
       // Subscribe to delivery_assignments changes
       const deliverySubscription = supabase
-        .channel('delivery_assignments_changes')
+        .channel(`delivery_assignments_${ts}`)
         .on(
           'postgres_changes',
           {
@@ -144,7 +142,7 @@ export default function DeliveryDashboard() {
 
       // Subscribe to dispatchers changes
       const dispatcherSubscription = supabase
-        .channel('dispatchers_changes')
+        .channel(`dispatchers_${ts}`)
         .on(
           'postgres_changes',
           {
@@ -160,7 +158,7 @@ export default function DeliveryDashboard() {
 
       // Subscribe to orders changes (for pickup orders)
       const ordersSubscription = supabase
-        .channel('orders_changes')
+        .channel(`orders_delivery_${ts}`)
         .on(
           'postgres_changes',
           {
@@ -175,9 +173,11 @@ export default function DeliveryDashboard() {
         .subscribe();
 
       return () => {
-        deliverySubscription.unsubscribe();
-        dispatcherSubscription.unsubscribe();
-        ordersSubscription.unsubscribe();
+        try {
+          supabase.removeChannel(deliverySubscription);
+          supabase.removeChannel(dispatcherSubscription);
+          supabase.removeChannel(ordersSubscription);
+        } catch {}
       };
     } catch (error) {
       console.error('Error setting up realtime subscription:', error);
