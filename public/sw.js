@@ -1,5 +1,5 @@
-const CACHE = "spice-grille-v3";
-const URLS = ["/", "/menu", "/cart"];
+const CACHE = "spice-grille-v4";
+const URLS = ["/", "/menu"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
@@ -25,14 +25,20 @@ self.addEventListener("fetch", (e) => {
 
   const url = new URL(e.request.url);
 
-  // Never intercept or cache admin, api, dispatcher, employee, auth, debug, or internal routes
+  // Never intercept or cache dynamic, transactional, or administrative routes
   if (
     url.pathname.startsWith("/api") ||
     url.pathname.startsWith("/admin") ||
+    url.pathname.startsWith("/checkout") ||
+    url.pathname.startsWith("/cart") ||
+    url.pathname.startsWith("/orders") ||
+    url.pathname.startsWith("/track") ||
+    url.pathname.startsWith("/account") ||
     url.pathname.startsWith("/employee") ||
     url.pathname.startsWith("/dispatcher") ||
     url.pathname.startsWith("/debug") ||
     url.pathname.startsWith("/auth") ||
+    url.pathname.startsWith("/login") ||
     url.protocol.startsWith("chrome") ||
     url.protocol.startsWith("ws")
   ) {

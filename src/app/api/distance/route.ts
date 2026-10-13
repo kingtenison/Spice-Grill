@@ -1,19 +1,10 @@
 import { getServiceClient } from "@/lib/supabase/service";
 import { NextRequest, NextResponse } from "next/server";
-
-function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 3959; // Earth radius in miles
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
+import {
+  DEFAULT_RESTAURANT_LAT,
+  DEFAULT_RESTAURANT_LNG,
+  haversineMiles,
+} from "@/lib/delivery";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -31,10 +22,10 @@ export async function GET(request: NextRequest) {
     .limit(1)
     .single();
 
-  const restaurantLat = settings?.restaurant_lat ?? 46.8772;
-  const restaurantLng = settings?.restaurant_lng ?? -96.7898;
+  const restaurantLat = Number(settings?.restaurant_lat) || DEFAULT_RESTAURANT_LAT;
+  const restaurantLng = Number(settings?.restaurant_lng) || DEFAULT_RESTAURANT_LNG;
 
-  const distanceMiles = haversineDistance(restaurantLat, restaurantLng, customerLat, customerLng);
+  const distanceMiles = haversineMiles(restaurantLat, restaurantLng, customerLat, customerLng);
 
   return NextResponse.json({
     distance_miles: Math.round(distanceMiles * 100) / 100,

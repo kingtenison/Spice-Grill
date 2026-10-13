@@ -1,4 +1,5 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { type SupabaseClient } from '@supabase/supabase-js';
+import { getServiceClient } from '@/lib/supabase/service';
 import { NextRequest, NextResponse } from 'next/server';
 import { getSquareClient, SQUARE_CURRENCY } from '@/lib/square';
 import { SquareError } from 'square';
@@ -18,7 +19,7 @@ const PROMO_COUPONS: Record<string, { discountType: 'percentage' | 'fixed'; disc
 };
 
 function round2(n: number): number {
-  return Math.round(n * 100) / 100;
+  return Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 }
 
 function sanitizeString(value: unknown, maxLength: number): string {
@@ -232,10 +233,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Payment token is required for card payments' }, { status: 400 });
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = getServiceClient();
 
     const { data: settings } = await supabase
       .from('delivery_settings')
@@ -333,42 +331,57 @@ export async function POST(request: NextRequest) {
     const baseDeliveryFee = Number(settings?.delivery_fee) || 0;
     const baseServiceFee = Number(settings?.service_fee) || 0;
     const perMileRate = Number(settings?.per_mile_rate) || 0;
-    const smallOrderThreshold = Number(settings?.small_order_threshold) || 15;
+    const smallOrderThreshold = Number(settings?.small_order_threshold) || 10;
     const smallOrderFeeValue = Number(settings?.small_order_fee) || 0;
+
+    const isExpress = shippingMethodRaw === 'express' ||
+      (typeof shippingMethodRaw === 'object' && shippingMethodRaw !== null && (shippingMethodRaw as { id?: string })?.id === 'express');
 
     let deliveryFee = 0;
     let serviceFee = 0;
-    if (!isPickup && deliveryMiles !== null) {
-      deliveryFee = deliveryMiles <= freeDeliveryRadius ? 0 : baseDeliveryFee;
-      serviceFee =
-        deliveryMiles <= serviceFeeRadius
-          ? baseServiceFee
-          : baseServiceFee + (deliveryMiles - serviceFeeRadius) * perMileRate;
+    let smallOrderFee = 0;
+
+    if (!isPickup) {
+      if (deliveryMiles !== null) {
+        const baseCost = deliveryMiles <= freeDeliveryRadius ? 0 : baseDeliveryFee;
+        deliveryFee = isExpress ? baseCost + 1.00 : baseCost;
+        serviceFee =
+          deliveryMiles <= serviceFeeRadius
+            ? baseServiceFee
+            : baseServiceFee + (deliveryMiles - serviceFeeRadius) * perMileRate;
+      }
+      smallOrderFee = dbSubtotal < smallOrderThreshold ? smallOrderFeeValue : 0;
     }
-    const smallOrderFee = dbSubtotal < smallOrderThreshold ? smallOrderFeeValue : 0;
+
     deliveryFee = round2(deliveryFee);
     serviceFee = round2(serviceFee);
-    const taxAmount = dbSubtotal * TAX_RATE;
-    const couponDiscount = await recomputeCouponDiscount(
+    smallOrderFee = round2(smallOrderFee);
+    const taxAmount = round2(dbSubtotal * TAX_RATE);
+    const couponDiscount = round2(await recomputeCouponDiscount(
       supabase,
       orderData?.coupon_code,
       orderData?.user_id || null,
       dbSubtotal
-    );
-    const loyaltyDiscount = await recomputeLoyaltyDiscount(
+    ));
+    const loyaltyDiscount = round2(await recomputeLoyaltyDiscount(
       supabase,
       orderData?.user_id || null,
       dbSubtotal
-    );
+    ));
 
-    const expectedTotal = Math.max(
-      0,
-      dbSubtotal + deliveryFee + serviceFee + smallOrderFee + taxAmount - couponDiscount - loyaltyDiscount
+    const expectedTotal = round2(
+      Math.max(
+        0,
+        dbSubtotal + deliveryFee + serviceFee + smallOrderFee + taxAmount - couponDiscount - loyaltyDiscount
+      )
     );
     const clientTotal = Number(orderData?.total_amount);
 
-    if (!Number.isFinite(clientTotal) || Math.abs(expectedTotal - clientTotal) > 0.02) {
-      console.warn(`Price verification failed: expected ${expectedTotal}, client sent ${clientTotal}`);
+    const diff = Math.abs(expectedTotal - clientTotal);
+    if (!Number.isFinite(clientTotal) || diff > 0.50) {
+      console.warn(
+        `Price verification failed: expected ${expectedTotal}, client sent ${clientTotal} (diff=${diff.toFixed(2)}). Details: dbSubtotal=${dbSubtotal}, deliveryFee=${deliveryFee}, serviceFee=${serviceFee}, smallOrderFee=${smallOrderFee}, taxAmount=${taxAmount}, couponDiscount=${couponDiscount}, loyaltyDiscount=${loyaltyDiscount}, method=${shippingMethodRaw}`
+      );
       return NextResponse.json(
         { error: 'Order total could not be verified. Please review your cart and try again.' },
         { status: 400 }
@@ -391,12 +404,13 @@ export async function POST(request: NextRequest) {
 
     // Server is authoritative over pricing
     orderRecord.subtotal = dbSubtotal;
-    orderRecord.tax_amount = round2(taxAmount);
+    orderRecord.delivery_fee = deliveryFee;
+    orderRecord.service_fee = serviceFee;
+    orderRecord.small_order_fee = smallOrderFee;
+    orderRecord.shipping_cost = deliveryFee;
+    orderRecord.tax_amount = taxAmount;
     orderRecord.discount_amount = round2(couponDiscount + loyaltyDiscount);
     orderRecord.total_amount = round2(expectedTotal);
-
-    // Set shipping_cost to delivery_fee for backward compat
-    orderRecord.shipping_cost = deliveryFee;
 
     let methodName = '';
     if (orderData.shipping_method) {

@@ -283,14 +283,17 @@ export default function CheckoutPage() {
     calcDistance();
   }, [customerLocation, deliverySettings]);
 
-  const subtotal = getSubtotal();
-  const deliveryCost = deliveryMethod?.id === 'pickup' ? 0 : (calculatedFees.deliveryFee !== undefined ? calculatedFees.deliveryFee : getDeliveryCost());
-  const serviceFee = deliveryMethod?.id === 'pickup' ? 0 : calculatedFees.serviceFee;
-  const smallOrderFee = deliveryMethod?.id === 'pickup' ? 0 : calculatedFees.smallOrderFee;
-  const taxAmount = subtotal * 0.08;
-  const discountAmount = getDiscountAmount();
+  const subtotal = Math.round(getSubtotal() * 100) / 100;
+  const isPickupOrder = deliveryMethod?.id === 'pickup';
+  const baseDeliveryCost = isPickupOrder ? 0 : (calculatedFees.deliveryFee !== undefined ? calculatedFees.deliveryFee : getDeliveryCost());
+  const expressExtra = deliveryMethod?.id === 'express' ? 1.00 : 0;
+  const deliveryCost = isPickupOrder ? 0 : Math.round((baseDeliveryCost + expressExtra) * 100) / 100;
+  const serviceFee = isPickupOrder ? 0 : calculatedFees.serviceFee;
+  const smallOrderFee = isPickupOrder ? 0 : calculatedFees.smallOrderFee;
+  const taxAmount = Math.round(subtotal * 0.08 * 100) / 100;
+  const discountAmount = Math.round(getDiscountAmount() * 100) / 100;
   const loyaltyDiscountAmount = userLoyalty ? Math.round(subtotal * (userLoyalty.discountPercent / 100) * 100) / 100 : 0;
-  const total = Math.max(0, subtotal + deliveryCost + serviceFee + smallOrderFee + taxAmount - discountAmount - loyaltyDiscountAmount);
+  const total = Math.max(0, Math.round((subtotal + deliveryCost + serviceFee + smallOrderFee + taxAmount - discountAmount - loyaltyDiscountAmount) * 100) / 100);
 
   const validateStep = (step: CheckoutStep): boolean => {
     const errors: Record<string, string> = {};
