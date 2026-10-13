@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient, safeGetUser } from "@/lib/supabase/client";
 import { CheckCircle, XCircle, Clock, User, Phone, Car, MapPin, AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface DispatcherApplication {
   id: string;
@@ -224,59 +225,82 @@ export default function DispatcherApplicationsPage() {
         ))}
       </div>
 
-        {/* Applications Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredApplications.map((application) => (
-            <div
-              key={application.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => setSelectedApplication(application)}
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                    <User className="w-6 h-6 text-red-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{application.name}</h3>
-                    <p className="text-sm text-gray-600">{application.email}</p>
-                  </div>
-                </div>
-                <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(application.application_status)}`}>
-                  {getStatusIcon(application.application_status)}
-                  <span className="capitalize">{application.application_status}</span>
-                </div>
-              </div>
+        {/* Applications Grid: Strict 2x2 on Mobile, 3 Columns on Desktop with Full Gradients */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4.5">
+          {filteredApplications.map((application) => {
+            const isPending = application.application_status === 'pending';
+            const isApproved = application.application_status === 'approved';
+            const isRejected = application.application_status === 'rejected';
 
-              <div className="space-y-2 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4" />
-                  <span>{application.phone}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Car className="w-4 h-4" />
-                  <span>
-                    {application.vehicle_info.year} {application.vehicle_info.make} {application.vehicle_info.model}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  <span className="truncate">{application.current_location.address}</span>
-                </div>
-              </div>
+            const cardBg = isPending 
+              ? "bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600 text-white border-amber-400/40 shadow-amber-950/20" 
+              : isApproved
+                ? "bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-800 text-white border-emerald-400/40 shadow-emerald-950/20"
+                : "bg-gradient-to-br from-rose-700 via-red-800 to-slate-900 text-white border-rose-500/40 shadow-rose-950/20";
 
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <p className="text-xs text-gray-500">
-                  Applied: {new Date(application.created_at).toLocaleDateString()}
-                </p>
+            return (
+              <div
+                key={application.id}
+                className={cn(
+                  "rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-lg border transition-all cursor-pointer flex flex-col justify-between group relative overflow-hidden",
+                  cardBg
+                )}
+                onClick={() => setSelectedApplication(application)}
+              >
+                <div>
+                  <div className="flex items-start justify-between gap-1 mb-2.5">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center shrink-0">
+                      <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    </div>
+                    <span className="text-[9px] sm:text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-black/25 backdrop-blur-md border border-white/20 text-white shrink-0">
+                      {application.application_status}
+                    </span>
+                  </div>
+
+                  <h3 className="font-black text-xs sm:text-base text-white leading-tight truncate mb-0.5">
+                    {application.name}
+                  </h3>
+                  <p className="text-[10px] sm:text-xs text-white/80 font-medium truncate mb-2.5">
+                    {application.email}
+                  </p>
+
+                  {/* Inner Glass Details Box */}
+                  <div className="bg-black/20 backdrop-blur-md border border-white/20 rounded-xl p-2 sm:p-2.5 space-y-1 text-white text-[10px] sm:text-xs mb-3">
+                    <div className="flex items-center gap-1.5 truncate">
+                      <Phone className="w-3 h-3 shrink-0 opacity-80" />
+                      <span className="truncate">{application.phone}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 truncate">
+                      <Car className="w-3 h-3 shrink-0 opacity-80" />
+                      <span className="truncate">
+                        {application.vehicle_info.year} {application.vehicle_info.make}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-white/20 flex flex-col gap-1.5">
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedApplication(application);
+                    }}
+                    className="w-full py-1.5 px-2 bg-white text-slate-900 rounded-xl font-black text-[11px] sm:text-xs shadow-sm hover:bg-white/95 active:scale-95 transition-all min-h-[36px] flex items-center justify-center"
+                  >
+                    Review Application
+                  </button>
+                  <p className="text-[9px] text-white/70 text-center font-bold">
+                    Applied: {new Date(application.created_at).toLocaleDateString()}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {filteredApplications.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
-            No {filter !== 'all' ? filter : ''} applications found
+          <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 text-slate-500 shadow-sm">
+            No {filter !== 'all' ? filter : ''} dispatcher applications found
           </div>
         )}
 

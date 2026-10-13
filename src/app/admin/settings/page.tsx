@@ -157,255 +157,375 @@ export default function AdminSettingsPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8 pb-12">
+      {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-1 text-gray-900">Settings</h1>
-          <p className="text-gray-600">Configure your restaurant and delivery preferences.</p>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="p-1.5 rounded-lg bg-red-100 text-red-600">
+              <Store className="w-5 h-5" />
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">System Settings</h1>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-600 font-medium">Configure restaurant identity, delivery economics, driver compensation, and notifications.</p>
         </div>
         <button
           onClick={saveSettings}
           disabled={isSaving}
-          className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-red-600 text-white font-bold shadow-lg shadow-red-500/20 hover:scale-[1.02] transition-all disabled:opacity-50"
+          className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-bold text-sm shadow-lg shadow-red-500/25 active:scale-[0.98] transition-all disabled:opacity-50 min-h-[44px]"
         >
-          <Save className="w-4 h-4" /> {isSaving ? "Saving..." : "Save Changes"}
+          <Save className="w-4 h-4" /> {isSaving ? "Saving..." : "Save Settings"}
         </button>
       </div>
 
       {saveMessage && (
-        <div className={`p-4 rounded-xl ${saveMessage.includes("success") ? "bg-green-50 text-green-800 border border-green-200" : "bg-red-50 text-red-800 border border-red-200"}`}>
-          {saveMessage}
+        <div className={`p-4 rounded-2xl text-sm font-bold flex items-center gap-2.5 animate-in fade-in duration-150 ${saveMessage.includes("success") ? "bg-emerald-50 text-emerald-800 border border-emerald-200" : "bg-rose-50 text-rose-800 border border-rose-200"}`}>
+          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+          <span>{saveMessage}</span>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
-          {/* Restaurant Info */}
-          <div className="p-8 rounded-2xl bg-white border border-gray-200 shadow-sm">
-            <div className="flex items-center gap-3 mb-8">
-              <Store className="w-5 h-5 text-red-600" />
-              <h3 className="text-xl font-bold text-gray-900">Restaurant Information</h3>
+      {/* 4 Full-Bleed Gradient KPI Cards (Strict 2x2 Grid on Mobile) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+        {/* Base Delivery Fee */}
+        <div className="relative overflow-hidden p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-800 text-white shadow-xl shadow-blue-500/15 border border-white/10 flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
+              <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-600">Restaurant Name</label>
+            <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm">
+              Customer
+            </span>
+          </div>
+          <div>
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-blue-100/90 block">
+              Base Delivery Fee
+            </span>
+            <div className="text-xl sm:text-3xl font-black tracking-tight mt-0.5">
+              ${Number(delivery.delivery_fee).toFixed(2)}
+            </div>
+          </div>
+        </div>
+
+        {/* Service Fee */}
+        <div className="relative overflow-hidden p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-800 text-white shadow-xl shadow-emerald-500/15 border border-white/10 flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
+              <Store className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+            </div>
+            <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm">
+              Platform
+            </span>
+          </div>
+          <div>
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-emerald-100/90 block">
+              Service Fee (5 mi)
+            </span>
+            <div className="text-xl sm:text-3xl font-black tracking-tight mt-0.5">
+              ${Number(delivery.service_fee).toFixed(2)}
+            </div>
+          </div>
+        </div>
+
+        {/* Driver Base Pay */}
+        <div className="relative overflow-hidden p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-purple-600 via-fuchsia-600 to-purple-800 text-white shadow-xl shadow-purple-500/15 border border-white/10 flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
+              <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+            </div>
+            <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm">
+              Payout
+            </span>
+          </div>
+          <div>
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-purple-100/90 block">
+              Driver Base Pay
+            </span>
+            <div className="text-xl sm:text-3xl font-black tracking-tight mt-0.5">
+              ${Number(delivery.driver_base_pay).toFixed(2)}
+            </div>
+          </div>
+        </div>
+
+        {/* Per-Mile Rate */}
+        <div className="relative overflow-hidden p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-amber-500 via-orange-600 to-rose-600 text-white shadow-xl shadow-amber-500/15 border border-white/10 flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
+              <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+            </div>
+            <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm">
+              Mileage
+            </span>
+          </div>
+          <div>
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-amber-100/90 block">
+              Mileage Pay
+            </span>
+            <div className="text-xl sm:text-3xl font-black tracking-tight mt-0.5">
+              ${Number(delivery.driver_mileage_pay).toFixed(2)}/mi
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+        <div className="lg:col-span-2 space-y-6 sm:space-y-8">
+          {/* Restaurant Info */}
+          <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-md">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-red-600 to-orange-500 text-white flex items-center justify-center shadow-md">
+                <Store className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-slate-900">Restaurant Information</h3>
+                <p className="text-xs text-slate-500">Public profile displayed on digital store and receipts</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">Restaurant Name</label>
                 <input
                   type="text"
                   value={restaurant.restaurantName}
                   onChange={(e) => setRestaurant(prev => ({ ...prev, restaurantName: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-medium text-gray-900"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-bold text-sm text-slate-900"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-600">Phone</label>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">Phone</label>
                 <input
                   type="text"
                   value={restaurant.phone}
                   onChange={(e) => setRestaurant(prev => ({ ...prev, phone: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-medium text-gray-900"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-bold text-sm text-slate-900"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-600">Email</label>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">Email</label>
                 <input
                   type="email"
                   value={restaurant.email}
                   onChange={(e) => setRestaurant(prev => ({ ...prev, email: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-medium text-gray-900"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-bold text-sm text-slate-900"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-600">Currency</label>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">Currency</label>
                 <select
                   value={restaurant.currency}
                   onChange={(e) => setRestaurant(prev => ({ ...prev, currency: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-medium text-gray-900"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-bold text-sm text-slate-900"
                 >
                   <option>USD</option>
                   <option>NGN</option>
                   <option>GBP</option>
                 </select>
               </div>
-              <div className="md:col-span-2 space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-600">Address</label>
+              <div className="md:col-span-2 space-y-1.5">
+                <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">Physical Address</label>
                 <textarea
                   value={restaurant.address}
                   onChange={(e) => setRestaurant(prev => ({ ...prev, address: e.target.value }))}
-                  rows={3}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-medium resize-none text-gray-900"
+                  rows={2}
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-bold text-sm resize-none text-slate-900"
                 />
               </div>
             </div>
           </div>
 
           {/* Delivery Fee Settings */}
-          <div className="p-8 rounded-2xl bg-white border border-gray-200 shadow-sm">
-            <div className="flex items-center gap-3 mb-8">
-              <Truck className="w-5 h-5 text-red-600" />
-              <h3 className="text-xl font-bold text-gray-900">Delivery Fee Settings</h3>
+          <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-md">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md">
+                <Truck className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-slate-900">Delivery Fee Calculation</h3>
+                <p className="text-xs text-slate-500">Tiered distance rules applied dynamically during customer checkout</p>
+              </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-600">Base Delivery Fee ($)</label>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">Base Delivery Fee ($)</label>
                 <input
                   type="number"
                   step="0.01"
                   value={delivery.delivery_fee}
                   onChange={(e) => updateDelivery("delivery_fee", Number(e.target.value))}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-medium text-gray-900"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-bold text-sm text-slate-900"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-600">Service Fee ($)</label>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">Service Fee ($)</label>
                 <input
                   type="number"
                   step="0.01"
                   value={delivery.service_fee}
                   onChange={(e) => updateDelivery("service_fee", Number(e.target.value))}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-medium text-gray-900"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-bold text-sm text-slate-900"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-600">Service Fee Radius (miles)</label>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">Service Fee Radius (miles)</label>
                 <input
                   type="number"
                   step="0.1"
                   value={delivery.service_fee_radius_miles}
                   onChange={(e) => updateDelivery("service_fee_radius_miles", Number(e.target.value))}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-medium text-gray-900"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-bold text-sm text-slate-900"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-600">Per-Mile Rate After Radius ($)</label>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">Per-Mile Rate After Radius ($)</label>
                 <input
                   type="number"
                   step="0.01"
                   value={delivery.per_mile_rate}
                   onChange={(e) => updateDelivery("per_mile_rate", Number(e.target.value))}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-medium text-gray-900"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-bold text-sm text-slate-900"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-600">Free Delivery Radius (miles)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={delivery.free_delivery_radius_miles}
-                  onChange={(e) => updateDelivery("free_delivery_radius_miles", Number(e.target.value))}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-medium text-gray-900"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-600">Small Order Threshold ($)</label>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">Small Order Threshold ($)</label>
                 <input
                   type="number"
                   step="0.01"
                   value={delivery.small_order_threshold}
                   onChange={(e) => updateDelivery("small_order_threshold", Number(e.target.value))}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-medium text-gray-900"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-bold text-sm text-slate-900"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-600">Small Order Fee ($)</label>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">Small Order Fee ($)</label>
                 <input
                   type="number"
                   step="0.01"
                   value={delivery.small_order_fee}
                   onChange={(e) => updateDelivery("small_order_fee", Number(e.target.value))}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-medium text-gray-900"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-bold text-sm text-slate-900"
                 />
               </div>
             </div>
           </div>
 
           {/* Dispatcher Pay Settings */}
-          <div className="p-8 rounded-2xl bg-white border border-gray-200 shadow-sm">
-            <div className="flex items-center gap-3 mb-8">
-              <Truck className="w-5 h-5 text-red-600" />
-              <h3 className="text-xl font-bold text-gray-900">Dispatcher Pay Settings</h3>
+          <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-md">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center shadow-md">
+                <Truck className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-slate-900">Dispatcher & Driver Payout Formula</h3>
+                <p className="text-xs text-slate-500">Automatic per-delivery earnings credited to driver ledger upon delivery</p>
+              </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-600">Base Pay Per Delivery ($)</label>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">Base Pay Per Delivery ($)</label>
                 <input
                   type="number"
                   step="0.01"
                   value={delivery.driver_base_pay}
                   onChange={(e) => updateDelivery("driver_base_pay", Number(e.target.value))}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-medium text-gray-900"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-bold text-sm text-slate-900"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-600">Mileage Pay ($/mile)</label>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">Mileage Pay ($/mile)</label>
                 <input
                   type="number"
                   step="0.01"
                   value={delivery.driver_mileage_pay}
                   onChange={(e) => updateDelivery("driver_mileage_pay", Number(e.target.value))}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-medium text-gray-900"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-bold text-sm text-slate-900"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-600">Restaurant Latitude</label>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">Restaurant Latitude</label>
                 <input
                   type="number"
                   step="0.0001"
                   value={delivery.restaurant_lat}
                   onChange={(e) => updateDelivery("restaurant_lat", Number(e.target.value))}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-medium text-gray-900"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-bold text-sm text-slate-900"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-600">Restaurant Longitude</label>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">Restaurant Longitude</label>
                 <input
                   type="number"
                   step="0.0001"
                   value={delivery.restaurant_lng}
                   onChange={(e) => updateDelivery("restaurant_lng", Number(e.target.value))}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-medium text-gray-900"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none font-bold text-sm text-slate-900"
                 />
               </div>
             </div>
           </div>
         </div>
 
+        {/* Sidebar Controls */}
         <div className="space-y-6">
-          <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm">
-            <h4 className="font-bold mb-4 text-gray-900">Quick Actions</h4>
-            <div className="space-y-2">
+          <div className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-md">
+            <h4 className="font-black mb-4 text-slate-900 text-sm uppercase tracking-wider">Quick Controls</h4>
+            <div className="space-y-2.5">
               <button
                 type="button"
                 onClick={() => { setActiveModal("security"); setModalMessage(""); }}
-                className="w-full text-left px-4 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 active:bg-gray-200 transition-all flex items-center gap-3 cursor-pointer"
+                className="w-full text-left px-4 py-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 active:scale-[0.99] transition-all flex items-center justify-between border border-slate-100 min-h-[46px]"
               >
-                <Shield className="w-4 h-4 text-red-600" />
-                <span className="font-medium text-gray-900">Security Settings</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-red-100 text-red-600 flex items-center justify-center">
+                    <Shield className="w-4 h-4" />
+                  </div>
+                  <span className="font-extrabold text-xs text-slate-900">Security Credentials</span>
+                </div>
+                <span className="text-[10px] uppercase font-bold text-slate-400">Manage</span>
               </button>
+
               <button
                 type="button"
                 onClick={() => { setActiveModal("notifications"); setModalMessage(""); }}
-                className="w-full text-left px-4 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 active:bg-gray-200 transition-all flex items-center gap-3 cursor-pointer"
+                className="w-full text-left px-4 py-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 active:scale-[0.99] transition-all flex items-center justify-between border border-slate-100 min-h-[46px]"
               >
-                <Bell className="w-4 h-4 text-red-600" />
-                <span className="font-medium text-gray-900">Notification Preferences</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+                    <Bell className="w-4 h-4" />
+                  </div>
+                  <span className="font-extrabold text-xs text-slate-900">Sound & Alerts</span>
+                </div>
+                <span className="text-[10px] uppercase font-bold text-slate-400">Tune</span>
               </button>
+
               <button
                 type="button"
                 onClick={() => { setActiveModal("region"); setModalMessage(""); }}
-                className="w-full text-left px-4 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 active:bg-gray-200 transition-all flex items-center gap-3 cursor-pointer"
+                className="w-full text-left px-4 py-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 active:scale-[0.99] transition-all flex items-center justify-between border border-slate-100 min-h-[46px]"
               >
-                <Globe className="w-4 h-4 text-red-600" />
-                <span className="font-medium text-gray-900">Language & Region</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
+                    <Globe className="w-4 h-4" />
+                  </div>
+                  <span className="font-extrabold text-xs text-slate-900">Regional & Timezone</span>
+                </div>
+                <span className="text-[10px] uppercase font-bold text-slate-400">Edit</span>
               </button>
             </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm">
-            <h4 className="font-bold mb-2 text-gray-900">System Status</h4>
-            <div className="flex items-center gap-2 text-sm">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-gray-600">All systems operational</span>
+          {/* System Telemetry Status Box */}
+          <div className="p-6 rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-slate-700/60 text-white shadow-xl">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-black text-xs uppercase tracking-wider text-slate-400">Cloud Status</h4>
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live
+              </div>
             </div>
+            <p className="text-sm font-bold text-white mb-1">Spice Grille Production API</p>
+            <p className="text-xs text-slate-400">Database connected • Realtime WebSockets active</p>
           </div>
         </div>
       </div>

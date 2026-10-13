@@ -251,118 +251,127 @@ export default function AdminBlogPage() {
         </button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm">
-          <p className="text-xs font-black uppercase tracking-widest text-gray-600 mb-2">Total Posts</p>
-          <h3 className="text-2xl font-black text-gray-900">{loading ? "—" : posts.length}</h3>
+      {/* Stats Cards - Strict 2x2 on Mobile with Full Bleed Gradients */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
+        <div className="relative overflow-hidden p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-700 to-indigo-900 text-white shadow-xl shadow-indigo-500/15 border border-white/10 flex flex-col justify-between">
+          <p className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-indigo-200/90 mb-1">Total Stories</p>
+          <h3 className="text-xl sm:text-3xl font-black text-white">{loading ? "—" : posts.length}</h3>
         </div>
-        <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm">
-          <p className="text-xs font-black uppercase tracking-widest text-gray-600 mb-2">Published</p>
-          <h3 className="text-2xl font-black text-green-600">
+        <div className="relative overflow-hidden p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-800 text-white shadow-xl shadow-emerald-500/15 border border-white/10 flex flex-col justify-between">
+          <p className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-emerald-200/90 mb-1">Published</p>
+          <h3 className="text-xl sm:text-3xl font-black text-white">
             {loading ? "—" : posts.filter((p) => p.status === "published").length}
           </h3>
         </div>
-        <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm">
-          <p className="text-xs font-black uppercase tracking-widest text-gray-600 mb-2">Drafts</p>
-          <h3 className="text-2xl font-black text-orange-600">
+        <div className="relative overflow-hidden p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600 text-white shadow-xl shadow-amber-500/15 border border-white/10 flex flex-col justify-between">
+          <p className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-amber-200/90 mb-1">Drafts</p>
+          <h3 className="text-xl sm:text-3xl font-black text-white">
             {loading ? "—" : posts.filter((p) => p.status === "draft").length}
           </h3>
         </div>
-        <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm">
-          <p className="text-xs font-black uppercase tracking-widest text-gray-600 mb-2">Total Views</p>
-          <h3 className="text-2xl font-black text-gray-900">12.4K</h3>
+        <div className="relative overflow-hidden p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-blue-600 via-cyan-600 to-blue-800 text-white shadow-xl shadow-blue-500/15 border border-white/10 flex flex-col justify-between">
+          <p className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-blue-200/90 mb-1">Total Views</p>
+          <h3 className="text-xl sm:text-3xl font-black text-white">12.4K</h3>
         </div>
       </div>
 
-      {/* Mobile Posts Cards View */}
-      <div className="md:hidden space-y-4">
+      {/* Mobile Posts Cards View - STRICT 2x2 GRID */}
+      <div className="grid grid-cols-2 gap-2.5 md:hidden">
         {loading ? (
-          <div className="p-4 bg-white rounded-2xl animate-pulse space-y-3">
-            <div className="h-5 bg-slate-200 rounded w-1/3" />
-            <div className="h-4 bg-slate-200 rounded w-2/3" />
-          </div>
+          [1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-44 bg-slate-200 rounded-2xl animate-pulse" />
+          ))
         ) : posts.length === 0 ? (
-          <div className="p-8 text-center bg-white rounded-2xl text-slate-500">
-            No blog posts yet.
+          <div className="col-span-2 p-8 text-center bg-white rounded-2xl border border-slate-200 text-slate-500 font-medium">
+            No blog posts published yet.
           </div>
         ) : (
-          posts.map((post) => (
-            <div key={post.id} className="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-3">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <h3 className="font-bold text-slate-900 text-base">{post.title}</h3>
-                  <p className="text-xs text-slate-500 line-clamp-2 mt-0.5">{post.excerpt}</p>
-                </div>
-                <button
-                  onClick={async () => {
-                    const newStatus = post.status === "published" ? "draft" : "published";
-                    try {
-                      const res = await fetch(`/api/admin/blog/${post.id}`, {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ status: newStatus }),
-                      });
-                      if (res.ok) {
-                        setPosts(posts.map((p) => (p.id === post.id ? { ...p, status: newStatus } : p)));
+          posts.map((post) => {
+            const isPub = post.status === "published";
+            return (
+              <div 
+                key={post.id} 
+                className={cn(
+                  "relative rounded-2xl p-3 shadow-lg border flex flex-col justify-between overflow-hidden bg-gradient-to-br min-h-[190px]",
+                  isPub 
+                    ? "from-emerald-700 via-teal-800 to-emerald-950 text-white border-emerald-400/30" 
+                    : "from-slate-700 via-slate-800 to-slate-900 text-white border-slate-600/40"
+                )}
+              >
+                {/* Top status toggle pill */}
+                <div className="flex items-start justify-between gap-1 mb-1.5">
+                  <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-white/20 backdrop-blur-md border border-white/20 truncate">
+                    {post.categories?.[0]?.name || "Story"}
+                  </span>
+                  <button
+                    onClick={async () => {
+                      const newStatus = post.status === "published" ? "draft" : "published";
+                      try {
+                        const res = await fetch(`/api/admin/blog/${post.id}`, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ status: newStatus }),
+                        });
+                        if (res.ok) {
+                          setPosts(posts.map((p) => (p.id === post.id ? { ...p, status: newStatus } : p)));
+                        }
+                      } catch (error) {
+                        console.error("Error updating status:", error);
                       }
-                    } catch (error) {
-                      console.error("Error updating status:", error);
-                    }
-                  }}
-                  className={cn(
-                    "px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition-all shrink-0",
-                    post.status === "published"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-orange-100 text-orange-700"
-                  )}
-                >
-                  {post.status === "published" ? "Live" : "Draft"}
-                </button>
-              </div>
-
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {post.categories.map((c) => (
-                  <span key={c.id} className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-600">
-                    {c.name}
-                  </span>
-                ))}
-                {post.tags.map((t) => (
-                  <span key={t.id} className="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-600">
-                    #{t.name}
-                  </span>
-                ))}
-              </div>
-
-              <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                <span className="text-xs text-slate-400">
-                  {new Date(post.published_at || post.created_at || new Date()).toLocaleDateString()}
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => window.open(`/blog/${post.slug}`, "_blank")}
-                    className="min-h-[40px] px-3 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs flex items-center gap-1.5"
+                    }}
+                    className={cn(
+                      "px-2 py-0.5 rounded-md text-[9px] font-black uppercase transition-all backdrop-blur-md shrink-0",
+                      isPub
+                        ? "bg-emerald-400/30 text-emerald-200 border border-emerald-300/40"
+                        : "bg-amber-500/30 text-amber-200 border border-amber-400/40"
+                    )}
                   >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    View
-                  </button>
-                  <button
-                    onClick={() => openEditModal(post)}
-                    className="min-h-[40px] px-3.5 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center gap-1.5"
-                  >
-                    <Edit2 className="w-3.5 h-3.5" />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(post.id)}
-                    className="min-h-[40px] px-3 rounded-xl bg-rose-50 text-rose-600 font-bold text-xs flex items-center gap-1"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    {isPub ? "Live" : "Draft"}
                   </button>
                 </div>
+
+                {/* Title & Excerpt */}
+                <div className="min-w-0">
+                  <h3 className="font-extrabold text-white text-xs sm:text-sm line-clamp-2 leading-tight">
+                    {post.title}
+                  </h3>
+                  <p className="text-[10px] text-white/70 line-clamp-1 mt-0.5">
+                    {post.excerpt || post.slug}
+                  </p>
+                </div>
+
+                {/* Date and Actions */}
+                <div className="pt-2 border-t border-white/15 flex items-center justify-between gap-1 mt-2">
+                  <span className="text-[9px] text-white/70 font-semibold truncate">
+                    {new Date(post.published_at || post.created_at || new Date()).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                  </span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => window.open(`/blog/${post.slug}`, "_blank")}
+                      className="w-7 h-7 rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur-md flex items-center justify-center text-white active:scale-95 transition-all"
+                      title="View Post"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => openEditModal(post)}
+                      className="w-7 h-7 rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur-md flex items-center justify-center text-white active:scale-95 transition-all"
+                      title="Edit Post"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(post.id)}
+                      className="w-7 h-7 rounded-lg bg-rose-500/30 hover:bg-rose-500/50 backdrop-blur-md flex items-center justify-center text-rose-200 active:scale-95 transition-all"
+                      title="Delete Post"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 

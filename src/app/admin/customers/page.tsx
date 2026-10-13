@@ -92,51 +92,53 @@ export default function AdminCustomersPage() {
         </div>
       ) : (
         <>
-          {/* Mobile Cards View */}
-          <div className="md:hidden space-y-3">
+          {/* Mobile Customers Grid: Strict 2x2 on Mobile */}
+          <div className="md:hidden grid grid-cols-2 gap-2.5">
             {filteredCustomers.map((customer) => (
               <div 
                 key={customer.id}
-                className="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-3"
+                className="p-3 rounded-2xl bg-white border border-slate-200/90 shadow-sm flex flex-col justify-between hover:shadow-md transition-all relative overflow-hidden"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center font-bold text-red-600 text-sm shrink-0">
-                    {customer.full_name?.[0]?.toUpperCase() || "C"}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-bold text-slate-900 text-base leading-tight truncate">
-                      {customer.full_name || "Guest Customer"}
-                    </h3>
-                    <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5">
-                      <Calendar className="w-3 h-3 text-slate-400" />
-                      <span>Joined {new Date(customer.created_at).toLocaleDateString()}</span>
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center font-black text-white text-xs shrink-0 shadow-sm shadow-red-500/20">
+                      {customer.full_name?.[0]?.toUpperCase() || "C"}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-extrabold text-slate-900 text-xs sm:text-sm leading-tight truncate">
+                        {customer.full_name || "Guest Customer"}
+                      </h3>
+                      <div className="flex items-center gap-1 text-[10px] text-slate-400 mt-0.5">
+                        <Calendar className="w-2.5 h-2.5 text-slate-400" />
+                        <span>{new Date(customer.created_at).toLocaleDateString()}</span>
+                      </div>
                     </div>
                   </div>
+
+                  {customer.phone && (
+                    <div className="flex items-center gap-1.5 text-[11px] text-slate-700 bg-slate-50 p-2 rounded-xl border border-slate-100 mb-2 truncate">
+                      <Phone className="w-3 h-3 text-slate-400 shrink-0" />
+                      <span className="font-bold truncate">{customer.phone}</span>
+                    </div>
+                  )}
                 </div>
 
-                {customer.phone && (
-                  <div className="flex items-center gap-2 text-sm text-slate-700 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                    <Phone className="w-4 h-4 text-slate-400 shrink-0" />
-                    <span className="font-medium">{customer.phone}</span>
-                  </div>
-                )}
-
-                <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
+                <div className="pt-2 border-t border-slate-100 flex flex-col gap-1.5">
                   {customer.phone ? (
                     <a
                       href={`tel:${customer.phone}`}
-                      className="flex-1 min-h-[42px] px-3 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold text-xs flex items-center justify-center gap-1.5 border border-emerald-200 transition-colors"
+                      className="w-full min-h-[36px] px-2 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-black text-[11px] flex items-center justify-center gap-1 border border-emerald-200 transition-colors"
                     >
-                      <Phone className="w-3.5 h-3.5" />
-                      Call Customer
+                      <Phone className="w-3 h-3" />
+                      Call
                     </a>
                   ) : null}
                   <Link
                     href={`/admin/orders?q=${encodeURIComponent(customer.full_name || "")}`}
-                    className="flex-1 min-h-[42px] px-3 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                    className="w-full min-h-[36px] px-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] flex items-center justify-center gap-1 transition-colors"
                   >
-                    <ShoppingBag className="w-3.5 h-3.5" />
-                    View Orders
+                    <ShoppingBag className="w-3 h-3" />
+                    Orders
                   </Link>
                 </div>
               </div>

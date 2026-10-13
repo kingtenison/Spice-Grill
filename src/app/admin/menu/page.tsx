@@ -716,60 +716,56 @@ export default function AdminMenuPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-100 rounded-xl">
-                <Package className="w-6 h-6 text-blue-600" />
+        {/* Stats Overview - 2x2 on Mobile, 4 Columns on Desktop with Full-Bleed Gradients */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4.5 mb-6 sm:mb-8">
+          <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-800 text-white shadow-lg shadow-blue-950/20 relative overflow-hidden group">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center shrink-0">
+                <Package className="w-5 h-5 text-white" />
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Total Items</p>
-                <p className="text-2xl font-bold text-gray-900">{items.length}</p>
-              </div>
+              <span className="text-[10px] sm:text-xs font-black uppercase px-2 py-0.5 rounded-full bg-black/20 backdrop-blur-md border border-white/20 text-blue-100">Catalog</span>
             </div>
+            <p className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-blue-100/80 mb-0.5">Total Dishes</p>
+            <p className="text-xl sm:text-3xl font-black text-white tracking-tight">{items.length}</p>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-green-100 rounded-xl">
-                <CheckCircle2 className="w-6 h-6 text-green-600" />
+          <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-800 text-white shadow-lg shadow-emerald-950/20 relative overflow-hidden group">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-5 h-5 text-white" />
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Available</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {items.filter(item => item.is_available).length}
-                </p>
-              </div>
+              <span className="text-[10px] sm:text-xs font-black uppercase px-2 py-0.5 rounded-full bg-black/20 backdrop-blur-md border border-white/20 text-emerald-100">Live</span>
             </div>
+            <p className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-emerald-100/80 mb-0.5">Available Now</p>
+            <p className="text-xl sm:text-3xl font-black text-white tracking-tight">
+              {items.filter(item => item.is_available).length}
+            </p>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-orange-100 rounded-xl">
-                <AlertTriangle className="w-6 h-6 text-orange-600" />
+          <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-amber-500 via-orange-600 to-rose-600 text-white shadow-lg shadow-amber-950/20 relative overflow-hidden group">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-white" />
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Low Stock</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {items.filter(item => item.stock_quantity < 10).length}
-                </p>
-              </div>
+              <span className="text-[10px] sm:text-xs font-black uppercase px-2 py-0.5 rounded-full bg-black/20 backdrop-blur-md border border-white/20 text-amber-100">Alert</span>
             </div>
+            <p className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-amber-100/80 mb-0.5">Low Stock (&lt;10)</p>
+            <p className="text-xl sm:text-3xl font-black text-white tracking-tight">
+              {items.filter(item => item.stock_quantity < 10).length}
+            </p>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-red-100 rounded-xl">
-                <DollarSign className="w-6 h-6 text-red-600" />
+          <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-purple-600 via-fuchsia-600 to-purple-800 text-white shadow-lg shadow-purple-950/20 relative overflow-hidden group">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center shrink-0">
+                <DollarSign className="w-5 h-5 text-white" />
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Avg Price</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  ${items.length > 0 ? (items.reduce((sum, item) => sum + item.price, 0) / items.length).toFixed(2) : '0.00'}
-                </p>
-              </div>
+              <span className="text-[10px] sm:text-xs font-black uppercase px-2 py-0.5 rounded-full bg-black/20 backdrop-blur-md border border-white/20 text-purple-100">Pricing</span>
             </div>
+            <p className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-purple-100/80 mb-0.5">Average Price</p>
+            <p className="text-xl sm:text-3xl font-black text-white tracking-tight">
+              ${items.length > 0 ? (items.reduce((sum, item) => sum + item.price, 0) / items.length).toFixed(2) : '0.00'}
+            </p>
           </div>
         </div>
 
@@ -902,34 +898,32 @@ export default function AdminMenuPage() {
           )}
         </div>
 
-        {/* Items Grid/List */}
+        {/* Items Grid/List: Strict 2x2 Grid on Mobile, 3-4 Cols on Desktop */}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4.5">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl p-6 border border-gray-200">
-                <div className="animate-pulse space-y-4">
-                  <div className="aspect-square bg-gray-200 rounded-xl"></div>
-                  <div className="space-y-2">
-                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                  </div>
+              <div key={i} className="bg-white rounded-2xl sm:rounded-3xl p-3 sm:p-5 border border-slate-200/80 shadow-sm animate-pulse space-y-3">
+                <div className="aspect-square bg-slate-200 rounded-xl sm:rounded-2xl"></div>
+                <div className="space-y-2">
+                  <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-slate-200 rounded w-1/2"></div>
                 </div>
               </div>
             ))}
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className="text-center py-12">
-            <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No menu items found</h3>
-            <p className="text-gray-600 mb-6">
+          <div className="text-center py-12 bg-white rounded-3xl border border-slate-200/80 p-8 shadow-sm">
+            <Package className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-slate-900 mb-2">No menu items found</h3>
+            <p className="text-slate-500 mb-6 text-sm">
               {searchQuery || selectedCategory !== 'all'
-                ? "Try adjusting your search or filters"
-                : "Get started by adding your first menu item"
+                ? "Try adjusting your search or category filters"
+                : "Get started by adding your first dish to the menu"
               }
             </p>
             <button
               onClick={() => setShowModal(true)}
-              className="px-6 py-3 bg-red-600 text-white font-medium rounded-xl hover:bg-red-700 transition-all"
+              className="px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all shadow-md shadow-red-600/20 active:scale-95"
             >
               Add Your First Item
             </button>
@@ -937,198 +931,193 @@ export default function AdminMenuPage() {
         ) : (
           <div className={cn(
             viewMode === 'grid'
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              ? "grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4.5"
               : "space-y-4"
           )}>
             {filteredItems.map((item) => (
               <div
                 key={item.id}
                 className={cn(
-                  "bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all group",
-                  viewMode === 'grid' ? "shadow-sm" : "shadow-sm",
+                  "bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl overflow-hidden hover:shadow-lg transition-all group flex flex-col justify-between shadow-sm",
                   selectedItems.has(item.id) && "ring-2 ring-red-500"
                 )}
               >
-                {/* Selection Checkbox */}
-                <div className="p-4 pb-0">
-                  <div className="flex items-center justify-between mb-4">
-                    <div
-                      className="flex items-center gap-3 cursor-pointer"
-                      onClick={() => toggleItemSelection(item.id)}
-                    >
-                      {selectedItems.has(item.id) ? (
-                        <CheckSquare className="w-5 h-5 text-red-600" />
-                      ) : (
-                        <Square className="w-5 h-5 text-gray-400 hover:text-red-600" />
-                      )}
-                    </div>
+                <div>
+                  {/* Selection Checkbox & View Icon */}
+                  <div className="p-2.5 sm:p-3.5 pb-2">
+                    <div className="flex items-center justify-between">
+                      <div
+                        className="flex items-center gap-2 cursor-pointer p-1"
+                        onClick={() => toggleItemSelection(item.id)}
+                      >
+                        {selectedItems.has(item.id) ? (
+                          <CheckSquare className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
+                        ) : (
+                          <Square className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 hover:text-red-600" />
+                        )}
+                      </div>
 
-                    {/* View Details Button */}
-                    <div className="relative">
+                      {/* View Details Button */}
                       <button
-                        className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
+                        className="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
                         onClick={() => handleViewItem(item.id)}
                         title="View item details"
                       >
-                        <Eye className="w-4 h-4" />
+                        <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       </button>
                     </div>
                   </div>
-                </div>
 
-                {/* Image */}
-                <div className="aspect-square relative overflow-hidden">
-                  {item.images && item.images.length > 0 ? (
-                    <div className="relative w-full h-full">
-                      <img
-                        src={item.images[0]}
-                        alt={item.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      {item.images.length > 1 && (
-                        <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-black/50 backdrop-blur-sm rounded-full px-2 py-1">
-                          <Upload className="w-3 h-3 text-white" />
-                          <span className="text-xs text-white font-medium">{item.images.length}</span>
+                  {/* Image Container with Badges */}
+                  <div className="aspect-square relative overflow-hidden mx-2.5 sm:mx-3 rounded-xl sm:rounded-2xl bg-slate-100">
+                    {item.images && item.images.length > 0 ? (
+                      <div className="relative w-full h-full">
+                        <img
+                          src={item.images[0]}
+                          alt={item.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        {item.images.length > 1 && (
+                          <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/60 backdrop-blur-md rounded-full px-2 py-0.5 border border-white/20">
+                            <Upload className="w-2.5 h-2.5 text-white" />
+                            <span className="text-[10px] text-white font-bold">{item.images.length}</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="w-full h-full bg-slate-100 flex items-center justify-center">
+                        <Package className="w-8 h-8 text-slate-400" />
+                      </div>
+                    )}
+
+                    {/* Status Badge */}
+                    <div className="absolute top-2 right-2">
+                      <div className={cn(
+                        "px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black backdrop-blur-md border flex items-center gap-1 shadow-sm",
+                        item.is_available 
+                          ? "bg-emerald-600/90 text-white border-emerald-400/30" 
+                          : "bg-rose-600/90 text-white border-rose-400/30"
+                      )}>
+                        {item.is_available ? <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> : <XCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
+                        <span className="hidden sm:inline">{item.is_available ? "Available" : "Unavailable"}</span>
+                      </div>
+                    </div>
+
+                    {/* Low Stock Warning */}
+                    {item.stock_quantity < 10 && (
+                      <div className="absolute top-2 left-2">
+                        <div className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/90 text-white backdrop-blur-md border border-amber-300/30 flex items-center gap-1 shadow-sm">
+                          <AlertTriangle className="w-2.5 h-2.5" />
+                          <span>Low</span>
                         </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                      <Package className="w-8 h-8 text-gray-400" />
-                    </div>
-                  )}
-
-                  {/* Status Badge */}
-                  <div className="absolute top-3 right-3">
-                    <div className={cn(
-                      "px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1",
-                      item.is_available ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                    )}>
-                      {item.is_available ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
-                      {item.is_available ? "Available" : "Unavailable"}
-                    </div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Low Stock Warning */}
-                  {item.stock_quantity < 10 && (
-                    <div className="absolute top-3 left-3">
-                      <div className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 flex items-center gap-1">
-                        <AlertTriangle className="w-3 h-3" />
-                        Low Stock
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Content */}
-                <div className="p-4">
-                  {inlineEditing === item.id ? (
-                    <div className="space-y-3">
-                      <input
-                        type="text"
-                        value={inlineFormData.name || ''}
-                        onChange={(e) => setInlineFormData(prev => ({ ...prev, name: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-red-500 outline-none"
-                        placeholder="Item name"
-                      />
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="w-4 h-4 text-gray-400" />
+                  {/* Content Area */}
+                  <div className="p-2.5 sm:p-4">
+                    {inlineEditing === item.id ? (
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          value={inlineFormData.name || ''}
+                          onChange={(e) => setInlineFormData(prev => ({ ...prev, name: e.target.value }))}
+                          className="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold focus:border-red-500 outline-none"
+                          placeholder="Dish name"
+                        />
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-slate-400">$</span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={inlineFormData.price || ''}
+                            onChange={(e) => setInlineFormData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                            className="flex-1 px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold focus:border-red-500 outline-none"
+                            placeholder="Price"
+                          />
+                        </div>
                         <input
                           type="number"
-                          step="0.01"
-                          value={inlineFormData.price || ''}
-                          onChange={(e) => setInlineFormData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
-                          className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-red-500 outline-none"
-                          placeholder="Price"
+                          value={inlineFormData.stock_quantity || ''}
+                          onChange={(e) => setInlineFormData(prev => ({ ...prev, stock_quantity: parseInt(e.target.value) || 0 }))}
+                          className="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold focus:border-red-500 outline-none"
+                          placeholder="Stock qty"
                         />
+                        <div className="flex gap-1.5 pt-1">
+                          <button
+                            onClick={() => saveInlineEdit(item.id)}
+                            className="flex-1 py-1.5 bg-red-600 text-white text-xs font-black rounded-xl hover:bg-red-700"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => setInlineEditing(null)}
+                            className="py-1.5 px-3 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-50"
+                          >
+                            Cancel
+                          </button>
+                        </div>
                       </div>
-                      <input
-                        type="number"
-                        value={inlineFormData.stock_quantity || ''}
-                        onChange={(e) => setInlineFormData(prev => ({ ...prev, stock_quantity: parseInt(e.target.value) || 0 }))}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-red-500 outline-none"
-                        placeholder="Stock quantity"
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => saveInlineEdit(item.id)}
-                          className="flex-1 px-3 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700"
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={() => setInlineEditing(null)}
-                          className="px-3 py-2 border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="mb-2">
-                        <h3 className="font-semibold text-gray-900 text-lg leading-tight mb-1">
-                          {item.name}
-                        </h3>
-                        <p className="text-sm text-gray-600 line-clamp-2">
-                          {item.description}
-                        </p>
-                      </div>
+                    ) : (
+                      <>
+                        <div className="mb-1.5">
+                          <h3 className="font-extrabold text-slate-900 text-xs sm:text-base leading-snug truncate">
+                            {item.name}
+                          </h3>
+                          <p className="text-[11px] sm:text-xs text-slate-500 line-clamp-1 mt-0.5">
+                            {item.description || "No description provided"}
+                          </p>
+                        </div>
 
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="w-4 h-4 text-red-600" />
-                          <span className="text-xl font-bold text-red-600">
-                            {item.price.toFixed(2)}
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm sm:text-lg font-black text-red-600">
+                            ${item.price.toFixed(2)}
+                          </span>
+                          <span className={cn(
+                            "text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-md",
+                            item.stock_quantity < 10 ? "bg-amber-50 text-amber-700" : "bg-slate-100 text-slate-600"
+                          )}>
+                            {item.stock_quantity} left
                           </span>
                         </div>
-                        <span className={cn(
-                          "text-sm font-medium",
-                          item.stock_quantity < 10 ? "text-orange-600" : "text-gray-600"
-                        )}>
-                          {item.stock_quantity} in stock
-                        </span>
-                      </div>
+                      </>
+                    )}
+                  </div>
+                </div>
 
-                      <div className="pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2">
-                        <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-lg">
-                          {item.categories?.name || "Uncategorized"}
-                        </span>
+                {/* Card Bottom Controls */}
+                <div className="p-2.5 sm:p-3.5 pt-0 border-t border-slate-100 mt-auto">
+                  <div className="flex items-center justify-between gap-1.5 pt-2">
+                    {/* Availability Toggle */}
+                    <button
+                      onClick={() => handleToggleAvailability(item)}
+                      className={cn(
+                        "flex-1 min-h-[36px] sm:min-h-[38px] px-2 py-1 rounded-xl text-[10px] sm:text-xs font-black transition-all flex items-center justify-center gap-1 active:scale-95",
+                        item.is_available
+                          ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200"
+                          : "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"
+                      )}
+                      title={item.is_available ? "Set unavailable" : "Set available"}
+                    >
+                      {item.is_available ? "In Stock" : "Sold Out"}
+                    </button>
 
-                        <div className="flex items-center gap-1.5">
-                          {/* Availability Toggle */}
-                          <button
-                            onClick={() => handleToggleAvailability(item)}
-                            className={cn(
-                              "px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1",
-                              item.is_available
-                                ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200"
-                                : "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"
-                            )}
-                            title={item.is_available ? "Click to set unavailable" : "Click to set available"}
-                          >
-                            {item.is_available ? "In Stock" : "Sold Out"}
-                          </button>
-
-                          <button
-                            onClick={() => handleEditItem(item.id)}
-                            className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
-                            title="Full edit"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteItem(item.id)}
-                            disabled={deleting === item.id}
-                            className="p-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors disabled:opacity-50 min-h-[36px] min-w-[36px] flex items-center justify-center"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    </>
-                  )}
+                    <button
+                      onClick={() => handleEditItem(item.id)}
+                      className="min-h-[36px] sm:min-h-[38px] min-w-[36px] sm:min-w-[38px] rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex items-center justify-center shrink-0 active:scale-95"
+                      title="Edit dish"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteItem(item.id)}
+                      disabled={deleting === item.id}
+                      className="min-h-[36px] sm:min-h-[38px] min-w-[36px] sm:min-w-[38px] rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors disabled:opacity-50 flex items-center justify-center shrink-0 active:scale-95"
+                      title="Delete dish"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
