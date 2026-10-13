@@ -275,8 +275,99 @@ export default function AdminBlogPage() {
         </div>
       </div>
 
-      {/* Posts Table */}
-      <div className="rounded-2xl bg-white border border-gray-200 overflow-hidden shadow-sm">
+      {/* Mobile Posts Cards View */}
+      <div className="md:hidden space-y-4">
+        {loading ? (
+          <div className="p-4 bg-white rounded-2xl animate-pulse space-y-3">
+            <div className="h-5 bg-slate-200 rounded w-1/3" />
+            <div className="h-4 bg-slate-200 rounded w-2/3" />
+          </div>
+        ) : posts.length === 0 ? (
+          <div className="p-8 text-center bg-white rounded-2xl text-slate-500">
+            No blog posts yet.
+          </div>
+        ) : (
+          posts.map((post) => (
+            <div key={post.id} className="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h3 className="font-bold text-slate-900 text-base">{post.title}</h3>
+                  <p className="text-xs text-slate-500 line-clamp-2 mt-0.5">{post.excerpt}</p>
+                </div>
+                <button
+                  onClick={async () => {
+                    const newStatus = post.status === "published" ? "draft" : "published";
+                    try {
+                      const res = await fetch(`/api/admin/blog/${post.id}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ status: newStatus }),
+                      });
+                      if (res.ok) {
+                        setPosts(posts.map((p) => (p.id === post.id ? { ...p, status: newStatus } : p)));
+                      }
+                    } catch (error) {
+                      console.error("Error updating status:", error);
+                    }
+                  }}
+                  className={cn(
+                    "px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition-all shrink-0",
+                    post.status === "published"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-orange-100 text-orange-700"
+                  )}
+                >
+                  {post.status === "published" ? "Live" : "Draft"}
+                </button>
+              </div>
+
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {post.categories.map((c) => (
+                  <span key={c.id} className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-600">
+                    {c.name}
+                  </span>
+                ))}
+                {post.tags.map((t) => (
+                  <span key={t.id} className="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+                    #{t.name}
+                  </span>
+                ))}
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-xs text-slate-400">
+                  {new Date(post.published_at || post.created_at || new Date()).toLocaleDateString()}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => window.open(`/blog/${post.slug}`, "_blank")}
+                    className="min-h-[40px] px-3 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs flex items-center gap-1.5"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    View
+                  </button>
+                  <button
+                    onClick={() => openEditModal(post)}
+                    className="min-h-[40px] px-3.5 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center gap-1.5"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(post.id)}
+                    className="min-h-[40px] px-3 rounded-xl bg-rose-50 text-rose-600 font-bold text-xs flex items-center gap-1"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop Posts Table */}
+      <div className="hidden md:block rounded-2xl bg-white border border-gray-200 overflow-hidden shadow-sm">
         <table className="w-full text-left">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-500">
@@ -395,24 +486,24 @@ export default function AdminBlogPage() {
                     </span>
                   </td>
                   <td className="px-6 py-5">
-                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => window.open(`/blog/${post.slug}`, "_blank")}
-                        className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
+                        className="p-2 rounded-lg bg-gray-50 hover:bg-blue-50 hover:text-blue-600 transition-all"
                         title="View"
                       >
                         <ExternalLink className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => openEditModal(post)}
-                        className="p-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition-all"
+                        className="p-2 rounded-lg bg-gray-50 hover:bg-orange-50 hover:text-orange-600 transition-all"
                         title="Edit"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(post.id)}
-                        className="p-2 rounded-lg hover:bg-red-50 hover:text-red-600 transition-all"
+                        className="p-2 rounded-lg bg-gray-50 hover:bg-red-50 hover:text-red-600 transition-all"
                         title="Delete"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -425,6 +516,7 @@ export default function AdminBlogPage() {
           </tbody>
         </table>
       </div>
+
 
       {/* Create/Edit Modal */}
       <AnimatePresence>

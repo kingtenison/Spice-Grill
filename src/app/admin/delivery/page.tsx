@@ -298,22 +298,21 @@ export default function DeliveryDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Delivery Dashboard</h1>
-            <p className="text-gray-600">Track and manage all deliveries in real-time</p>
-          </div>
-          <button
-            onClick={fetchData}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Refresh
-          </button>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Delivery Fleet</h1>
+          <p className="text-sm text-slate-600 mt-1">Track driver routes, dispatch assignments, and live orders.</p>
         </div>
+        <button
+          onClick={fetchData}
+          className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all font-semibold text-sm shadow-sm active:scale-95 min-h-[44px]"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Refresh
+        </button>
+      </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -476,14 +475,14 @@ export default function DeliveryDashboard() {
               )}
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-slate-100">
                 {!delivery.dispatchers && delivery.status === 'ready_for_pickup' && (
                   <button
                     onClick={() => {
                       setSelectedDelivery(delivery);
                       setShowAssignModal(true);
                     }}
-                    className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    className="min-h-[44px] flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-xl font-bold text-sm hover:bg-red-700 active:scale-95 transition-all shadow-sm shadow-red-600/20"
                   >
                     <User className="w-4 h-4" />
                     Assign Dispatcher
@@ -493,7 +492,7 @@ export default function DeliveryDashboard() {
                 {delivery.status === 'assigned' && (
                   <button
                     onClick={() => updateDeliveryStatus(delivery.id, 'picked_up')}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="min-h-[44px] flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
                   >
                     <Truck className="w-4 h-4" />
                     Mark Picked Up
@@ -503,7 +502,7 @@ export default function DeliveryDashboard() {
                 {delivery.status === 'picked_up' && (
                   <button
                     onClick={() => updateDeliveryStatus(delivery.id, 'on_the_way')}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    className="min-h-[44px] flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-xl font-bold text-sm hover:bg-green-700 active:scale-95 transition-all shadow-sm"
                   >
                     <Navigation className="w-4 h-4" />
                     Mark On the Way
@@ -513,7 +512,7 @@ export default function DeliveryDashboard() {
                 {delivery.status === 'on_the_way' && (
                   <button
                     onClick={() => updateDeliveryStatus(delivery.id, 'arrived')}
-                    className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+                    className="min-h-[44px] flex items-center gap-2 px-4 py-2.5 bg-teal-600 text-white rounded-xl font-bold text-sm hover:bg-teal-700 active:scale-95 transition-all shadow-sm"
                   >
                     <MapPin className="w-4 h-4" />
                     Mark Arrived
@@ -523,7 +522,7 @@ export default function DeliveryDashboard() {
                 {delivery.status === 'arrived' && (
                   <button
                     onClick={() => updateDeliveryStatus(delivery.id, 'delivered')}
-                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+                    className="min-h-[44px] flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-700 active:scale-95 transition-all shadow-sm"
                   >
                     <CheckCircle className="w-4 h-4" />
                     Mark Delivered
@@ -533,7 +532,7 @@ export default function DeliveryDashboard() {
                 {delivery.status === 'preparing' && (
                   <button
                     onClick={() => updateDeliveryStatus(delivery.id, 'ready_for_pickup')}
-                    className="flex items-center gap-2 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+                    className="min-h-[44px] flex items-center gap-2 px-4 py-2.5 bg-yellow-600 text-white rounded-xl font-bold text-sm hover:bg-yellow-700 active:scale-95 transition-all shadow-sm"
                   >
                     <CheckCircle className="w-4 h-4" />
                     Mark Ready
@@ -651,6 +650,6 @@ export default function DeliveryDashboard() {
         {/* Hidden state for pickup order being created */}
         {pickupOrderId && null}
       </div>
-    </div>
   );
 }
+

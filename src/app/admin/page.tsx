@@ -152,7 +152,48 @@ export default function AdminDashboard() {
             </Link>
           </div>
           
-          <div className="rounded-2xl bg-white border border-gray-200 overflow-x-auto shadow-sm">
+          {/* Mobile Recent Orders Cards */}
+          <div className="md:hidden space-y-3">
+            {recentOrders.map((order) => (
+              <div key={order.id} className="p-4 bg-white rounded-2xl border border-gray-200 shadow-sm space-y-2.5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <Link href="/admin/orders" className="font-extrabold text-sm text-gray-900 hover:text-red-600">
+                      #{order.id.slice(-6).toUpperCase()}
+                    </Link>
+                    <p className="text-xs text-gray-600 font-medium">{order.profiles?.full_name || "Guest User"}</p>
+                  </div>
+                  <span className={cn(
+                    "text-[10px] font-black uppercase px-2 py-1 rounded-lg",
+                    order.status === "pending" && "bg-orange-100 text-orange-600",
+                    order.status === "preparing" && "bg-blue-100 text-blue-600",
+                    order.status === "ready" && "bg-purple-100 text-purple-600",
+                    order.status === "delivered" && "bg-green-100 text-green-600",
+                    order.status === "cancelled" && "bg-red-100 text-red-600",
+                  )}>
+                    {order.status}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span className="font-black text-sm text-gray-900">{formatCurrency(order.total_amount)}</span>
+                  <Link
+                    href="/admin/orders"
+                    className="text-xs font-bold text-red-600 hover:text-red-700 flex items-center gap-1"
+                  >
+                    Manage Order →
+                  </Link>
+                </div>
+              </div>
+            ))}
+            {recentOrders.length === 0 && !loading && (
+              <div className="p-8 text-center bg-white rounded-2xl border border-gray-200 text-gray-500 text-sm">
+                No recent orders found
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden md:block rounded-2xl bg-white border border-gray-200 overflow-x-auto shadow-sm">
             <table className="w-full text-left min-w-[540px]">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">

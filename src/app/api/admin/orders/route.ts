@@ -43,6 +43,14 @@ export async function GET(request: Request) {
           name,
           phone
         )
+      ),
+      order_items(
+        id,
+        quantity,
+        unit_price,
+        menu_items(
+          name
+        )
       )
     `)
     .order("created_at", { ascending: false });
@@ -70,6 +78,7 @@ export async function GET(request: Request) {
     delivery_address: order.delivery_address,
     customer_location: order.customer_location,
     delivery_assignments: order.delivery_assignments?.[0] || null,
+    order_items: order.order_items || [],
     profiles: order.user_id ?
       { full_name: profileMap.get(order.user_id) || 'Unknown User' } :
       { full_name: 'Guest User' }

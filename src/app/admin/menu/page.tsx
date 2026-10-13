@@ -599,6 +599,22 @@ export default function AdminMenuPage() {
     }
   };
 
+  const handleToggleAvailability = async (item: MenuItem) => {
+    const newStatus = !item.is_available;
+    setItems(prev => prev.map(i => i.id === item.id ? { ...i, is_available: newStatus } : i));
+    try {
+      const res = await fetch(`/api/admin/menu/items/${item.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_available: newStatus }),
+      });
+      if (!res.ok) throw new Error("Failed to update status");
+    } catch (error) {
+      setItems(prev => prev.map(i => i.id === item.id ? { ...i, is_available: !newStatus } : i));
+      alert("Failed to toggle item availability");
+    }
+  };
+
   // Selection handlers
   const toggleItemSelection = (id: string) => {
     setSelectedItems(prev => {
@@ -777,7 +793,7 @@ export default function AdminMenuPage() {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-4 py-3 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all outline-none min-w-[200px]"
+                className="px-4 py-3 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all outline-none w-full sm:w-auto"
               >
                 <option value="all">All Categories</option>
                 {categories.map(category => (
@@ -947,13 +963,14 @@ export default function AdminMenuPage() {
                       )}
                     </div>
 
-                    {/* Actions Menu */}
+                    {/* View Details Button */}
                     <div className="relative">
                       <button
-                        className="p-2 rounded-lg hover:bg-gray-100 transition-colors opacity-0 group-hover:opacity-100"
-                        onClick={() => {/* Toggle dropdown */}}
+                        className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
+                        onClick={() => handleViewItem(item.id)}
+                        title="View item details"
                       >
-                        <MoreVertical className="w-4 h-4" />
+                        <Eye className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
@@ -1073,40 +1090,40 @@ export default function AdminMenuPage() {
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                      <div className="pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-lg">
                           {item.categories?.name || "Uncategorized"}
                         </span>
 
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-1.5">
+                          {/* Availability Toggle */}
                           <button
-                            onClick={() => handleViewItem(item.id)}
-                            className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                            title="View details"
+                            onClick={() => handleToggleAvailability(item)}
+                            className={cn(
+                              "px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1",
+                              item.is_available
+                                ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200"
+                                : "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"
+                            )}
+                            title={item.is_available ? "Click to set unavailable" : "Click to set available"}
                           >
-                            <Eye className="w-4 h-4" />
+                            {item.is_available ? "In Stock" : "Sold Out"}
                           </button>
-                          <button
-                            onClick={() => startInlineEdit(item)}
-                            className="p-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition-colors"
-                            title="Quick edit"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
+
                           <button
                             onClick={() => handleEditItem(item.id)}
-                            className="p-2 rounded-lg hover:bg-purple-50 hover:text-purple-600 transition-colors"
+                            className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
                             title="Full edit"
                           >
-                            <Upload className="w-4 h-4" />
+                            <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleDeleteItem(item.id)}
                             disabled={deleting === item.id}
-                            className="p-2 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
+                            className="p-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors disabled:opacity-50 min-h-[36px] min-w-[36px] flex items-center justify-center"
                             title="Delete"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </div>
@@ -1811,7 +1828,17 @@ export default function AdminMenuPage() {
             </div>
           </div>
         )}
+
+        {/* Floating Action Button for Mobile: Add Menu Item */}
+        <button
+          onClick={() => setShowModal(true)}
+          className="lg:hidden fixed bottom-20 right-4 z-30 flex items-center gap-2 px-5 py-3.5 bg-red-600 text-white font-bold rounded-full shadow-xl shadow-red-600/30 active:scale-95 transition-all"
+          aria-label="Add New Menu Item"
+        >
+          <Plus className="w-5 h-5" />
+          <span>Add Item</span>
+        </button>
       </div>
     </div>
   );
-}
+}

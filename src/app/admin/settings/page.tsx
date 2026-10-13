@@ -801,6 +801,19 @@ export default function AdminSettingsPage() {
           </div>
         </div>
       )}
+
+      {/* Mobile Sticky Save Changes Action */}
+      <div className="sm:hidden fixed bottom-20 inset-x-4 z-30 shadow-2xl">
+        <button
+          onClick={saveSettings}
+          disabled={isSaving}
+          className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-red-600 text-white font-bold shadow-xl shadow-red-600/30 active:scale-95 transition-all disabled:opacity-50"
+        >
+          <Save className="w-5 h-5" />
+          <span>{isSaving ? "Saving..." : "Save Settings Changes"}</span>
+        </button>
+      </div>
     </div>
   );
 }
+

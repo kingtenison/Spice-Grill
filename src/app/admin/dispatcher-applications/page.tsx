@@ -193,37 +193,36 @@ export default function DispatcherApplicationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dispatcher Applications</h1>
-          <p className="text-gray-600">Review and approve dispatcher applications</p>
-        </div>
+    <div className="space-y-6">
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Dispatcher Applications</h1>
+        <p className="text-sm text-slate-600 mt-1">Review background info, vehicle details, and approve driver registrations.</p>
+      </div>
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600" />
-            <p className="text-sm text-red-800">{error}</p>
-          </div>
-        )}
-
-        {/* Filter Tabs */}
-        <div className="mb-6 flex gap-2">
-          {(['all', 'pending', 'approved', 'rejected'] as const).map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilter(status)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                filter === status
-                  ? 'bg-red-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              {status.charAt(0).toUpperCase() + status.slice(1)}
-              {status === 'pending' && ` (${applications.filter(a => a.application_status === 'pending').length})`}
-            </button>
-          ))}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+          <p className="text-sm text-red-800">{error}</p>
         </div>
+      )}
+
+      {/* Filter Tabs */}
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {(['all', 'pending', 'approved', 'rejected'] as const).map((status) => (
+          <button
+            key={status}
+            onClick={() => setFilter(status)}
+            className={`min-h-[40px] px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${
+              filter === status
+                ? 'bg-red-600 text-white shadow-sm'
+                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+            {status === 'pending' && ` (${applications.filter(a => a.application_status === 'pending').length})`}
+          </button>
+        ))}
+      </div>
 
         {/* Applications Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -280,7 +279,6 @@ export default function DispatcherApplicationsPage() {
             No {filter !== 'all' ? filter : ''} applications found
           </div>
         )}
-      </div>
 
       {/* Application Detail Modal */}
       {selectedApplication && (
