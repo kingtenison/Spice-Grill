@@ -194,74 +194,50 @@ export default function AdminOrdersPage() {
     switch (status) {
       case "pending":
         return {
-          gradientRibbon: "from-amber-400 via-orange-500 to-amber-600",
-          cardBg: "bg-gradient-to-b from-amber-500/[0.07] via-white to-white",
-          borderColor: "border-amber-200/90 hover:border-amber-400",
-          glowColor: "bg-amber-400/25",
-          badgeBg: "bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-xs shadow-amber-500/25",
+          cardBg: "bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600",
+          borderColor: "border-amber-400/40 hover:border-amber-300 shadow-amber-500/20",
           label: "Pending",
         };
       case "accepted":
         return {
-          gradientRibbon: "from-blue-500 via-indigo-500 to-cyan-500",
-          cardBg: "bg-gradient-to-b from-blue-500/[0.07] via-white to-white",
-          borderColor: "border-blue-200/90 hover:border-blue-400",
-          glowColor: "bg-blue-400/25",
-          badgeBg: "bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 text-white shadow-xs shadow-blue-500/25",
+          cardBg: "bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700",
+          borderColor: "border-blue-400/40 hover:border-blue-300 shadow-blue-500/20",
           label: "Accepted",
         };
       case "preparing":
         return {
-          gradientRibbon: "from-orange-500 via-red-500 to-amber-500",
-          cardBg: "bg-gradient-to-b from-orange-500/[0.07] via-white to-white",
-          borderColor: "border-orange-200/90 hover:border-orange-400",
-          glowColor: "bg-orange-400/25",
-          badgeBg: "bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 text-white shadow-xs shadow-orange-500/25",
+          cardBg: "bg-gradient-to-br from-orange-500 via-red-500 to-rose-600",
+          borderColor: "border-orange-400/40 hover:border-orange-300 shadow-orange-500/20",
           label: "Cooking",
         };
       case "ready":
         return {
-          gradientRibbon: "from-purple-500 via-fuchsia-500 to-pink-500",
-          cardBg: "bg-gradient-to-b from-purple-500/[0.07] via-white to-white",
-          borderColor: "border-purple-200/90 hover:border-purple-400",
-          glowColor: "bg-purple-400/25",
-          badgeBg: "bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 text-white shadow-xs shadow-purple-500/25",
+          cardBg: "bg-gradient-to-br from-purple-600 via-fuchsia-600 to-purple-800",
+          borderColor: "border-purple-400/40 hover:border-purple-300 shadow-purple-500/20",
           label: "Ready",
         };
       case "out_for_delivery":
         return {
-          gradientRibbon: "from-cyan-500 via-teal-500 to-blue-500",
-          cardBg: "bg-gradient-to-b from-cyan-500/[0.07] via-white to-white",
-          borderColor: "border-cyan-200/90 hover:border-cyan-400",
-          glowColor: "bg-cyan-400/25",
-          badgeBg: "bg-gradient-to-r from-cyan-600 via-teal-600 to-blue-600 text-white shadow-xs shadow-cyan-500/25",
+          cardBg: "bg-gradient-to-br from-cyan-600 via-teal-600 to-blue-700",
+          borderColor: "border-cyan-400/40 hover:border-cyan-300 shadow-cyan-500/20",
           label: "In Transit",
         };
       case "delivered":
         return {
-          gradientRibbon: "from-emerald-500 via-teal-500 to-green-600",
-          cardBg: "bg-gradient-to-b from-emerald-500/[0.05] via-white to-white",
-          borderColor: "border-emerald-200/90 hover:border-emerald-400",
-          glowColor: "bg-emerald-400/20",
-          badgeBg: "bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 text-white shadow-xs shadow-emerald-500/20",
+          cardBg: "bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-800",
+          borderColor: "border-emerald-400/40 hover:border-emerald-300 shadow-emerald-500/20",
           label: "Delivered",
         };
       case "cancelled":
         return {
-          gradientRibbon: "from-rose-500 via-red-500 to-pink-600",
-          cardBg: "bg-gradient-to-b from-rose-500/[0.05] via-white to-white",
-          borderColor: "border-rose-200/90 hover:border-rose-400",
-          glowColor: "bg-rose-400/20",
-          badgeBg: "bg-gradient-to-r from-rose-600 via-red-600 to-pink-600 text-white shadow-xs shadow-rose-500/20",
+          cardBg: "bg-gradient-to-br from-rose-700 via-red-800 to-slate-900",
+          borderColor: "border-rose-500/30 hover:border-rose-400 shadow-rose-900/20",
           label: "Cancelled",
         };
       default:
         return {
-          gradientRibbon: "from-slate-400 to-slate-500",
-          cardBg: "bg-white",
-          borderColor: "border-slate-200",
-          glowColor: "bg-slate-300/20",
-          badgeBg: "bg-slate-800 text-white",
+          cardBg: "bg-gradient-to-br from-slate-700 to-slate-900",
+          borderColor: "border-slate-600",
           label: status,
         };
     }
@@ -283,10 +259,7 @@ export default function AdminOrdersPage() {
     };
 
     return (
-      <span className={cn(
-        "inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-black tracking-wide shrink-0",
-        theme.badgeBg
-      )}>
+      <span className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-black tracking-wide shrink-0 bg-white/20 text-white border border-white/25 backdrop-blur-md shadow-xs">
         {status === "pending" ? (
           <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping shrink-0" />
         ) : (
@@ -307,7 +280,7 @@ export default function AdminOrdersPage() {
             <button
               onClick={() => handleOrderAction(order.id, "confirm")}
               disabled={isBusy}
-              className="flex-1 min-h-[38px] sm:min-h-[42px] px-2 py-1.5 rounded-xl font-black text-[11px] sm:text-xs flex items-center justify-center gap-1 transition-all shadow-md active:scale-95 disabled:opacity-50 text-white bg-gradient-to-r from-emerald-500 via-teal-600 to-emerald-600 hover:from-emerald-600 hover:to-teal-700 shadow-emerald-500/25"
+              className="flex-1 min-h-[38px] sm:min-h-[42px] px-2 py-1.5 rounded-xl font-black text-[11px] sm:text-xs flex items-center justify-center gap-1 transition-all shadow-md active:scale-95 disabled:opacity-50 bg-white text-emerald-800 hover:bg-emerald-50"
             >
               <CheckCircle className="w-3.5 h-3.5 shrink-0" />
               <span className="truncate">Accept</span>
@@ -316,7 +289,7 @@ export default function AdminOrdersPage() {
               onClick={() => handleOrderAction(order.id, "cancel")}
               disabled={isBusy}
               title="Reject Order"
-              className="min-h-[38px] sm:min-h-[42px] w-8 sm:w-9 px-0 rounded-xl font-black text-[11px] sm:text-xs flex items-center justify-center transition-all active:scale-95 disabled:opacity-50 text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 shrink-0"
+              className="min-h-[38px] sm:min-h-[42px] w-8 sm:w-9 px-0 rounded-xl font-black text-[11px] sm:text-xs flex items-center justify-center transition-all active:scale-95 disabled:opacity-50 text-white bg-white/20 hover:bg-rose-600 border border-white/30 shrink-0 backdrop-blur-md"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -329,7 +302,7 @@ export default function AdminOrdersPage() {
             <button
               onClick={() => handleOrderAction(order.id, "prepare")}
               disabled={isBusy}
-              className="w-full min-h-[38px] sm:min-h-[42px] px-2.5 py-1.5 rounded-xl font-black text-[11px] sm:text-xs flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 disabled:opacity-50 text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 hover:from-blue-700 hover:to-indigo-700 shadow-blue-500/25"
+              className="w-full min-h-[38px] sm:min-h-[42px] px-2.5 py-1.5 rounded-xl font-black text-[11px] sm:text-xs flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 disabled:opacity-50 bg-white text-blue-900 hover:bg-blue-50"
             >
               <ChefHat className="w-3.5 h-3.5 shrink-0" />
               <span className="truncate">Start Cooking</span>
@@ -343,7 +316,7 @@ export default function AdminOrdersPage() {
             <button
               onClick={() => handleOrderAction(order.id, "ready")}
               disabled={isBusy}
-              className="w-full min-h-[38px] sm:min-h-[42px] px-2.5 py-1.5 rounded-xl font-black text-[11px] sm:text-xs flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 disabled:opacity-50 text-white bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 hover:from-orange-600 hover:to-red-600 shadow-orange-500/25"
+              className="w-full min-h-[38px] sm:min-h-[42px] px-2.5 py-1.5 rounded-xl font-black text-[11px] sm:text-xs flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 disabled:opacity-50 bg-white text-orange-950 hover:bg-orange-50"
             >
               <Package className="w-3.5 h-3.5 shrink-0" />
               <span className="truncate">Mark Ready</span>
@@ -357,7 +330,7 @@ export default function AdminOrdersPage() {
             <button
               onClick={() => handleOrderAction(order.id, "pickup")}
               disabled={isBusy}
-              className="w-full min-h-[38px] sm:min-h-[42px] px-2.5 py-1.5 rounded-xl font-black text-[11px] sm:text-xs flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 disabled:opacity-50 text-white bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 hover:from-purple-700 hover:to-fuchsia-700 shadow-purple-500/25"
+              className="w-full min-h-[38px] sm:min-h-[42px] px-2.5 py-1.5 rounded-xl font-black text-[11px] sm:text-xs flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 disabled:opacity-50 bg-white text-purple-950 hover:bg-purple-50"
             >
               <Truck className="w-3.5 h-3.5 shrink-0" />
               <span className="truncate">Dispatch</span>
@@ -371,7 +344,7 @@ export default function AdminOrdersPage() {
             <button
               onClick={() => handleOrderAction(order.id, "deliver")}
               disabled={isBusy}
-              className="w-full min-h-[38px] sm:min-h-[42px] px-2.5 py-1.5 rounded-xl font-black text-[11px] sm:text-xs flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 disabled:opacity-50 text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-500/25"
+              className="w-full min-h-[38px] sm:min-h-[42px] px-2.5 py-1.5 rounded-xl font-black text-[11px] sm:text-xs flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 disabled:opacity-50 bg-white text-teal-950 hover:bg-teal-50"
             >
               <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
               <span className="truncate">Delivered</span>
@@ -381,16 +354,16 @@ export default function AdminOrdersPage() {
 
       case "delivered":
         return (
-          <div className="w-full min-h-[38px] sm:min-h-[42px] rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 text-emerald-700 border border-emerald-200/80 font-black text-[11px] sm:text-xs flex items-center justify-center gap-1 px-2">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+          <div className="w-full min-h-[38px] sm:min-h-[42px] rounded-xl bg-white/20 text-white border border-white/30 font-black text-[11px] sm:text-xs flex items-center justify-center gap-1 px-2 backdrop-blur-md">
+            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">Completed</span>
           </div>
         );
 
       case "cancelled":
         return (
-          <div className="w-full min-h-[38px] sm:min-h-[42px] rounded-xl bg-gradient-to-r from-rose-500/10 to-red-500/10 text-rose-700 border border-rose-200/80 font-black text-[11px] sm:text-xs flex items-center justify-center gap-1 px-2">
-            <XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+          <div className="w-full min-h-[38px] sm:min-h-[42px] rounded-xl bg-white/15 text-white/90 border border-white/25 font-black text-[11px] sm:text-xs flex items-center justify-center gap-1 px-2 backdrop-blur-md">
+            <XCircle className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">Cancelled</span>
           </div>
         );
@@ -537,14 +510,14 @@ export default function AdminOrdersPage() {
       {loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4.5">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <div key={i} className="p-3.5 sm:p-5 bg-gradient-to-b from-slate-50 to-white rounded-2xl sm:rounded-3xl border border-slate-200 animate-pulse space-y-3">
+            <div key={i} className="p-3.5 sm:p-5 bg-gradient-to-br from-slate-200 to-slate-300 rounded-2xl sm:rounded-3xl animate-pulse space-y-3">
               <div className="flex justify-between items-center">
-                <div className="h-4 bg-slate-200 rounded w-16 sm:w-20" />
-                <div className="h-4 bg-slate-200 rounded w-12 sm:w-16" />
+                <div className="h-4 bg-white/40 rounded w-16 sm:w-20" />
+                <div className="h-4 bg-white/40 rounded w-12 sm:w-16" />
               </div>
-              <div className="h-3.5 bg-slate-200 rounded w-24 sm:w-28" />
-              <div className="h-16 sm:h-20 bg-slate-100 rounded-xl" />
-              <div className="h-9 sm:h-11 bg-slate-200 rounded-xl" />
+              <div className="h-3.5 bg-white/30 rounded w-24 sm:w-28" />
+              <div className="h-16 sm:h-20 bg-white/20 rounded-xl" />
+              <div className="h-9 sm:h-11 bg-white/40 rounded-xl" />
             </div>
           ))}
         </div>
@@ -560,7 +533,7 @@ export default function AdminOrdersPage() {
         </div>
       ) : viewMode === "grid" ? (
         /* ======================================================== */
-        /* RESTAURANT TICKET GRID VIEW (2x2 on Mobile, 3-4 on Desktop) */
+        /* RESTAURANT TICKET FULL GRADIENT GRID (2x2 on Mobile, 3-4 on Desktop) */
         /* ======================================================== */
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4.5">
           {filteredOrders.map((order) => {
@@ -569,16 +542,13 @@ export default function AdminOrdersPage() {
               <div
                 key={order.id}
                 className={cn(
-                  "rounded-2xl sm:rounded-3xl border shadow-xs hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between overflow-hidden relative backdrop-blur-sm",
+                  "rounded-2xl sm:rounded-3xl border shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between overflow-hidden relative text-white",
                   theme.cardBg,
                   theme.borderColor
                 )}
               >
-                {/* Top Status Gradient Ribbon */}
-                <div className={cn("h-1.5 w-full bg-gradient-to-r", theme.gradientRibbon)} />
-
-                {/* Ambient Decorative Radial Glow */}
-                <div className={cn("absolute -top-10 -right-10 w-28 h-28 rounded-full blur-2xl opacity-20 pointer-events-none", theme.glowColor)} />
+                {/* Ambient Decorative Glass Highlight */}
+                <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-white/15 blur-2xl pointer-events-none" />
 
                 <div className="p-3 sm:p-4.5 flex-1 flex flex-col justify-between space-y-2.5 sm:space-y-3.5 relative z-10">
                   <div className="space-y-2.5 sm:space-y-3">
@@ -586,12 +556,12 @@ export default function AdminOrdersPage() {
                     <div className="flex items-start justify-between gap-1.5">
                       <div className="min-w-0">
                         <div className="flex items-center gap-1 flex-wrap">
-                          <span className="font-mono font-black text-slate-900 text-xs sm:text-sm tracking-tight">
+                          <span className="font-mono font-black text-white text-xs sm:text-sm tracking-tight drop-shadow-xs">
                             #{order.id.slice(-6).toUpperCase()}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1 text-[10px] sm:text-[11px] text-slate-500 mt-0.5 font-medium">
-                          <Clock className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+                        <div className="flex items-center gap-1 text-[10px] sm:text-[11px] text-white/80 mt-0.5 font-medium">
+                          <Clock className="w-2.5 h-2.5 text-white/70 shrink-0" />
                           <span>{getTimeAgo(order.created_at)}</span>
                         </div>
                       </div>
@@ -601,25 +571,25 @@ export default function AdminOrdersPage() {
                     </div>
 
                     {/* Customer Row */}
-                    <div className="flex items-center justify-between gap-1.5 pt-1.5 border-t border-slate-200/50">
+                    <div className="flex items-center justify-between gap-1.5 pt-1.5 border-t border-white/20">
                       <div className="flex items-center gap-1.5 min-w-0">
-                        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-tr from-slate-900 via-slate-800 to-slate-700 text-white flex items-center justify-center font-black text-[10px] sm:text-xs shrink-0 shadow-xs ring-1 ring-white">
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/25 text-white border border-white/30 flex items-center justify-center font-black text-[10px] sm:text-xs shrink-0 shadow-xs backdrop-blur-md">
                           {(order.profiles?.full_name || "G")[0].toUpperCase()}
                         </div>
                         <div className="min-w-0">
-                          <p className="font-bold text-slate-900 text-xs sm:text-sm truncate leading-tight">
+                          <p className="font-bold text-white text-xs sm:text-sm truncate leading-tight drop-shadow-xs">
                             {order.profiles?.full_name || "Guest Customer"}
                           </p>
                         </div>
                       </div>
                       <div className="shrink-0">
                         {order.delivery_address ? (
-                          <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-bold bg-blue-500/10 text-blue-700 border border-blue-200/60">
+                          <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-bold bg-white/20 text-white border border-white/30 backdrop-blur-md">
                             <Truck className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                             <span className="hidden sm:inline">Delivery</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-bold bg-amber-500/10 text-amber-700 border border-amber-200/60">
+                          <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-bold bg-white/20 text-white border border-white/30 backdrop-blur-md">
                             <ShoppingBag className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                             <span className="hidden sm:inline">Pickup</span>
                           </span>
@@ -627,21 +597,21 @@ export default function AdminOrdersPage() {
                       </div>
                     </div>
 
-                    {/* Items Breakdown Box (Translucent Glass Effect) */}
-                    <div className="p-2 sm:p-2.5 rounded-xl bg-white/80 border border-slate-200/70 shadow-2xs space-y-1">
+                    {/* Items Breakdown Box (Liquid Glassmorphism) */}
+                    <div className="p-2 sm:p-2.5 rounded-xl bg-black/20 backdrop-blur-md border border-white/20 text-white shadow-inner space-y-1">
                       {order.order_items && order.order_items.length > 0 ? (
                         <>
                           {order.order_items.slice(0, 2).map((item, idx) => (
                             <div key={item.id || idx} className="flex items-center justify-between text-[11px] sm:text-xs gap-1.5">
                               <div className="flex items-center gap-1.5 min-w-0">
-                                <span className="w-4.5 h-4.5 rounded bg-slate-100 border border-slate-200/90 font-extrabold text-slate-800 text-[10px] flex items-center justify-center shrink-0">
+                                <span className="w-4.5 h-4.5 rounded bg-white/25 border border-white/30 font-black text-white text-[10px] flex items-center justify-center shrink-0">
                                   {item.quantity}×
                                 </span>
-                                <span className="font-semibold text-slate-700 truncate">
+                                <span className="font-semibold text-white truncate">
                                   {item.menu_items?.name || "Dish Item"}
                                 </span>
                               </div>
-                              <span className="font-semibold text-slate-500 shrink-0 text-[10px] sm:text-xs">
+                              <span className="font-bold text-white/90 shrink-0 text-[10px] sm:text-xs">
                                 {formatCurrency(item.unit_price * item.quantity)}
                               </span>
                             </div>
@@ -649,34 +619,34 @@ export default function AdminOrdersPage() {
                           {order.order_items.length > 2 && (
                             <button
                               onClick={() => setSelectedOrder(order)}
-                              className="text-[10px] sm:text-[11px] font-bold text-red-600 hover:text-red-700 pt-0.5 block hover:underline text-left truncate"
+                              className="text-[10px] sm:text-[11px] font-black text-white underline pt-0.5 block hover:text-white/80 text-left truncate"
                             >
                               +{order.order_items.length - 2} more items...
                             </button>
                           )}
                         </>
                       ) : (
-                        <div className="text-[11px] sm:text-xs text-slate-500 flex items-center justify-between">
+                        <div className="text-[11px] sm:text-xs text-white/80 flex items-center justify-between">
                           <span className="truncate">Meal Package</span>
-                          <span className="font-bold text-slate-700">{formatCurrency(order.total_amount)}</span>
+                          <span className="font-bold text-white">{formatCurrency(order.total_amount)}</span>
                         </div>
                       )}
                     </div>
 
                     {/* Delivery Address snippet if applicable */}
                     {order.delivery_address && (
-                      <div className="flex items-start gap-1 text-[10px] sm:text-xs text-slate-500 px-0.5">
-                        <MapPin className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-400 shrink-0 mt-0.5" />
+                      <div className="flex items-start gap-1 text-[10px] sm:text-xs text-white/85 px-0.5">
+                        <MapPin className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white/80 shrink-0 mt-0.5" />
                         <span className="line-clamp-1 leading-snug">{order.delivery_address}</span>
                       </div>
                     )}
                   </div>
 
                   {/* Footer: Order Total & Action Buttons */}
-                  <div className="pt-2 sm:pt-3 border-t border-slate-200/60 mt-auto space-y-2">
+                  <div className="pt-2 sm:pt-3 border-t border-white/20 mt-auto space-y-2">
                     <div className="flex items-baseline justify-between px-0.5">
-                      <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total</span>
-                      <span className="text-sm sm:text-base font-black text-slate-900 tracking-tight">
+                      <span className="text-[10px] sm:text-[11px] font-bold text-white/75 uppercase tracking-wider">Total</span>
+                      <span className="text-sm sm:text-base font-black text-white tracking-tight drop-shadow-xs">
                         {formatCurrency(order.total_amount)}
                       </span>
                     </div>
@@ -684,7 +654,7 @@ export default function AdminOrdersPage() {
                     <div className="flex items-center gap-1.5 sm:gap-2">
                       <button
                         onClick={() => setSelectedOrder(order)}
-                        className="min-h-[38px] sm:min-h-[42px] px-2 sm:px-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-1 transition-all active:scale-95 shrink-0 shadow-2xs"
+                        className="min-h-[38px] sm:min-h-[42px] px-2 sm:px-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white border border-white/30 font-black text-xs flex items-center justify-center gap-1 transition-all active:scale-95 shrink-0 shadow-xs backdrop-blur-md"
                         title="View Order Details"
                       >
                         <Eye className="w-3.5 h-3.5" />
