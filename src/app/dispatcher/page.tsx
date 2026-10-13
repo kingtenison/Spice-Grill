@@ -7,6 +7,8 @@ import {
   Clock, AlertCircle, LogOut, RefreshCw, DollarSign, CreditCard
 } from "lucide-react";
 import dynamic from "next/dynamic";
+import { toast } from "sonner";
+import { playNotificationSound, sendBrowserNotification } from "@/lib/notifications";
 const LiveMap = dynamic(() => import("@/components/dispatcher/LiveMap"), { ssr: false });
 
 const storageGet = (key: string) => { try { return localStorage.getItem(key); } catch { return null; } };
@@ -253,7 +255,22 @@ export default function DispatcherPortal() {
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
 
-      setActiveDeliveries(data.active || []);
+      const newActive = data.active || [];
+      setActiveDeliveries(prev => {
+        const prevIds = new Set(prev.map(d => d.id));
+        const newlyAssigned = newActive.filter((d: any) => !prevIds.has(d.id));
+        if (prev.length > 0 && newlyAssigned.length > 0) {
+          playNotificationSound("new_order");
+          toast.success("New Delivery Assigned!", {
+            description: `You have ${newlyAssigned.length} new delivery request(s).`,
+            duration: 8000,
+          });
+          sendBrowserNotification("New Delivery Assigned!", {
+            body: `You have ${newlyAssigned.length} new delivery request(s).`,
+          });
+        }
+        return newActive;
+      });
       setCompletedDeliveries(data.completed || []);
     } catch (error) {
       console.error('Error fetching deliveries:', error);

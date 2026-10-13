@@ -297,10 +297,22 @@ export function clearAllNotifications(): void {
   }
 }
 
+const recentNotifiedOrders = new Set<string>();
+
 /**
  * Trigger full system alert: sound + toast + desktop notification + store
  */
 export function notifyNewOrder(order: { id: string; total_amount?: number; customer_name?: string }): void {
+  if (order.id && recentNotifiedOrders.has(order.id)) {
+    return;
+  }
+  if (order.id) {
+    recentNotifiedOrders.add(order.id);
+    setTimeout(() => {
+      recentNotifiedOrders.delete(order.id);
+    }, 8000);
+  }
+
   const shortId = order.id.slice(-5).toUpperCase();
   const amountStr = order.total_amount ? ` ($${order.total_amount.toFixed(2)})` : "";
   const customerStr = order.customer_name ? ` from ${order.customer_name}` : "";

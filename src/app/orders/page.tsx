@@ -162,24 +162,27 @@ export default function OrdersPage() {
               console.log('Order updated:', payload);
               const updatedOrder = payload.new;
               if (updatedOrder) {
-                playNotificationSound("status_change");
-                const statusLabel = (updatedOrder.status || "").replace("_", " ").toUpperCase();
-                const shortId = (updatedOrder.id || "").slice(0, 8).toUpperCase();
-                toast.info(`Order #${shortId} Status Update`, {
-                  description: `Your order is now ${statusLabel}!`,
-                  duration: 6000,
-                });
-                sendBrowserNotification(`Order #${shortId} Update`, {
-                  body: `Your order is now ${statusLabel}!`,
+                setOrders(currentOrders => {
+                  const existing = currentOrders.find(o => o.id === updatedOrder.id);
+                  if (!existing || existing.status !== updatedOrder.status) {
+                    playNotificationSound("status_change");
+                    const statusLabel = (updatedOrder.status || "").replace("_", " ").toUpperCase();
+                    const shortId = (updatedOrder.id || "").slice(0, 8).toUpperCase();
+                    toast.info(`Order #${shortId} Status Update`, {
+                      description: `Your order is now ${statusLabel}!`,
+                      duration: 6000,
+                    });
+                    sendBrowserNotification(`Order #${shortId} Update`, {
+                      body: `Your order is now ${statusLabel}!`,
+                    });
+                  }
+                  return currentOrders.map(order =>
+                    order.id === updatedOrder.id
+                      ? { ...order, ...updatedOrder }
+                      : order
+                  );
                 });
               }
-              setOrders(currentOrders =>
-                currentOrders.map(order =>
-                  order.id === payload.new.id
-                    ? { ...order, ...payload.new }
-                    : order
-                )
-              );
             }
           )
           .subscribe();

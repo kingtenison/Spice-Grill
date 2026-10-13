@@ -37,6 +37,7 @@ export function NotificationCenter() {
   const [soundOn, setSoundOn] = useState(true);
   const [permission, setPermission] = useState<NotificationPermission>("default");
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const knownStatuses = useRef<Map<string, string>>(new Map());
 
   // Load notifications and permissions
   useEffect(() => {
@@ -76,6 +77,9 @@ export function NotificationCenter() {
         (payload: any) => {
           const order = payload.new;
           if (order) {
+            if (order.id && order.status) {
+              knownStatuses.current.set(order.id, order.status);
+            }
             notifyNewOrder({
               id: order.id,
               total_amount: order.total_amount,
@@ -90,18 +94,26 @@ export function NotificationCenter() {
         (payload: any) => {
           const order = payload.new;
           const oldOrder = payload.old;
-          if (order && oldOrder && order.status !== oldOrder.status) {
-            const shortId = order.id.slice(-5).toUpperCase();
-            const title = `Order #${shortId} status changed to ${order.status.replace("_", " ")}`;
-            const message = `Order total: $${order.total_amount?.toFixed(2) || "0.00"}`;
-            
-            playNotificationSound("status_change");
-            saveNotification({
-              title,
-              message,
-              type: order.status === "cancelled" ? "alert" : "status",
-              link: "/admin/orders",
-            });
+          if (order) {
+            const prevStatus = (oldOrder && oldOrder.status) ? oldOrder.status : knownStatuses.current.get(order.id);
+            if (prevStatus && prevStatus === order.status) {
+              return;
+            }
+            knownStatuses.current.set(order.id, order.status);
+
+            if (prevStatus && prevStatus !== order.status) {
+              const shortId = order.id.slice(-5).toUpperCase();
+              const title = `Order #${shortId} status changed to ${order.status.replace("_", " ")}`;
+              const message = `Order total: $${order.total_amount?.toFixed(2) || "0.00"}`;
+              
+              playNotificationSound("status_change");
+              saveNotification({
+                title,
+                message,
+                type: order.status === "cancelled" ? "alert" : "status",
+                link: "/admin/orders",
+              });
+            }
           }
         }
       )

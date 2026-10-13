@@ -9,6 +9,8 @@ import {
 import Link from "next/link";
 import { createAuthClientBrowser } from "@/lib/supabase/client";
 import { getMenuItemImage, getMenuItemName } from "@/lib/utils";
+import { toast } from "sonner";
+import { playNotificationSound, sendBrowserNotification } from "@/lib/notifications";
 
 type DeliveryStatus = 'pending' | 'preparing' | 'ready_for_pickup' | 'assigned' | 'picked_up' | 'on_the_way' | 'arrived' | 'delivered' | 'cancelled' | 'delayed';
 
@@ -114,7 +116,23 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ orderI
         },
         (payload: any) => {
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
-            setDelivery(payload.new as DeliveryAssignment);
+            const updated = payload.new as DeliveryAssignment;
+            if (updated) {
+              setDelivery(prev => {
+                if (prev && prev.status !== updated.status) {
+                  playNotificationSound("status_change");
+                  const friendlyStatus = (updated.status || "").replace(/_/g, " ").toUpperCase();
+                  toast.info("Delivery Update", {
+                    description: `Delivery status: ${friendlyStatus}`,
+                    duration: 6000,
+                  });
+                  sendBrowserNotification("Delivery Update", {
+                    body: `Delivery status: ${friendlyStatus}`,
+                  });
+                }
+                return updated;
+              });
+            }
           }
         }
       )
