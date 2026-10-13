@@ -19,7 +19,9 @@ import {
   AlertTriangle,
   User,
   ShoppingBag,
-  Filter
+  Filter,
+  LayoutGrid,
+  List
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createAuthClientBrowser } from "@/lib/supabase/client";
@@ -281,17 +283,19 @@ export default function AdminOrdersPage() {
           </div>
         );
 
-      case "out_for_delivery":
+      case "delivered":
         return (
-          <div className={cn("flex items-center gap-2", isFullWidth && "w-full")}>
-            <button
-              onClick={() => handleOrderAction(order.id, "deliver")}
-              disabled={isBusy}
-              className={cn(btnClasses, "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20")}
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              Mark Delivered
-            </button>
+          <div className={cn("min-h-[44px] rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-xs flex items-center justify-center gap-1.5 px-3", isFullWidth ? "w-full" : "flex-1")}>
+            <CheckCircle2 className="w-4 h-4" />
+            <span>Completed</span>
+          </div>
+        );
+
+      case "cancelled":
+        return (
+          <div className={cn("min-h-[44px] rounded-xl bg-rose-50 text-rose-700 border border-rose-200 font-bold text-xs flex items-center justify-center gap-1.5 px-3", isFullWidth ? "w-full" : "flex-1")}>
+            <XCircle className="w-4 h-4" />
+            <span>Cancelled</span>
           </div>
         );
 
@@ -299,6 +303,43 @@ export default function AdminOrdersPage() {
         return null;
     }
   };
+
+  const getTimeAgo = (dateStr: string) => {
+    try {
+      const diffMs = Date.now() - new Date(dateStr).getTime();
+      const diffMins = Math.floor(diffMs / 60000);
+      if (diffMins < 1) return "Just now";
+      if (diffMins < 60) return `${diffMins}m ago`;
+      const diffHours = Math.floor(diffMins / 60);
+      if (diffHours < 24) return `${diffHours}h ago`;
+      return `${Math.floor(diffHours / 24)}d ago`;
+    } catch {
+      return "";
+    }
+  };
+
+  const getStatusTheme = (status: string) => {
+    switch (status) {
+      case "pending":
+        return { borderTop: "border-t-amber-500", accent: "text-amber-600" };
+      case "accepted":
+        return { borderTop: "border-t-blue-500", accent: "text-blue-600" };
+      case "preparing":
+        return { borderTop: "border-t-orange-500", accent: "text-orange-600" };
+      case "ready":
+        return { borderTop: "border-t-purple-500", accent: "text-purple-600" };
+      case "out_for_delivery":
+        return { borderTop: "border-t-cyan-500", accent: "text-cyan-600" };
+      case "delivered":
+        return { borderTop: "border-t-emerald-500", accent: "text-emerald-600" };
+      case "cancelled":
+        return { borderTop: "border-t-rose-500", accent: "text-rose-600" };
+      default:
+        return { borderTop: "border-t-slate-400", accent: "text-slate-600" };
+    }
+  };
+
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
   const filteredOrders = orders.filter((o) => {
     const matchesSearch = 
@@ -325,13 +366,43 @@ export default function AdminOrdersPage() {
         </div>
 
         <div className="flex items-center gap-2.5">
+          {/* View Mode Toggle */}
+          <div className="flex items-center bg-white border border-slate-200 rounded-xl p-0.5 shadow-sm">
+            <button
+              onClick={() => setViewMode("grid")}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all min-h-[38px]",
+                viewMode === "grid"
+                  ? "bg-slate-900 text-white shadow-sm"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+              )}
+              title="Grid View"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Grid</span>
+            </button>
+            <button
+              onClick={() => setViewMode("table")}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all min-h-[38px]",
+                viewMode === "table"
+                  ? "bg-slate-900 text-white shadow-sm"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+              )}
+              title="Table View"
+            >
+              <List className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Table</span>
+            </button>
+          </div>
+
           <button
             onClick={() => loadOrders(true)}
             disabled={refreshing}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold text-sm transition-all shadow-sm active:scale-95 disabled:opacity-50 min-h-[44px]"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold text-sm transition-all shadow-sm active:scale-95 disabled:opacity-50 min-h-[42px]"
           >
             <RefreshCw className={cn("w-4 h-4 text-slate-500", refreshing && "animate-spin")} />
-            <span>Refresh</span>
+            <span className="hidden sm:inline">Refresh</span>
           </button>
         </div>
       </div>
@@ -389,11 +460,16 @@ export default function AdminOrdersPage() {
 
       {/* Orders Content */}
       {loading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="p-6 bg-white rounded-2xl border border-slate-200 animate-pulse space-y-3">
-              <div className="h-5 bg-slate-200 rounded w-1/3" />
-              <div className="h-4 bg-slate-200 rounded w-2/3" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <div key={i} className="p-5 bg-white rounded-2xl border border-slate-200 animate-pulse space-y-4">
+              <div className="flex justify-between items-center">
+                <div className="h-5 bg-slate-200 rounded w-24" />
+                <div className="h-5 bg-slate-200 rounded w-16" />
+              </div>
+              <div className="h-4 bg-slate-200 rounded w-36" />
+              <div className="h-24 bg-slate-100 rounded-xl" />
+              <div className="h-11 bg-slate-200 rounded-xl" />
             </div>
           ))}
         </div>
@@ -407,137 +483,202 @@ export default function AdminOrdersPage() {
               : "New customer orders will appear here automatically with live audio alerts."}
           </p>
         </div>
-      ) : (
-        <>
-          {/* ======================================================== */}
-          {/* MOBILE CARDS VIEW (Visible on mobile, hidden on tablet/desktop) */}
-          {/* ======================================================== */}
-          <div className="md:hidden space-y-4">
-            {filteredOrders.map((order) => (
+      ) : viewMode === "grid" ? (
+        /* ======================================================== */
+        /* RESTAURANT TICKET GRID VIEW (Responsive 1-4 columns)      */
+        /* ======================================================== */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+          {filteredOrders.map((order) => {
+            const theme = getStatusTheme(order.status);
+            return (
               <div
                 key={order.id}
-                className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-3.5"
+                className={cn(
+                  "bg-white rounded-2xl border border-slate-200 p-4.5 sm:p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between border-t-4",
+                  theme.borderTop
+                )}
               >
-                {/* Header: ID, Time & Status Badge */}
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-black text-slate-900 text-base">
-                        #{order.id.slice(-6).toUpperCase()}
-                      </span>
-                      <span className="text-xs text-slate-400 font-medium">
-                        {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                <div className="space-y-3.5">
+                  {/* Top Row: Order ID, Elapsed Time, Status Badge */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-mono font-black text-slate-900 text-base tracking-tight">
+                          #{order.id.slice(-6).toUpperCase()}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                          <Clock className="w-3 h-3 text-slate-400" />
+                          {getTimeAgo(order.created_at)}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-slate-400 font-medium block mt-0.5">
+                        {new Date(order.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5 mt-0.5 text-slate-700 text-sm font-semibold">
-                      <User className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{order.profiles?.full_name || "Guest User"}</span>
+                    <div className="shrink-0">
+                      {getStatusBadge(order.status)}
                     </div>
                   </div>
-                  <div>
-                    {getStatusBadge(order.status)}
+
+                  {/* Customer Info & Service Type */}
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-700 text-xs shrink-0">
+                        {(order.profiles?.full_name || "G")[0].toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-bold text-slate-900 text-sm truncate leading-tight">
+                          {order.profiles?.full_name || "Guest Customer"}
+                        </p>
+                        <p className="text-[11px] text-slate-400 font-medium truncate">Customer</p>
+                      </div>
+                    </div>
+                    <div className="shrink-0">
+                      {order.delivery_address ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200/60">
+                          <Truck className="w-3 h-3" /> Delivery
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/60">
+                          <ShoppingBag className="w-3 h-3" /> Pickup
+                        </span>
+                      )}
+                    </div>
                   </div>
+
+                  {/* Order Items Breakdown Box */}
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 space-y-1.5">
+                    {order.order_items && order.order_items.length > 0 ? (
+                      <>
+                        {order.order_items.slice(0, 3).map((item, idx) => (
+                          <div key={item.id || idx} className="flex items-center justify-between text-xs gap-2">
+                            <div className="flex items-center gap-2 truncate">
+                              <span className="w-5 h-5 rounded bg-white border border-slate-200/90 font-bold text-slate-800 text-[10px] flex items-center justify-center shrink-0">
+                                {item.quantity}×
+                              </span>
+                              <span className="font-semibold text-slate-700 truncate">
+                                {item.menu_items?.name || "Dish Item"}
+                              </span>
+                            </div>
+                            <span className="font-semibold text-slate-500 shrink-0">
+                              {formatCurrency(item.unit_price * item.quantity)}
+                            </span>
+                          </div>
+                        ))}
+                        {order.order_items.length > 3 && (
+                          <button
+                            onClick={() => setSelectedOrder(order)}
+                            className="text-[11px] font-bold text-red-600 hover:text-red-700 pt-0.5 block hover:underline text-left"
+                          >
+                            +{order.order_items.length - 3} more items...
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-xs text-slate-500 flex items-center justify-between">
+                        <span>Standard Order Package</span>
+                        <span className="font-bold text-slate-700">{formatCurrency(order.total_amount)}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Delivery Address snippet if applicable */}
+                  {order.delivery_address && (
+                    <div className="flex items-start gap-1.5 text-xs text-slate-500 px-0.5">
+                      <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                      <span className="line-clamp-1 leading-snug">{order.delivery_address}</span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Amount & Items Preview */}
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
-                  <div>
-                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Order Total</span>
-                    <span className="text-base font-black text-slate-900">{formatCurrency(order.total_amount)}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Items</span>
-                    <span className="text-sm font-bold text-slate-700">
-                      {order.order_items?.length ? `${order.order_items.length} items` : "Standard Meal"}
+                {/* Footer: Order Total & Action Buttons */}
+                <div className="pt-3.5 border-t border-slate-100 mt-3.5 space-y-3">
+                  <div className="flex items-baseline justify-between px-0.5">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total</span>
+                    <span className="text-lg font-black text-slate-900 tracking-tight">
+                      {formatCurrency(order.total_amount)}
                     </span>
                   </div>
-                </div>
 
-                {/* Delivery Address */}
-                {order.delivery_address && (
-                  <div className="flex items-start gap-2 text-xs text-slate-600 bg-white">
-                    <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
-                    <span className="line-clamp-2 leading-relaxed">{order.delivery_address}</span>
-                  </div>
-                )}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setSelectedOrder(order)}
+                      className="min-h-[44px] px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 shrink-0"
+                      title="View Order Details"
+                    >
+                      <Eye className="w-4 h-4" />
+                      <span className="hidden sm:inline">Details</span>
+                    </button>
 
-                {/* Action Buttons Row */}
-                <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
-                  <button
-                    onClick={() => setSelectedOrder(order)}
-                    className="min-h-[44px] px-3.5 py-2.5 rounded-xl font-bold text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 active:scale-95 transition-all flex items-center justify-center gap-1.5"
-                  >
-                    <Eye className="w-4 h-4" />
-                    Details
-                  </button>
-                  <div className="flex-1 flex gap-2">
-                    {renderActionButtons(order, true)}
+                    <div className="flex-1">
+                      {renderActionButtons(order, true)}
+                    </div>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-
-          {/* ======================================================== */}
-          {/* DESKTOP TABLE VIEW (Visible on md and up) */}
-          {/* ======================================================== */}
-          <div className="hidden md:block bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                    <th className="px-5 py-4">Order ID</th>
-                    <th className="px-5 py-4">Customer</th>
-                    <th className="px-5 py-4">Time & Date</th>
-                    <th className="px-5 py-4">Total</th>
-                    <th className="px-5 py-4">Status</th>
-                    <th className="px-5 py-4">Delivery Address</th>
-                    <th className="px-5 py-4 text-right">Actions</th>
+            );
+          })}
+        </div>
+      ) : (
+        /* ======================================================== */
+        /* TABLE VIEW (Available as alternative view mode)          */
+        /* ======================================================== */
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[700px]">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  <th className="px-5 py-4">Order ID</th>
+                  <th className="px-5 py-4">Customer</th>
+                  <th className="px-5 py-4">Time & Date</th>
+                  <th className="px-5 py-4">Total</th>
+                  <th className="px-5 py-4">Status</th>
+                  <th className="px-5 py-4">Delivery Address</th>
+                  <th className="px-5 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-sm">
+                {filteredOrders.map((order) => (
+                  <tr key={order.id} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="px-5 py-4 font-bold text-slate-900">
+                      #{order.id.slice(-6).toUpperCase()}
+                    </td>
+                    <td className="px-5 py-4 font-semibold text-slate-800">
+                      {order.profiles?.full_name || "Guest Customer"}
+                    </td>
+                    <td className="px-5 py-4 text-slate-500 text-xs">
+                      <div>{new Date(order.created_at).toLocaleDateString()}</div>
+                      <div className="font-medium text-slate-400">
+                        {new Date(order.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 font-black text-slate-900">
+                      {formatCurrency(order.total_amount)}
+                    </td>
+                    <td className="px-5 py-4">
+                      {getStatusBadge(order.status)}
+                    </td>
+                    <td className="px-5 py-4 text-slate-600 text-xs max-w-xs truncate">
+                      {order.delivery_address || "Pickup Order"}
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => setSelectedOrder(order)}
+                          className="p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
+                          title="View Full Details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        {renderActionButtons(order)}
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-sm">
-                  {filteredOrders.map((order) => (
-                    <tr key={order.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="px-5 py-4 font-bold text-slate-900">
-                        #{order.id.slice(-6).toUpperCase()}
-                      </td>
-                      <td className="px-5 py-4 font-semibold text-slate-800">
-                        {order.profiles?.full_name || "Guest Customer"}
-                      </td>
-                      <td className="px-5 py-4 text-slate-500 text-xs">
-                        <div>{new Date(order.created_at).toLocaleDateString()}</div>
-                        <div className="font-medium text-slate-400">
-                          {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </div>
-                      </td>
-                      <td className="px-5 py-4 font-black text-slate-900">
-                        {formatCurrency(order.total_amount)}
-                      </td>
-                      <td className="px-5 py-4">
-                        {getStatusBadge(order.status)}
-                      </td>
-                      <td className="px-5 py-4 text-slate-600 text-xs max-w-xs truncate">
-                        {order.delivery_address || "Pickup Order"}
-                      </td>
-                      <td className="px-5 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => setSelectedOrder(order)}
-                            className="p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
-                            title="View Full Details"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          {renderActionButtons(order)}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </>
+        </div>
       )}
 
       {/* ======================================================== */}
