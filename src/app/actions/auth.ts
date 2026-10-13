@@ -1,8 +1,9 @@
 "use client";
 
 export async function signOut() {
-  const { createAuthClientBrowser } = await import("@/lib/supabase/client");
+  const { createAuthClientBrowser, resetBrowserClient } = await import("@/lib/supabase/client");
   const supabase = createAuthClientBrowser();
+  resetBrowserClient();
   try {
     await Promise.race([
       supabase.auth.signOut(),

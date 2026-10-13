@@ -1,33 +1,37 @@
 import { createBrowserClient } from '@supabase/ssr'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
-type SupabaseClient = ReturnType<typeof createBrowserClient>
+let browserClient: SupabaseClient | null = null;
 
-export const createClient = () => createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      flowType: 'pkce',
-    },
-    global: {
-      fetch: (url: RequestInfo | URL, init?: RequestInit) => {
-        // Wrap every single fetch made by the Supabase client with a 10-second timeout.
-        // This ensures database queries, authentication requests, and storage operations
-        // never hang indefinitely if the user's browser has network/cookie connection issues.
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10_000);
+export const createClient = (): SupabaseClient => {
+  if (typeof window === 'undefined') {
+    return createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+    );
+  }
 
-        return fetch(url, {
-          ...init,
-          signal: controller.signal,
-        }).finally(() => clearTimeout(timeoutId));
+  if (!browserClient) {
+    browserClient = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+      {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+          flowType: 'pkce',
+        },
       },
-    },
-  },
-);
+    );
+  }
+
+  return browserClient;
+};
+
+export const resetBrowserClient = () => {
+  browserClient = null;
+};
 
 export const createAuthClientBrowser = createClient;
 

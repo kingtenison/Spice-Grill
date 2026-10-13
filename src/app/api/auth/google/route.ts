@@ -8,9 +8,10 @@ import { createServerClient } from '@supabase/ssr';
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const origin = requestUrl.origin;
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || origin;
+  const isLocal = origin.includes('localhost') || origin.includes('127.0.0.1');
+  const baseUrl = isLocal ? origin : (process.env.NEXT_PUBLIC_APP_URL || origin);
 
-  const response = NextResponse.next();
+  const cookiesToSetList: Array<{ name: string; value: string; options?: any }> = [];
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,8 +28,8 @@ export async function GET(request: Request) {
             }) ?? [];
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            response.cookies.set(name, value, options);
+          cookiesToSet.forEach((item) => {
+            cookiesToSetList.push(item);
           });
         },
       },
@@ -47,11 +48,14 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL('/login?error=oauth_init_failed', origin));
   }
 
-  // Redirect user to the Google sign-in page.
-  // Copy any PKCE cookies that Supabase set (code_verifier) to the redirect response.
+  // Redirect user to Google sign-in page with PKCE cookies preserved with full options
   const redirectResponse = NextResponse.redirect(data.url);
-  response.cookies.getAll().forEach((cookie) => {
-    redirectResponse.cookies.set(cookie.name, cookie.value);
+  cookiesToSetList.forEach(({ name, value, options }) => {
+    redirectResponse.cookies.set(name, value, {
+      path: '/',
+      sameSite: 'lax',
+      ...options,
+    });
   });
 
   return redirectResponse;

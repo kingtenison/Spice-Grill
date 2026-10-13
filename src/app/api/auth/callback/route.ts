@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL('/login?error=missing_code', url));
   }
 
-  const response = NextResponse.next();
+  const cookiesToSetList: Array<{ name: string; value: string; options?: any }> = [];
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,7 +23,6 @@ export async function GET(request: Request) {
     {
       cookies: {
         getAll() {
-          // Read cookies from the incoming request
           return request.headers
             .get('cookie')
             ?.split('; ')
@@ -33,9 +32,8 @@ export async function GET(request: Request) {
             }) ?? [];
         },
         setAll(cookiesToSet) {
-          // Write cookies to the outgoing response
-          cookiesToSet.forEach(({ name, value, options }) => {
-            response.cookies.set(name, value, options);
+          cookiesToSet.forEach((item) => {
+            cookiesToSetList.push(item);
           });
         },
       },
@@ -46,9 +44,17 @@ export async function GET(request: Request) {
 
   if (error) {
     console.error('Supabase OAuth exchange failed:', error);
-    return NextResponse.redirect(
+    const errRedirect = NextResponse.redirect(
       new URL(`/login?error=${encodeURIComponent(error.message)}`, url),
     );
+    cookiesToSetList.forEach(({ name, value, options }) => {
+      errRedirect.cookies.set(name, value, {
+        path: '/',
+        sameSite: 'lax',
+        ...options,
+      });
+    });
+    return errRedirect;
   }
 
   // Session is now stored in cookies. Determine role for redirect.
@@ -86,10 +92,14 @@ export async function GET(request: Request) {
           ? new URL('/dispatcher', url)
           : new URL(next, url);
 
-  // Build the redirect response and copy all cookies from the exchange
+  // Build the redirect response and attach all authentication cookies with full options
   const redirectResponse = NextResponse.redirect(redirectUrl);
-  response.cookies.getAll().forEach((cookie) => {
-    redirectResponse.cookies.set(cookie.name, cookie.value);
+  cookiesToSetList.forEach(({ name, value, options }) => {
+    redirectResponse.cookies.set(name, value, {
+      path: '/',
+      sameSite: 'lax',
+      ...options,
+    });
   });
 
   return redirectResponse;

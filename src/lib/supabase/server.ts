@@ -30,17 +30,6 @@ export async function createClient() {
           }
         },
       },
-      global: {
-        fetch: (url: RequestInfo | URL, init?: RequestInit) => {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 3_000);
-
-          return fetch(url, {
-            ...init,
-            signal: controller.signal,
-          }).finally(() => clearTimeout(timeoutId));
-        },
-      },
     }
   )
 }
@@ -61,17 +50,6 @@ export async function createPKCEClient() {
           cookiesToSet.forEach(({ name, value, options }) =>
             cookieStore.set(name, value, { ...options, httpOnly: false })
           )
-        },
-      },
-      global: {
-        fetch: (url: RequestInfo | URL, init?: RequestInit) => {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 3_000);
-
-          return fetch(url, {
-            ...init,
-            signal: controller.signal,
-          }).finally(() => clearTimeout(timeoutId));
         },
       },
     }

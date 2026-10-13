@@ -13,8 +13,20 @@ async function getAuthenticatedUser() {
     const supabase = await createClient();
     const { data: { user }, error } = await supabase.auth.getUser();
     if (!error && user) return user;
-  } catch (err) {
-    console.warn('[getAuthenticatedUser] Secure auth check failed:', err);
+
+    if (error) {
+      console.warn('[getAuthenticatedUser] getUser failed:', error.message);
+      // Fallback: If network issue, check session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) return session.user;
+    }
+  } catch (err: any) {
+    console.warn('[getAuthenticatedUser] Secure auth check exception:', err?.message || err);
+    try {
+      const supabase = await createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) return session.user;
+    } catch {}
   }
   return null;
 }
@@ -34,13 +46,14 @@ export async function GET() {
       return NextResponse.json({ user: null, profile: null, role: 'customer' }, { status: 401 });
     }
 
-    // Check for cached role cookie to avoid DB query
+    // Check for cached role cookie matching this specific user to avoid DB query
+    const cachedUserId = cookieStore.get('sb-user-id')?.value;
     const cachedRole = cookieStore.get('sb-user-role')?.value;
     const cachedName = cookieStore.get('sb-user-fullname')?.value;
     const cachedPhone = cookieStore.get('sb-user-phone')?.value;
     const cachedDispatcher = cookieStore.get('sb-user-dispatcher')?.value;
 
-    if (cachedRole) {
+    if (cachedUserId === user.id && cachedRole) {
       return NextResponse.json({
         user,
         profile: {
@@ -55,11 +68,12 @@ export async function GET() {
       });
     }
 
-    // Fallback: Fetch profile and dispatcher status from DB with a short timeout
+    // Fallback: Fetch profile and dispatcher status from DB with a generous timeout
     const db = getServiceClient();
 
     let profileData = null;
     let dispatcherData = null;
+    let dbSuccess = false;
     try {
       const profilePromise = db
         .from('profiles')
@@ -74,7 +88,7 @@ export async function GET() {
         .maybeSingle();
 
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('DB_TIMEOUT')), 3000)
+        setTimeout(() => reject(new Error('DB_TIMEOUT')), 8000)
       );
 
       const [profileResult, dispatcherResult] = await Promise.all([
@@ -84,6 +98,7 @@ export async function GET() {
       
       profileData = profileResult.data;
       dispatcherData = dispatcherResult.data;
+      dbSuccess = true;
     } catch (dbErr: any) {
       console.warn('[API auth/me] DB fetch timed out or failed:', dbErr.message);
     }
@@ -93,7 +108,6 @@ export async function GET() {
     const phone = profileData?.phone ?? user.user_metadata?.phone ?? user.phone ?? '';
     const isApprovedDispatcher = dispatcherData?.application_status === 'approved';
 
-    // Cache role/name/dispatcher/phone in cookies for future requests (valid for 1 week)
     const cookieOpts = {
       path: '/',
       maxAge: 60 * 60 * 24 * 7,
@@ -114,10 +128,14 @@ export async function GET() {
       isApprovedDispatcher
     });
 
-    response.cookies.set('sb-user-role', role, cookieOpts);
-    response.cookies.set('sb-user-fullname', fullName, cookieOpts);
-    response.cookies.set('sb-user-phone', phone, cookieOpts);
-    response.cookies.set('sb-user-dispatcher', isApprovedDispatcher ? 'approved' : 'none', cookieOpts);
+    // Only cache if database lookup actually succeeded
+    if (dbSuccess) {
+      response.cookies.set('sb-user-id', user.id, cookieOpts);
+      response.cookies.set('sb-user-role', role, cookieOpts);
+      response.cookies.set('sb-user-fullname', fullName, cookieOpts);
+      response.cookies.set('sb-user-phone', phone, cookieOpts);
+      response.cookies.set('sb-user-dispatcher', isApprovedDispatcher ? 'approved' : 'none', cookieOpts);
+    }
 
     return response;
   } catch (error: any) {

@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
-  const supabaseResponse = NextResponse.next({
+  let supabaseResponse = NextResponse.next({
     request,
   })
 
@@ -15,6 +15,12 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          )
+          supabaseResponse = NextResponse.next({
+            request,
+          })
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           )
@@ -35,7 +41,7 @@ export async function updateSession(request: NextRequest) {
     ])
     user = result.data?.user ?? null
   } catch (err) {
-    // Timeout or network error — clear stale cookies and let through
+    // Timeout or network error — let through to avoid hanging
     console.warn('[proxy] Auth check failed:', (err as Error).message)
   }
 
@@ -54,7 +60,11 @@ export async function updateSession(request: NextRequest) {
   ) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
-    return NextResponse.redirect(url)
+    const redirectResponse = NextResponse.redirect(url)
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
+    })
+    return redirectResponse
   }
 
   return supabaseResponse
@@ -63,6 +73,9 @@ export async function updateSession(request: NextRequest) {
 export async function proxy(request: NextRequest) {
   return await updateSession(request)
 }
+
+export const middleware = proxy
+export default proxy
 
 export const config = {
   matcher: [
