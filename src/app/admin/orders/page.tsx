@@ -190,53 +190,135 @@ export default function AdminOrdersPage() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusTheme = (status: string) => {
     switch (status) {
       case "pending":
-        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200"><Clock className="w-3 h-3" /> Pending</span>;
+        return {
+          gradientRibbon: "from-amber-400 via-orange-500 to-amber-600",
+          cardBg: "bg-gradient-to-b from-amber-500/[0.07] via-white to-white",
+          borderColor: "border-amber-200/90 hover:border-amber-400",
+          glowColor: "bg-amber-400/25",
+          badgeBg: "bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-xs shadow-amber-500/25",
+          label: "Pending",
+        };
       case "accepted":
-        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200"><CheckCircle className="w-3 h-3" /> Accepted</span>;
+        return {
+          gradientRibbon: "from-blue-500 via-indigo-500 to-cyan-500",
+          cardBg: "bg-gradient-to-b from-blue-500/[0.07] via-white to-white",
+          borderColor: "border-blue-200/90 hover:border-blue-400",
+          glowColor: "bg-blue-400/25",
+          badgeBg: "bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 text-white shadow-xs shadow-blue-500/25",
+          label: "Accepted",
+        };
       case "preparing":
-        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-800 border border-orange-200"><ChefHat className="w-3 h-3" /> Kitchen Prep</span>;
+        return {
+          gradientRibbon: "from-orange-500 via-red-500 to-amber-500",
+          cardBg: "bg-gradient-to-b from-orange-500/[0.07] via-white to-white",
+          borderColor: "border-orange-200/90 hover:border-orange-400",
+          glowColor: "bg-orange-400/25",
+          badgeBg: "bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 text-white shadow-xs shadow-orange-500/25",
+          label: "Cooking",
+        };
       case "ready":
-        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200"><Package className="w-3 h-3" /> Ready</span>;
+        return {
+          gradientRibbon: "from-purple-500 via-fuchsia-500 to-pink-500",
+          cardBg: "bg-gradient-to-b from-purple-500/[0.07] via-white to-white",
+          borderColor: "border-purple-200/90 hover:border-purple-400",
+          glowColor: "bg-purple-400/25",
+          badgeBg: "bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 text-white shadow-xs shadow-purple-500/25",
+          label: "Ready",
+        };
       case "out_for_delivery":
-        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-cyan-100 text-cyan-800 border border-cyan-200"><Truck className="w-3 h-3" /> Out for Delivery</span>;
+        return {
+          gradientRibbon: "from-cyan-500 via-teal-500 to-blue-500",
+          cardBg: "bg-gradient-to-b from-cyan-500/[0.07] via-white to-white",
+          borderColor: "border-cyan-200/90 hover:border-cyan-400",
+          glowColor: "bg-cyan-400/25",
+          badgeBg: "bg-gradient-to-r from-cyan-600 via-teal-600 to-blue-600 text-white shadow-xs shadow-cyan-500/25",
+          label: "In Transit",
+        };
       case "delivered":
-        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200"><CheckCircle2 className="w-3 h-3" /> Delivered</span>;
+        return {
+          gradientRibbon: "from-emerald-500 via-teal-500 to-green-600",
+          cardBg: "bg-gradient-to-b from-emerald-500/[0.05] via-white to-white",
+          borderColor: "border-emerald-200/90 hover:border-emerald-400",
+          glowColor: "bg-emerald-400/20",
+          badgeBg: "bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 text-white shadow-xs shadow-emerald-500/20",
+          label: "Delivered",
+        };
       case "cancelled":
-        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200"><XCircle className="w-3 h-3" /> Cancelled</span>;
+        return {
+          gradientRibbon: "from-rose-500 via-red-500 to-pink-600",
+          cardBg: "bg-gradient-to-b from-rose-500/[0.05] via-white to-white",
+          borderColor: "border-rose-200/90 hover:border-rose-400",
+          glowColor: "bg-rose-400/20",
+          badgeBg: "bg-gradient-to-r from-rose-600 via-red-600 to-pink-600 text-white shadow-xs shadow-rose-500/20",
+          label: "Cancelled",
+        };
       default:
-        return <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-800 capitalize">{status}</span>;
+        return {
+          gradientRibbon: "from-slate-400 to-slate-500",
+          cardBg: "bg-white",
+          borderColor: "border-slate-200",
+          glowColor: "bg-slate-300/20",
+          badgeBg: "bg-slate-800 text-white",
+          label: status,
+        };
     }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const theme = getStatusTheme(status);
+    const getIcon = () => {
+      switch (status) {
+        case "pending": return <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />;
+        case "accepted": return <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3" />;
+        case "preparing": return <ChefHat className="w-2.5 h-2.5 sm:w-3 sm:h-3" />;
+        case "ready": return <Package className="w-2.5 h-2.5 sm:w-3 sm:h-3" />;
+        case "out_for_delivery": return <Truck className="w-2.5 h-2.5 sm:w-3 sm:h-3" />;
+        case "delivered": return <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" />;
+        case "cancelled": return <XCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3" />;
+        default: return null;
+      }
+    };
+
+    return (
+      <span className={cn(
+        "inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-black tracking-wide shrink-0",
+        theme.badgeBg
+      )}>
+        {status === "pending" ? (
+          <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping shrink-0" />
+        ) : (
+          getIcon()
+        )}
+        <span>{theme.label}</span>
+      </span>
+    );
   };
 
   const renderActionButtons = (order: Order, isFullWidth = false) => {
     const isBusy = processingOrder === order.id;
-    const btnClasses = cn(
-      "min-h-[44px] px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:pointer-events-none",
-      isFullWidth && "flex-1"
-    );
 
     switch (order.status) {
       case "pending":
         return (
-          <div className={cn("flex items-center gap-2", isFullWidth && "w-full")}>
+          <div className="flex items-center gap-1 sm:gap-1.5 w-full">
             <button
               onClick={() => handleOrderAction(order.id, "confirm")}
               disabled={isBusy}
-              className={cn(btnClasses, "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20")}
+              className="flex-1 min-h-[38px] sm:min-h-[42px] px-2 py-1.5 rounded-xl font-black text-[11px] sm:text-xs flex items-center justify-center gap-1 transition-all shadow-md active:scale-95 disabled:opacity-50 text-white bg-gradient-to-r from-emerald-500 via-teal-600 to-emerald-600 hover:from-emerald-600 hover:to-teal-700 shadow-emerald-500/25"
             >
-              <CheckCircle className="w-4 h-4" />
-              Accept Order
+              <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">Accept</span>
             </button>
             <button
               onClick={() => handleOrderAction(order.id, "cancel")}
               disabled={isBusy}
-              className={cn(btnClasses, "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200")}
+              title="Reject Order"
+              className="min-h-[38px] sm:min-h-[42px] w-8 sm:w-9 px-0 rounded-xl font-black text-[11px] sm:text-xs flex items-center justify-center transition-all active:scale-95 disabled:opacity-50 text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 shrink-0"
             >
-              <X className="w-4 h-4" />
-              Reject
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         );
@@ -247,10 +329,10 @@ export default function AdminOrdersPage() {
             <button
               onClick={() => handleOrderAction(order.id, "prepare")}
               disabled={isBusy}
-              className={cn(btnClasses, "bg-amber-600 hover:bg-amber-700 text-white shadow-amber-600/20")}
+              className="w-full min-h-[38px] sm:min-h-[42px] px-2.5 py-1.5 rounded-xl font-black text-[11px] sm:text-xs flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 disabled:opacity-50 text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 hover:from-blue-700 hover:to-indigo-700 shadow-blue-500/25"
             >
-              <ChefHat className="w-4 h-4" />
-              Start Cooking
+              <ChefHat className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">Start Cooking</span>
             </button>
           </div>
         );
@@ -261,10 +343,10 @@ export default function AdminOrdersPage() {
             <button
               onClick={() => handleOrderAction(order.id, "ready")}
               disabled={isBusy}
-              className={cn(btnClasses, "bg-purple-600 hover:bg-purple-700 text-white shadow-purple-600/20")}
+              className="w-full min-h-[38px] sm:min-h-[42px] px-2.5 py-1.5 rounded-xl font-black text-[11px] sm:text-xs flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 disabled:opacity-50 text-white bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 hover:from-orange-600 hover:to-red-600 shadow-orange-500/25"
             >
-              <Package className="w-4 h-4" />
-              Mark Ready
+              <Package className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">Mark Ready</span>
             </button>
           </div>
         );
@@ -275,27 +357,41 @@ export default function AdminOrdersPage() {
             <button
               onClick={() => handleOrderAction(order.id, "pickup")}
               disabled={isBusy}
-              className={cn(btnClasses, "bg-cyan-600 hover:bg-cyan-700 text-white shadow-cyan-600/20")}
+              className="w-full min-h-[38px] sm:min-h-[42px] px-2.5 py-1.5 rounded-xl font-black text-[11px] sm:text-xs flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 disabled:opacity-50 text-white bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 hover:from-purple-700 hover:to-fuchsia-700 shadow-purple-500/25"
             >
-              <Truck className="w-4 h-4" />
-              Out for Delivery
+              <Truck className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">Dispatch</span>
+            </button>
+          </div>
+        );
+
+      case "out_for_delivery":
+        return (
+          <div className={cn("flex items-center gap-2", isFullWidth && "w-full")}>
+            <button
+              onClick={() => handleOrderAction(order.id, "deliver")}
+              disabled={isBusy}
+              className="w-full min-h-[38px] sm:min-h-[42px] px-2.5 py-1.5 rounded-xl font-black text-[11px] sm:text-xs flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 disabled:opacity-50 text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-500/25"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">Delivered</span>
             </button>
           </div>
         );
 
       case "delivered":
         return (
-          <div className={cn("min-h-[44px] rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-xs flex items-center justify-center gap-1.5 px-3", isFullWidth ? "w-full" : "flex-1")}>
-            <CheckCircle2 className="w-4 h-4" />
-            <span>Completed</span>
+          <div className="w-full min-h-[38px] sm:min-h-[42px] rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 text-emerald-700 border border-emerald-200/80 font-black text-[11px] sm:text-xs flex items-center justify-center gap-1 px-2">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span className="truncate">Completed</span>
           </div>
         );
 
       case "cancelled":
         return (
-          <div className={cn("min-h-[44px] rounded-xl bg-rose-50 text-rose-700 border border-rose-200 font-bold text-xs flex items-center justify-center gap-1.5 px-3", isFullWidth ? "w-full" : "flex-1")}>
-            <XCircle className="w-4 h-4" />
-            <span>Cancelled</span>
+          <div className="w-full min-h-[38px] sm:min-h-[42px] rounded-xl bg-gradient-to-r from-rose-500/10 to-red-500/10 text-rose-700 border border-rose-200/80 font-black text-[11px] sm:text-xs flex items-center justify-center gap-1 px-2">
+            <XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+            <span className="truncate">Cancelled</span>
           </div>
         );
 
@@ -315,27 +411,6 @@ export default function AdminOrdersPage() {
       return `${Math.floor(diffHours / 24)}d ago`;
     } catch {
       return "";
-    }
-  };
-
-  const getStatusTheme = (status: string) => {
-    switch (status) {
-      case "pending":
-        return { borderTop: "border-t-amber-500", accent: "text-amber-600" };
-      case "accepted":
-        return { borderTop: "border-t-blue-500", accent: "text-blue-600" };
-      case "preparing":
-        return { borderTop: "border-t-orange-500", accent: "text-orange-600" };
-      case "ready":
-        return { borderTop: "border-t-purple-500", accent: "text-purple-600" };
-      case "out_for_delivery":
-        return { borderTop: "border-t-cyan-500", accent: "text-cyan-600" };
-      case "delivered":
-        return { borderTop: "border-t-emerald-500", accent: "text-emerald-600" };
-      case "cancelled":
-        return { borderTop: "border-t-rose-500", accent: "text-rose-600" };
-      default:
-        return { borderTop: "border-t-slate-400", accent: "text-slate-600" };
     }
   };
 
@@ -460,16 +535,16 @@ export default function AdminOrdersPage() {
 
       {/* Orders Content */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4.5">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <div key={i} className="p-5 bg-white rounded-2xl border border-slate-200 animate-pulse space-y-4">
+            <div key={i} className="p-3.5 sm:p-5 bg-gradient-to-b from-slate-50 to-white rounded-2xl sm:rounded-3xl border border-slate-200 animate-pulse space-y-3">
               <div className="flex justify-between items-center">
-                <div className="h-5 bg-slate-200 rounded w-24" />
-                <div className="h-5 bg-slate-200 rounded w-16" />
+                <div className="h-4 bg-slate-200 rounded w-16 sm:w-20" />
+                <div className="h-4 bg-slate-200 rounded w-12 sm:w-16" />
               </div>
-              <div className="h-4 bg-slate-200 rounded w-36" />
-              <div className="h-24 bg-slate-100 rounded-xl" />
-              <div className="h-11 bg-slate-200 rounded-xl" />
+              <div className="h-3.5 bg-slate-200 rounded w-24 sm:w-28" />
+              <div className="h-16 sm:h-20 bg-slate-100 rounded-xl" />
+              <div className="h-9 sm:h-11 bg-slate-200 rounded-xl" />
             </div>
           ))}
         </div>
@@ -485,133 +560,140 @@ export default function AdminOrdersPage() {
         </div>
       ) : viewMode === "grid" ? (
         /* ======================================================== */
-        /* RESTAURANT TICKET GRID VIEW (Responsive 1-4 columns)      */
+        /* RESTAURANT TICKET GRID VIEW (2x2 on Mobile, 3-4 on Desktop) */
         /* ======================================================== */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4.5">
           {filteredOrders.map((order) => {
             const theme = getStatusTheme(order.status);
             return (
               <div
                 key={order.id}
                 className={cn(
-                  "bg-white rounded-2xl border border-slate-200 p-4.5 sm:p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between border-t-4",
-                  theme.borderTop
+                  "rounded-2xl sm:rounded-3xl border shadow-xs hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between overflow-hidden relative backdrop-blur-sm",
+                  theme.cardBg,
+                  theme.borderColor
                 )}
               >
-                <div className="space-y-3.5">
-                  {/* Top Row: Order ID, Elapsed Time, Status Badge */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="font-mono font-black text-slate-900 text-base tracking-tight">
-                          #{order.id.slice(-6).toUpperCase()}
-                        </span>
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                          <Clock className="w-3 h-3 text-slate-400" />
-                          {getTimeAgo(order.created_at)}
-                        </span>
-                      </div>
-                      <span className="text-[11px] text-slate-400 font-medium block mt-0.5">
-                        {new Date(order.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                      </span>
-                    </div>
-                    <div className="shrink-0">
-                      {getStatusBadge(order.status)}
-                    </div>
-                  </div>
+                {/* Top Status Gradient Ribbon */}
+                <div className={cn("h-1.5 w-full bg-gradient-to-r", theme.gradientRibbon)} />
 
-                  {/* Customer Info & Service Type */}
-                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-700 text-xs shrink-0">
-                        {(order.profiles?.full_name || "G")[0].toUpperCase()}
-                      </div>
+                {/* Ambient Decorative Radial Glow */}
+                <div className={cn("absolute -top-10 -right-10 w-28 h-28 rounded-full blur-2xl opacity-20 pointer-events-none", theme.glowColor)} />
+
+                <div className="p-3 sm:p-4.5 flex-1 flex flex-col justify-between space-y-2.5 sm:space-y-3.5 relative z-10">
+                  <div className="space-y-2.5 sm:space-y-3">
+                    {/* Header: Order ID + Status Badge + Time */}
+                    <div className="flex items-start justify-between gap-1.5">
                       <div className="min-w-0">
-                        <p className="font-bold text-slate-900 text-sm truncate leading-tight">
-                          {order.profiles?.full_name || "Guest Customer"}
-                        </p>
-                        <p className="text-[11px] text-slate-400 font-medium truncate">Customer</p>
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <span className="font-mono font-black text-slate-900 text-xs sm:text-sm tracking-tight">
+                            #{order.id.slice(-6).toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 text-[10px] sm:text-[11px] text-slate-500 mt-0.5 font-medium">
+                          <Clock className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+                          <span>{getTimeAgo(order.created_at)}</span>
+                        </div>
+                      </div>
+                      <div className="shrink-0">
+                        {getStatusBadge(order.status)}
                       </div>
                     </div>
-                    <div className="shrink-0">
-                      {order.delivery_address ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200/60">
-                          <Truck className="w-3 h-3" /> Delivery
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/60">
-                          <ShoppingBag className="w-3 h-3" /> Pickup
-                        </span>
-                      )}
-                    </div>
-                  </div>
 
-                  {/* Order Items Breakdown Box */}
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 space-y-1.5">
-                    {order.order_items && order.order_items.length > 0 ? (
-                      <>
-                        {order.order_items.slice(0, 3).map((item, idx) => (
-                          <div key={item.id || idx} className="flex items-center justify-between text-xs gap-2">
-                            <div className="flex items-center gap-2 truncate">
-                              <span className="w-5 h-5 rounded bg-white border border-slate-200/90 font-bold text-slate-800 text-[10px] flex items-center justify-center shrink-0">
-                                {item.quantity}×
-                              </span>
-                              <span className="font-semibold text-slate-700 truncate">
-                                {item.menu_items?.name || "Dish Item"}
+                    {/* Customer Row */}
+                    <div className="flex items-center justify-between gap-1.5 pt-1.5 border-t border-slate-200/50">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-tr from-slate-900 via-slate-800 to-slate-700 text-white flex items-center justify-center font-black text-[10px] sm:text-xs shrink-0 shadow-xs ring-1 ring-white">
+                          {(order.profiles?.full_name || "G")[0].toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-slate-900 text-xs sm:text-sm truncate leading-tight">
+                            {order.profiles?.full_name || "Guest Customer"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="shrink-0">
+                        {order.delivery_address ? (
+                          <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-bold bg-blue-500/10 text-blue-700 border border-blue-200/60">
+                            <Truck className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                            <span className="hidden sm:inline">Delivery</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-bold bg-amber-500/10 text-amber-700 border border-amber-200/60">
+                            <ShoppingBag className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                            <span className="hidden sm:inline">Pickup</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Items Breakdown Box (Translucent Glass Effect) */}
+                    <div className="p-2 sm:p-2.5 rounded-xl bg-white/80 border border-slate-200/70 shadow-2xs space-y-1">
+                      {order.order_items && order.order_items.length > 0 ? (
+                        <>
+                          {order.order_items.slice(0, 2).map((item, idx) => (
+                            <div key={item.id || idx} className="flex items-center justify-between text-[11px] sm:text-xs gap-1.5">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span className="w-4.5 h-4.5 rounded bg-slate-100 border border-slate-200/90 font-extrabold text-slate-800 text-[10px] flex items-center justify-center shrink-0">
+                                  {item.quantity}×
+                                </span>
+                                <span className="font-semibold text-slate-700 truncate">
+                                  {item.menu_items?.name || "Dish Item"}
+                                </span>
+                              </div>
+                              <span className="font-semibold text-slate-500 shrink-0 text-[10px] sm:text-xs">
+                                {formatCurrency(item.unit_price * item.quantity)}
                               </span>
                             </div>
-                            <span className="font-semibold text-slate-500 shrink-0">
-                              {formatCurrency(item.unit_price * item.quantity)}
-                            </span>
-                          </div>
-                        ))}
-                        {order.order_items.length > 3 && (
-                          <button
-                            onClick={() => setSelectedOrder(order)}
-                            className="text-[11px] font-bold text-red-600 hover:text-red-700 pt-0.5 block hover:underline text-left"
-                          >
-                            +{order.order_items.length - 3} more items...
-                          </button>
-                        )}
-                      </>
-                    ) : (
-                      <div className="text-xs text-slate-500 flex items-center justify-between">
-                        <span>Standard Order Package</span>
-                        <span className="font-bold text-slate-700">{formatCurrency(order.total_amount)}</span>
+                          ))}
+                          {order.order_items.length > 2 && (
+                            <button
+                              onClick={() => setSelectedOrder(order)}
+                              className="text-[10px] sm:text-[11px] font-bold text-red-600 hover:text-red-700 pt-0.5 block hover:underline text-left truncate"
+                            >
+                              +{order.order_items.length - 2} more items...
+                            </button>
+                          )}
+                        </>
+                      ) : (
+                        <div className="text-[11px] sm:text-xs text-slate-500 flex items-center justify-between">
+                          <span className="truncate">Meal Package</span>
+                          <span className="font-bold text-slate-700">{formatCurrency(order.total_amount)}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Delivery Address snippet if applicable */}
+                    {order.delivery_address && (
+                      <div className="flex items-start gap-1 text-[10px] sm:text-xs text-slate-500 px-0.5">
+                        <MapPin className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-400 shrink-0 mt-0.5" />
+                        <span className="line-clamp-1 leading-snug">{order.delivery_address}</span>
                       </div>
                     )}
                   </div>
 
-                  {/* Delivery Address snippet if applicable */}
-                  {order.delivery_address && (
-                    <div className="flex items-start gap-1.5 text-xs text-slate-500 px-0.5">
-                      <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
-                      <span className="line-clamp-1 leading-snug">{order.delivery_address}</span>
+                  {/* Footer: Order Total & Action Buttons */}
+                  <div className="pt-2 sm:pt-3 border-t border-slate-200/60 mt-auto space-y-2">
+                    <div className="flex items-baseline justify-between px-0.5">
+                      <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total</span>
+                      <span className="text-sm sm:text-base font-black text-slate-900 tracking-tight">
+                        {formatCurrency(order.total_amount)}
+                      </span>
                     </div>
-                  )}
-                </div>
 
-                {/* Footer: Order Total & Action Buttons */}
-                <div className="pt-3.5 border-t border-slate-100 mt-3.5 space-y-3">
-                  <div className="flex items-baseline justify-between px-0.5">
-                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total</span>
-                    <span className="text-lg font-black text-slate-900 tracking-tight">
-                      {formatCurrency(order.total_amount)}
-                    </span>
-                  </div>
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <button
+                        onClick={() => setSelectedOrder(order)}
+                        className="min-h-[38px] sm:min-h-[42px] px-2 sm:px-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-1 transition-all active:scale-95 shrink-0 shadow-2xs"
+                        title="View Order Details"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span className="hidden md:inline">Details</span>
+                      </button>
 
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setSelectedOrder(order)}
-                      className="min-h-[44px] px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 shrink-0"
-                      title="View Order Details"
-                    >
-                      <Eye className="w-4 h-4" />
-                      <span className="hidden sm:inline">Details</span>
-                    </button>
-
-                    <div className="flex-1">
-                      {renderActionButtons(order, true)}
+                      <div className="flex-1 min-w-0">
+                        {renderActionButtons(order, true)}
+                      </div>
                     </div>
                   </div>
                 </div>
