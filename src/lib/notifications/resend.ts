@@ -17,9 +17,8 @@ export function isResendConfigured(): boolean {
 }
 
 export function getResendFromEmail(): string {
-  // If user sets RESEND_FROM_EMAIL (e.g., "Spice Grill <orders@thespicegrille.com>"), use it.
-  // Otherwise default to the Resend sandbox onboarding domain which works immediately without custom domain DNS.
-  return process.env.RESEND_FROM_EMAIL || "Spice Grill <onboarding@resend.dev>";
+  // Uses verified domain thespicegrille.com
+  return process.env.RESEND_FROM_EMAIL || "Spice Grill <orders@thespicegrille.com>";
 }
 
 export interface SendEmailOptions {

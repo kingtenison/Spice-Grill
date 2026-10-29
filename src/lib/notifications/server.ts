@@ -419,7 +419,7 @@ export function getNotificationConfigStatus() {
     },
     resend: {
       configured: isResendConfigured(),
-      fromEmail: process.env.RESEND_FROM_EMAIL || "Spice Grill <onboarding@resend.dev>",
+      fromEmail: process.env.RESEND_FROM_EMAIL || "Spice Grill <orders@thespicegrille.com>",
     },
   };
 }
