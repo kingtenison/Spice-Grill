@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import { WebhooksHelper } from 'square';
+import { notifyOrderCreated } from '@/lib/notifications/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -84,6 +85,11 @@ export async function POST(request: NextRequest) {
         if (error) {
           console.error('Webhook: failed to update order status:', error);
           return NextResponse.json({ error: 'Status update failed' }, { status: 500 });
+        }
+        if (newStatus === 'paid') {
+          notifyOrderCreated(existing.id).catch((err) =>
+            console.error('[Notifications] Webhook order notification error:', err)
+          );
         }
       }
     }

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getServiceClient } from "@/lib/supabase/service";
 import { NextResponse } from "next/server";
+import { notifyOrderStatusChanged } from "@/lib/notifications/server";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
@@ -109,7 +110,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       });
     }
 
-    // TODO: Send notification to user (could integrate with email service)
+    // Trigger customer SMS (Bird.com) and Email (Resend) notification
+    notifyOrderStatusChanged(orderId, orderStatus).catch((err) =>
+      console.error("[Notifications] Status notification error:", err)
+    );
 
     console.log(`Order ${action}ed successfully`);
     return NextResponse.json({

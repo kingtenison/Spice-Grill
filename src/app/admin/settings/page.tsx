@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Save, Store, Truck, Bell, Shield, Globe, X, Check, Lock, CheckCircle2, Volume2 } from "lucide-react";
+import { Save, Store, Truck, Bell, Shield, Globe, X, Check, Lock, CheckCircle2, Volume2, MessageSquare, Mail, Send, Loader2 } from "lucide-react";
 import { 
   playNotificationSound, 
   isSoundEnabled, 
@@ -77,6 +77,18 @@ export default function AdminSettingsPage() {
     dispatcherAlerts: true,
   });
 
+  // SMS (Bird.com) & Email (Resend) Provider Testing State
+  const [providerConfig, setProviderConfig] = useState<{
+    bird: { configured: boolean; region: string; senderId: string };
+    resend: { configured: boolean; fromEmail: string };
+  } | null>(null);
+  const [testPhone, setTestPhone] = useState("");
+  const [testEmail, setTestEmail] = useState("");
+  const [isSendingTestSms, setIsSendingTestSms] = useState(false);
+  const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
+  const [testSmsFeedback, setTestSmsFeedback] = useState<{ success: boolean; msg: string } | null>(null);
+  const [testEmailFeedback, setTestEmailFeedback] = useState<{ success: boolean; msg: string } | null>(null);
+
   // Language & region state
   const [regionSettings, setRegionSettings] = useState({
     language: "en",
@@ -112,6 +124,70 @@ export default function AdminSettingsPage() {
     };
     loadSettings();
   }, []);
+
+  // Fetch provider status when notifications modal opens
+  useEffect(() => {
+    if (activeModal === "notifications") {
+      fetch("/api/admin/notifications")
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.status) setProviderConfig(data.status);
+        })
+        .catch(() => {});
+    }
+  }, [activeModal]);
+
+  const handleTestSms = async () => {
+    if (!testPhone.trim()) return;
+    setIsSendingTestSms(true);
+    setTestSmsFeedback(null);
+    try {
+      const res = await fetch("/api/admin/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "test_sms", recipient: testPhone.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.result?.success) {
+        setTestSmsFeedback({ success: true, msg: "Test SMS sent successfully via Bird.com!" });
+      } else {
+        setTestSmsFeedback({
+          success: false,
+          msg: data.result?.error || data.error || "SMS failed. Please verify BIRD_API_KEY in .env.local",
+        });
+      }
+    } catch (err: any) {
+      setTestSmsFeedback({ success: false, msg: err.message || "Failed to trigger test SMS." });
+    } finally {
+      setIsSendingTestSms(false);
+    }
+  };
+
+  const handleTestEmail = async () => {
+    if (!testEmail.trim()) return;
+    setIsSendingTestEmail(true);
+    setTestEmailFeedback(null);
+    try {
+      const res = await fetch("/api/admin/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "test_email", recipient: testEmail.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.result?.success) {
+        setTestEmailFeedback({ success: true, msg: "Test email sent successfully via Resend!" });
+      } else {
+        setTestEmailFeedback({
+          success: false,
+          msg: data.result?.error || data.error || "Email failed. Please verify RESEND_API_KEY in .env.local",
+        });
+      }
+    } catch (err: any) {
+      setTestEmailFeedback({ success: false, msg: err.message || "Failed to trigger test email." });
+    } finally {
+      setIsSendingTestEmail(false);
+    }
+  };
 
   const saveSettings = async () => {
     setIsSaving(true);
@@ -656,7 +732,7 @@ export default function AdminSettingsPage() {
       {/* Notification Preferences Modal */}
       {activeModal === "notifications" && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-4 border-b border-gray-100">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center text-red-600">
@@ -664,13 +740,13 @@ export default function AdminSettingsPage() {
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-900">Notification Preferences</h3>
-                  <p className="text-xs text-gray-500">Configure real-time alert channels</p>
+                  <p className="text-xs text-gray-500">Configure alerts, Bird.com SMS & Resend email</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
+                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -772,6 +848,154 @@ export default function AdminSettingsPage() {
                 >
                   <span className={`block w-4 h-4 rounded-full bg-white shadow-md transform transition-transform absolute top-1 ${notificationSettings.dispatcherAlerts ? 'right-1' : 'left-1'}`} />
                 </button>
+              </div>
+
+              {/* External Notification Services: Bird.com & Resend */}
+              <div className="pt-3 border-t border-gray-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-gray-500">
+                    Live Messaging Services
+                  </h4>
+                  <span className="text-[11px] font-semibold text-gray-400">Bird.com & Resend</span>
+                </div>
+
+                {/* 1. Bird.com SMS Card */}
+                <div className="p-3.5 rounded-xl border border-gray-200 bg-slate-50 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center font-bold">
+                        <MessageSquare className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-bold text-gray-900">SMS via Bird.com</p>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                              providerConfig?.bird.configured
+                                ? "bg-emerald-100 text-emerald-700"
+                                : "bg-amber-100 text-amber-800"
+                            }`}
+                          >
+                            {providerConfig?.bird.configured ? "Connected" : "Key Not Found"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          Sender ID: <span className="font-semibold text-gray-700">{providerConfig?.bird.senderId || "SpiceGrill"}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Test SMS dispatch */}
+                  <div className="pt-2 border-t border-gray-200/60">
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">
+                      Send Test SMS
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="tel"
+                        placeholder="e.g. +1 701 555 1234"
+                        value={testPhone}
+                        onChange={(e) => setTestPhone(e.target.value)}
+                        className="flex-1 px-3 py-2 text-xs font-medium bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600"
+                      />
+                      <button
+                        type="button"
+                        disabled={isSendingTestSms || !testPhone.trim()}
+                        onClick={handleTestSms}
+                        className="px-3 py-2 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-slate-800 disabled:opacity-40 transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                      >
+                        {isSendingTestSms ? (
+                          <>
+                            <Loader2 className="w-3 h-3 animate-spin" /> Sending...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-3 h-3" /> Test SMS
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    {testSmsFeedback && (
+                      <p
+                        className={`text-xs mt-1.5 font-medium ${
+                          testSmsFeedback.success ? "text-emerald-600" : "text-red-600"
+                        }`}
+                      >
+                        {testSmsFeedback.success ? "✓" : "⚠"} {testSmsFeedback.msg}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* 2. Resend Email Card */}
+                <div className="p-3.5 rounded-xl border border-gray-200 bg-slate-50 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center font-bold">
+                        <Mail className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-bold text-gray-900">Email via Resend</p>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                              providerConfig?.resend.configured
+                                ? "bg-emerald-100 text-emerald-700"
+                                : "bg-amber-100 text-amber-800"
+                            }`}
+                          >
+                            {providerConfig?.resend.configured ? "Connected" : "Key Not Found"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 truncate max-w-[240px]">
+                          From: <span className="font-semibold text-gray-700">{providerConfig?.resend.fromEmail || "orders@resend.dev"}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Test Email dispatch */}
+                  <div className="pt-2 border-t border-gray-200/60">
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">
+                      Send Test Email
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="email"
+                        placeholder="e.g. owner@example.com"
+                        value={testEmail}
+                        onChange={(e) => setTestEmail(e.target.value)}
+                        className="flex-1 px-3 py-2 text-xs font-medium bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600"
+                      />
+                      <button
+                        type="button"
+                        disabled={isSendingTestEmail || !testEmail.trim()}
+                        onClick={handleTestEmail}
+                        className="px-3 py-2 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 disabled:opacity-40 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 shadow-sm"
+                      >
+                        {isSendingTestEmail ? (
+                          <>
+                            <Loader2 className="w-3 h-3 animate-spin" /> Sending...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-3 h-3" /> Test Email
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    {testEmailFeedback && (
+                      <p
+                        className={`text-xs mt-1.5 font-medium ${
+                          testEmailFeedback.success ? "text-emerald-600" : "text-red-600"
+                        }`}
+                      >
+                        {testEmailFeedback.success ? "✓" : "⚠"} {testEmailFeedback.msg}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="pt-4 flex gap-3">

@@ -41,7 +41,17 @@ export default function AdminMarketingPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showTriggerModal, setShowTriggerModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [triggerSubmitting, setTriggerSubmitting] = useState(false);
+  const [triggerResult, setTriggerResult] = useState<string | null>(null);
+  const [triggerForm, setTriggerForm] = useState({
+    channel: "sms" as "sms" | "email",
+    recipient: "",
+    title: "Weekend Special Feast",
+    message: "Get 20% off all chef signature curries and tandoori grills this weekend!",
+    promoCode: "WEEKEND20",
+  });
   const [filter, setFilter] = useState<"all" | "active" | "draft">("all");
   const [formData, setFormData] = useState<NewCampaignForm>({
     name: "",
@@ -102,6 +112,35 @@ export default function AdminMarketingPage() {
 
   const handleDeleteCampaign = (id: string) => {
     setCampaigns(campaigns.filter((c) => c.id !== id));
+  };
+
+  const handleSendBroadcast = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setTriggerSubmitting(true);
+    setTriggerResult(null);
+    try {
+      const res = await fetch("/api/admin/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "broadcast_campaign",
+          recipient: triggerForm.recipient,
+          title: triggerForm.title,
+          message: triggerForm.message,
+          promoCode: triggerForm.promoCode,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setTriggerResult(`Dispatched notification via ${triggerForm.channel.toUpperCase()}!`);
+      } else {
+        setTriggerResult(data.error || "Broadcast completed or logged.");
+      }
+    } catch (err: any) {
+      setTriggerResult(err.message || "Failed to broadcast.");
+    } finally {
+      setTriggerSubmitting(false);
+    }
   };
 
   const CAMPAIGN_TYPES = ["Discount", "Offer", "Announcement"];
@@ -515,8 +554,8 @@ export default function AdminMarketingPage() {
                 </p>
               </div>
               <button 
-                onClick={() => alert("Automated triggers active.")}
-                className="px-5 py-2.5 rounded-xl bg-white text-slate-900 font-extrabold text-xs hover:bg-slate-100 transition-colors shrink-0 shadow-md min-h-[40px]"
+                onClick={() => { setShowTriggerModal(true); setTriggerResult(null); }}
+                className="px-5 py-2.5 rounded-xl bg-white text-slate-900 font-extrabold text-xs hover:bg-slate-100 transition-colors shrink-0 shadow-md min-h-[40px] cursor-pointer"
               >
                 Trigger Hub
               </button>
@@ -617,6 +656,139 @@ export default function AdminMarketingPage() {
                   className="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-bold text-xs shadow-md shadow-red-500/20 disabled:opacity-50 transition-all"
                 >
                   {submitting ? "Launching..." : "Launch Campaign"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Trigger Hub Modal for SMS & Email Broadcast */}
+      {showTriggerModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-lg shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between mb-5 pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-red-600 to-orange-500 text-white flex items-center justify-center">
+                  <Send className="w-4 h-4" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-black text-slate-900">Trigger Hub (Bird & Resend)</h2>
+                  <p className="text-xs text-slate-500">Dispatch live SMS or email notifications</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowTriggerModal(false)} 
+                className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {triggerResult && (
+              <div className="mb-4 p-3 rounded-xl bg-slate-100 text-slate-800 text-xs font-semibold flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{triggerResult}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSendBroadcast} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Notification Channel
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setTriggerForm({ ...triggerForm, channel: "sms" })}
+                    className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all ${
+                      triggerForm.channel === "sms"
+                        ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+                        : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                    }`}
+                  >
+                    📱 SMS (Bird.com)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTriggerForm({ ...triggerForm, channel: "email" })}
+                    className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all ${
+                      triggerForm.channel === "email"
+                        ? "bg-red-600 text-white border-red-600 shadow-sm"
+                        : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                    }`}
+                  >
+                    ✉️ Email (Resend)
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Target Recipient ({triggerForm.channel === "sms" ? "Phone Number" : "Email Address"})
+                </label>
+                <input
+                  type={triggerForm.channel === "sms" ? "tel" : "email"}
+                  required
+                  value={triggerForm.recipient}
+                  placeholder={triggerForm.channel === "sms" ? "+1 701 555 1234" : "customer@example.com"}
+                  onChange={(e) => setTriggerForm({ ...triggerForm, recipient: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none text-sm text-slate-900 font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Campaign Title / Subject
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={triggerForm.title}
+                  onChange={(e) => setTriggerForm({ ...triggerForm, title: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none text-sm text-slate-900 font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Message Content
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  value={triggerForm.message}
+                  onChange={(e) => setTriggerForm({ ...triggerForm, message: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none text-sm text-slate-900 font-medium resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Promo Coupon Code (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={triggerForm.promoCode}
+                  placeholder="e.g. FEAST20"
+                  onChange={(e) => setTriggerForm({ ...triggerForm, promoCode: e.target.value.toUpperCase() })}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all outline-none text-sm text-slate-900 font-medium uppercase"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-3">
+                <button
+                  type="button" 
+                  onClick={() => setShowTriggerModal(false)}
+                  className="flex-1 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold text-xs hover:bg-slate-50 transition-all cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  type="submit" 
+                  disabled={triggerSubmitting}
+                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-bold text-xs shadow-md shadow-red-500/20 disabled:opacity-50 transition-all cursor-pointer"
+                >
+                  {triggerSubmitting ? "Dispatching..." : `Send ${triggerForm.channel.toUpperCase()}`}
                 </button>
               </div>
             </form>

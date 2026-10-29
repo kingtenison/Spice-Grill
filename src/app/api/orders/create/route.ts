@@ -3,6 +3,7 @@ import { getServiceClient } from '@/lib/supabase/service';
 import { NextRequest, NextResponse } from 'next/server';
 import { getSquareClient, SQUARE_CURRENCY } from '@/lib/square';
 import { SquareError } from 'square';
+import { notifyOrderCreated } from '@/lib/notifications/server';
 import {
   MAX_DELIVERY_RADIUS_MILES,
   DEFAULT_RESTAURANT_LAT,
@@ -495,6 +496,10 @@ export async function POST(request: NextRequest) {
             smallOrderFee,
             Number(orderData?.distance_miles) || 0
           );
+          // Trigger customer SMS (Bird) & Email (Resend) notifications
+          notifyOrderCreated(order.id).catch((err) =>
+            console.error('[Notifications] Failed to dispatch order created notifications:', err)
+          );
           return NextResponse.json({ success: true, orderId: order.id });
         }
 
@@ -532,6 +537,11 @@ export async function POST(request: NextRequest) {
       serviceFee,
       smallOrderFee,
       Number(orderData?.distance_miles) || 0
+    );
+
+    // Trigger customer SMS (Bird) & Email (Resend) notifications
+    notifyOrderCreated(order.id).catch((err) =>
+      console.error('[Notifications] Failed to dispatch order created notifications:', err)
     );
 
     return NextResponse.json({ success: true, orderId: order.id });
